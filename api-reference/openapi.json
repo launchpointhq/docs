@@ -27,12 +27,22 @@
           {
             "name": "codes",
             "in": "query",
-            "description": "Comma-separated list of discount codes to retrieve",
+            "description": "Comma-separated list of discount codes to retrieve (optional)",
             "required": false,
             "schema": {
               "type": "string"
             },
             "example": "CODE1,CODE2,CODE3"
+          },
+          {
+            "name": "discount_group_id",
+            "in": "query",
+            "description": "The ID of the discount group to retrieve codes for (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         ],
         "responses": {
@@ -59,7 +69,7 @@
         }
       },
       "post": {
-        "description": "Creates new discount codes for a campaign",
+        "description": "Adds new discount codes for a campaign",
         "requestBody": {
           "description": "Discount codes and campaign details",
           "content": {
@@ -156,7 +166,13 @@
         "responses": {
           "202": {
             "description": "Code update accepted",
-            "content": {}
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCodeUsageResponse"
+                }
+              }
+            }
           },
           "400": {
             "description": "unexpected error",
@@ -237,20 +253,10 @@
             },
             "example": ["CODE1", "CODE2", "CODE3"]
           },
-          "user_description": {
-            "description": "Description of what the user gets with these codes",
+          "discount_group_id": {
+            "description": "The ID of the discount group to add codes to",
             "type": "string",
-            "example": "20% off your first purchase"
-          },
-          "creator_drives": {
-            "description": "The metric the creator drives (e.g. click, install, etc.)",
-            "type": "string",
-            "example": "signup"
-          },
-          "creator_commission_cents": {
-            "description": "Commission amount in cents that the creator receives per conversion",
-            "type": "integer",
-            "example": 500
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         }
       },
@@ -273,10 +279,6 @@
           },
           "creator_commission_cents": {
             "type": "integer"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
