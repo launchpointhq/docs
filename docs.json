@@ -56,7 +56,7 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.launchpoint.nyc"
+      "href": "https://buyer.launchpoint.nyc"
     }
   },
   "contextual": {
