@@ -1,0 +1,24 @@
+---
+title: "Manual"
+description: "How to use connect your own code system to Launchpoint"
+---
+
+## Creating codes
+
+Create enough unique discount codes in your system for every creator you want to work with. It's beneficial to have a buffer of extra unused codes to avoid disruptions.
+
+<Note>
+  The code should offer the end user a discount or incentive of some kind. This is what you'll use for
+  `user_description`
+</Note>
+
+## Updating usage
+
+- You have two options:
+  - Track the **total uses** of each code and periodically bulk update `PUT /codes`
+  - Send a request to `PUT /codes/{code}` each time it a code used.
+
+<Info>
+  Creators are paid when you report, so you cannot retroactively decrease a code's uses. You cannot delete codes which
+  are already assigned.
+</Info>

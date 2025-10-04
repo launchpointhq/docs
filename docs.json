@@ -18,11 +18,14 @@
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "Codes",
+            "group": "Affiliate Codes",
             "pages": [
-              "api-reference/codes",
-              "api-reference/codes/create",
-              "api-reference/codes/update-single",
+              "api-reference/codes/overview",
+              "api-reference/codes/shopify",
+              "api-reference/codes/levanta",
+              "api-reference/codes/manual",
+              "api-reference/codes/add",
+              "api-reference/codes/increment",
               "api-reference/codes/update",
               "api-reference/codes/get",
               "api-reference/codes/delete"
