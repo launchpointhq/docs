@@ -18,6 +18,7 @@
       "bearerAuth": []
     }
   ],
+
   "paths": {
     "/codes": {
       "get": {
