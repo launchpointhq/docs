@@ -1,33 +1,28 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "Introduction"
+description: "Get set up with the Launchpoint API"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
+All requests are under `https://buyer.launchpoint.nyc/api/{version}`. The current version is `2025-11`
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+| Version | Status    | Release Date | Supported Until |
+| ------- | --------- | ------------ | --------------- |
+| 2025-11 | Supported | 2025-11-01   | 2026-12-31      |
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+To authenticate your requests, include the `Authorization` header with the value `Bearer <api_key>`. For example:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+```javascript
+const headers = {
+  Authorization: "Bearer <api_key>",
+};
+await fetch("https://buyer.launchpoint.nyc/api/2025-11/<endpoint>", {
+  method: "...",
+  headers,
+});
 ```
+
+You can create an API key in your [dashboard](https://buyer.launchpoint.nyc/settings#api).

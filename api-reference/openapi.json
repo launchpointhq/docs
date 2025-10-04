@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
+    "title": "Launchpoint Buyer API",
+    "description": "The API Launchpoint brands can use to manage their campaigns",
     "license": {
       "name": "MIT"
     },
@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://buyer.launchpoint.nyc/api/2025-11"
     }
   ],
   "security": [
@@ -19,30 +19,28 @@
     }
   ],
   "paths": {
-    "/plants": {
+    "/codes": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "description": "Returns usage data and earnings for specified discount codes",
         "parameters": [
           {
-            "name": "limit",
+            "name": "codes",
             "in": "query",
-            "description": "The maximum number of results to return",
+            "description": "Comma-separated list of discount codes to retrieve",
+            "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
+              "type": "string"
+            },
+            "example": "CODE1,CODE2,CODE3"
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Code usage and earnings response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
+                  "$ref": "#/components/schemas/CodeUsageResponse"
                 }
               }
             }
@@ -60,13 +58,13 @@
         }
       },
       "post": {
-        "description": "Creates a new plant in the store",
+        "description": "Creates new discount codes for a campaign",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "description": "Discount codes and campaign details",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/AddCodes"
               }
             }
           },
@@ -74,11 +72,54 @@
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Codes created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/CodesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Updates usage statistics for discount codes",
+        "requestBody": {
+          "description": "Code usage data - either as a map or CSV format",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCodeUsage"
+              }
+            },
+            "text/csv": {
+              "schema": {
+                "type": "string",
+                "description": "CSV format: code,total_uses",
+                "example": "CODE1,5\nCODE2,10\nCODE3,3"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Code usage updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCodeUsageResponse"
                 }
               }
             }
@@ -96,28 +137,79 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/codes/{code}": {
+      "put": {
+        "description": "Increments code usage by one",
         "parameters": [
           {
-            "name": "id",
+            "name": "code",
             "in": "path",
-            "description": "ID of plant to delete",
+            "description": "The discount code to update",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string",
+              "example": "CODE1"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Code update accepted",
+            "content": {}
+          },
+          "400": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Deletes a discount code",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "The discount code to delete",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "CODE1"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": "Plant deleted",
+            "description": "Code deleted successfully",
             "content": {}
           },
           "400": {
             "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Code not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,71 +222,163 @@
       }
     }
   },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "AddCodes": {
+        "required": ["codes", "user_description", "creator_drives", "creator_commission_cents"],
         "type": "object",
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "codes": {
+            "description": "Array of unique discount codes",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["CODE1", "CODE2", "CODE3"]
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "user_description": {
+            "description": "Description of what the user gets with these codes",
+            "type": "string",
+            "example": "20% off your first purchase"
+          },
+          "creator_drives": {
+            "description": "The metric the creator drives (e.g. click, install, etc.)",
+            "type": "string",
+            "example": "signup"
+          },
+          "creator_commission_cents": {
+            "description": "Commission amount in cents that the creator receives per conversion",
+            "type": "integer",
+            "example": 500
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "CodesResponse": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "description": "Array of created discount codes",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["CODE1", "CODE2", "CODE3"]
           },
-          {
-            "required": [
-              "id"
-            ],
+          "user_description": {
+            "type": "string"
+          },
+          "creator_drives": {
+            "type": "integer"
+          },
+          "creator_commission_cents": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateCodeUsage": {
+        "type": "object",
+        "properties": {
+          "code_usage": {
+            "description": "Map of discount code to total uses",
             "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "example": {
+              "CODE1": 5,
+              "CODE2": 10,
+              "CODE3": 3
             }
           }
-        ]
+        }
+      },
+      "UpdateCodeUsageResponse": {
+        "type": "object",
+        "properties": {
+          "updated_codes": {
+            "description": "Number of codes successfully updated",
+            "type": "integer"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CodeUsageResponse": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "description": "Usage data for requested codes",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeUsageData"
+            }
+          },
+          "total_earnings_cents": {
+            "description": "Total earnings across all codes in cents",
+            "type": "integer",
+            "example": 15000
+          }
+        }
+      },
+      "CodeUsageData": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "description": "The discount code",
+            "type": "string",
+            "example": "CODE1"
+          },
+          "total_uses": {
+            "description": "Total number of times this code has been used",
+            "type": "integer",
+            "example": 5
+          },
+          "earnings_cents": {
+            "description": "Earnings generated by this code in cents",
+            "type": "integer",
+            "example": 2500
+          },
+          "user_description": {
+            "description": "What the user gets with this code",
+            "type": "string"
+          },
+          "last_updated": {
+            "description": "The last time usage data was updated",
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CodeWebhookPayload": {
+        "type": "object",
+        "properties": {
+          "event_type": {
+            "description": "Type of webhook event",
+            "type": "string",
+            "enum": ["code.used", "code.created", "code.updated"],
+            "example": "code.used"
+          },
+          "code": {
+            "description": "The discount code involved in the event",
+            "type": "string"
+          },
+          "total_uses": {
+            "description": "Updated total uses for the code",
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       },
       "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+        "required": ["error", "message"],
         "type": "object",
         "properties": {
           "error": {
