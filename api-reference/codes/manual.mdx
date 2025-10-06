@@ -16,9 +16,10 @@ Then, create enough unique discount codes in your system for every creator you w
 
 ## Updating usage
 
-- You have two options:
+- You have three options:
   - Track the **total uses** of each code and periodically bulk update `PUT /codes`
   - Send a request to `PUT /codes/{code}` each time it a code used.
+  - Send an email to `agent@lpt.is` with a CSV attachment that contains a `code` and `total_uses` column
 
 <Info>
   Creators are paid when you report, so you cannot retroactively decrease a code's uses. You cannot delete codes which
