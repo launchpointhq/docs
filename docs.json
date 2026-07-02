@@ -32,6 +32,13 @@
             ]
           },
           {
+            "group": "Targeting",
+            "pages": [
+              "api-reference/campaigns/list-targeting-properties",
+              "api-reference/campaigns/list-targeting-property-values"
+            ]
+          },
+          {
             "group": "Lifecycle",
             "pages": [
               "api-reference/campaigns/publish",

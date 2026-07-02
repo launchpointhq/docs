@@ -1064,6 +1064,77 @@
           }
         }
       }
+    },
+    "/targeting/properties": {
+      "get": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "List targeting properties",
+        "description": "Returns the creator properties available for campaign targeting. Use a property's `id` in targeting conditions; fetch an `option` property's allowed values from its values endpoint.",
+        "responses": {
+          "200": {
+            "description": "The available targeting properties",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetingPropertyList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/targeting/properties/{property_id}/values": {
+      "get": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "List targeting property values",
+        "description": "Returns the allowed values for an `option` targeting property. Large catalogs (locations, schools) are paginated \u2014 use `search` to narrow. Returns 404 for `number` properties, which take `\"min-max\"` ranges instead of listed values.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PropertyId"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Filter values by name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/StartingAfter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of allowed values",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetingPropertyValueList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1136,6 +1207,15 @@
         "schema": {
           "type": "string",
           "maxLength": 255
+        }
+      },
+      "PropertyId": {
+        "name": "property_id",
+        "in": "path",
+        "description": "The targeting property ID",
+        "required": true,
+        "schema": {
+          "type": "string"
         }
       }
     },
@@ -1366,6 +1446,14 @@
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
           },
+          "invite_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Access code creators use to join an `unlisted` campaign. Null for `public` campaigns.",
+            "example": "GLOW2026"
+          },
           "description": {
             "type": [
               "string",
@@ -1489,6 +1577,10 @@
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
           },
+          "invite_code": {
+            "type": "string",
+            "description": "Custom access code for an `unlisted` campaign. Optional \u2014 one is generated if omitted."
+          },
           "brand_id": {
             "type": "string",
             "format": "uuid",
@@ -1560,6 +1652,10 @@
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
+          },
+          "invite_code": {
+            "type": "string",
+            "description": "Custom access code for an `unlisted` campaign"
           },
           "description": {
             "type": "string"
@@ -1673,17 +1769,6 @@
               "feed_video"
             ]
           },
-          "requirements": {
-            "type": "array",
-            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "Show the logo",
-              "Mention the discount code"
-            ]
-          },
           "caption": {
             "type": [
               "string",
@@ -1731,12 +1816,20 @@
           },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
+            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
             "enum": [
               "media_review",
               "autoreview"
             ],
             "example": "media_review"
+          },
+          "autoreview_prompt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
+            "example": "The product must be clearly visible and mentioned by name."
           },
           "is_required": {
             "type": "boolean",
@@ -1805,17 +1898,6 @@
               "feed_video"
             ]
           },
-          "requirements": {
-            "type": "array",
-            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "Show the logo",
-              "Mention the discount code"
-            ]
-          },
           "caption": {
             "type": [
               "string",
@@ -1863,12 +1945,20 @@
           },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
+            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
             "enum": [
               "media_review",
               "autoreview"
             ],
             "example": "media_review"
+          },
+          "autoreview_prompt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
+            "example": "The product must be clearly visible and mentioned by name."
           },
           "is_required": {
             "type": "boolean",
@@ -1922,17 +2012,6 @@
               "feed_video"
             ]
           },
-          "requirements": {
-            "type": "array",
-            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "Show the logo",
-              "Mention the discount code"
-            ]
-          },
           "caption": {
             "type": [
               "string",
@@ -1980,12 +2059,20 @@
           },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
+            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
             "enum": [
               "media_review",
               "autoreview"
             ],
             "example": "media_review"
+          },
+          "autoreview_prompt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
+            "example": "The product must be clearly visible and mentioned by name."
           },
           "is_required": {
             "type": "boolean",
@@ -2665,7 +2752,7 @@
         "properties": {
           "property": {
             "type": "string",
-            "description": "The creator property to match on. Valid properties are listed in the dashboard's targeting editor.",
+            "description": "The creator property to match on \u2014 an `id` from [List Targeting Properties](/api-reference/campaigns/list-targeting-properties)",
             "example": "country"
           },
           "operator": {
@@ -2683,7 +2770,8 @@
             "example": [
               "US",
               "CA"
-            ]
+            ],
+            "description": "For `option` properties: values from the property's values list. For `number` properties: `\"min-max\"` range strings."
           }
         }
       },
@@ -2767,6 +2855,75 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TargetingProperty": {
+        "type": "object",
+        "description": "A creator property campaigns can target on",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Use as `property` in targeting conditions",
+            "example": "877972f8-af4b-4918-95df-d35377234817"
+          },
+          "name": {
+            "type": "string",
+            "example": "Gender"
+          },
+          "kind": {
+            "type": "string",
+            "description": "`option` properties match against values from the property's values list. `number` properties match against ranges encoded as `\"min-max\"` strings (e.g. `\"10000-50000\"` followers).",
+            "enum": [
+              "option",
+              "number"
+            ],
+            "example": "option"
+          }
+        }
+      },
+      "TargetingPropertyList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TargetingProperty"
+            }
+          }
+        }
+      },
+      "TargetingPropertyValue": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Use in a targeting condition's `values` array",
+            "example": "fitness"
+          },
+          "label": {
+            "type": "string",
+            "example": "Fitness"
+          }
+        }
+      },
+      "TargetingPropertyValueList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TargetingPropertyValue"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }

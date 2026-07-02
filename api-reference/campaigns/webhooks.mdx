@@ -9,16 +9,16 @@ Configure your webhook URL in [dashboard settings](https://dashboard.launchpoint
 
 ## Events
 
-| Event                     | Fires when                                                            |
-| ------------------------- | --------------------------------------------------------------------- |
-| `campaign.status_changed` | A campaign changes status — publish approval/denial, pauses, resumes  |
-| `creator.applied`         | A creator applies to a campaign                                        |
-| `creator.approved`        | A creator application is approved (via API or dashboard)               |
-| `creator.rejected`        | A creator application is rejected                                       |
-| `submission.created`      | A creator submits content for review, including revisions              |
-| `submission.approved`     | A submission is approved (via API or dashboard)                         |
+| Event                     | Fires when                                                               |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `campaign.status_changed` | A campaign changes status — publish approval/denial, pauses, resumes     |
+| `creator.applied`         | A creator applies to a campaign                                          |
+| `creator.approved`        | A creator application is approved (via API or dashboard)                 |
+| `creator.rejected`        | A creator application is rejected                                        |
+| `submission.created`      | A creator submits content for review, including revisions                |
+| `submission.approved`     | A submission is approved (via API or dashboard)                          |
 | `submission.rejected`     | A submission is rejected                                                 |
-| `post.created`            | Approved content goes live                                              |
+| `post.created`            | Approved content goes live                                               |
 | `post.metrics_updated`    | A live post's engagement metrics are refreshed (at most hourly per post) |
 
 Decision events (`creator.*`, `submission.*`) fire regardless of where the decision was made — so an integration stays in sync even when your team works in the dashboard.
@@ -39,7 +39,7 @@ Every event is a JSON `POST` with the event type, campaign context, the affected
     "task_id": "5b0a4567-e89b-12d3-a456-426614174000",
     "status": "in_review",
     "media_type": "video",
-    "media_url": "https://media.launchpoint.sh/...",
+    "media_url": "https://cdn.launchpointhq.com/...",
     "revision_count": 0,
     "submitted_at": "2026-07-02T15:04:05Z"
   },
