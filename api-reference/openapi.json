@@ -1300,14 +1300,6 @@
             ],
             "format": "uri",
             "example": "https://cdn.acme.com/glow-serum.png"
-          },
-          "shopify_shop_domain": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Your connected Shopify store domain, when fulfillment or codes run through Shopify",
-            "example": "acme-skincare.myshopify.com"
           }
         }
       },
@@ -1373,11 +1365,6 @@
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
-          },
-          "product_seeding": {
-            "type": "boolean",
-            "description": "Whether this is a product-seeding (gifting) campaign",
-            "example": false
           },
           "description": {
             "type": [
@@ -1474,13 +1461,6 @@
             "type": "integer",
             "example": 2
           },
-          "products": {
-            "type": "array",
-            "description": "The campaign's fulfillment products. Embedded when fetching a single campaign; omitted in list responses.",
-            "items": {
-              "$ref": "#/components/schemas/FulfillmentProduct"
-            }
-          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -1508,10 +1488,6 @@
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
-          },
-          "product_seeding": {
-            "type": "boolean",
-            "default": false
           },
           "brand_id": {
             "type": "string",
@@ -1569,19 +1545,12 @@
             "items": {
               "$ref": "#/components/schemas/TaskCreate"
             }
-          },
-          "products": {
-            "type": "array",
-            "description": "Fulfillment products to create with the campaign",
-            "items": {
-              "$ref": "#/components/schemas/ProductInput"
-            }
           }
         }
       },
       "CampaignUpdate": {
         "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`products`, `video_examples`, `links`, `targeting`) are replaced wholesale. `type` and `brand_id` are immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
+        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`video_examples`, `links`, `targeting`) are replaced wholesale. `type` and `brand_id` are immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
         "properties": {
           "name": {
             "type": "string"
@@ -1589,18 +1558,8 @@
           "product": {
             "$ref": "#/components/schemas/ProductInfo"
           },
-          "products": {
-            "type": "array",
-            "description": "Replaces the campaign's product list. Items with an `id` update that product; items without one are added; existing products missing from the array are removed (unless already selected by a creator \u2014 409).",
-            "items": {
-              "$ref": "#/components/schemas/ProductInput"
-            }
-          },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
-          },
-          "product_seeding": {
-            "type": "boolean"
           },
           "description": {
             "type": "string"
@@ -1681,7 +1640,7 @@
       },
       "Task": {
         "type": "object",
-        "description": "A deliverable creators complete for the campaign",
+        "description": "A deliverable creators complete for the campaign. Tasks on Canvas campaigns are readable but not writable via the API, and some fields (e.g. `max_posts_per_creator`) don't apply to them.",
         "properties": {
           "id": {
             "type": "string",
@@ -1716,7 +1675,7 @@
           },
           "requirements": {
             "type": "array",
-            "description": "Checklist items the content must satisfy",
+            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
             "items": {
               "type": "string"
             },
@@ -1770,17 +1729,9 @@
             "format": "uri",
             "description": "Cover image shown with the task"
           },
-          "product_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "Limit this task to one of the campaign's products"
-          },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are approved automatically.",
+            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
             "enum": [
               "media_review",
               "autoreview"
@@ -1797,7 +1748,7 @@
               "integer",
               "null"
             ],
-            "description": "Null means unlimited",
+            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
             "example": 1
           },
           "display_order": {
@@ -1856,7 +1807,7 @@
           },
           "requirements": {
             "type": "array",
-            "description": "Checklist items the content must satisfy",
+            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
             "items": {
               "type": "string"
             },
@@ -1910,17 +1861,9 @@
             "format": "uri",
             "description": "Cover image shown with the task"
           },
-          "product_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "Limit this task to one of the campaign's products"
-          },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are approved automatically.",
+            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
             "enum": [
               "media_review",
               "autoreview"
@@ -1937,7 +1880,7 @@
               "integer",
               "null"
             ],
-            "description": "Null means unlimited",
+            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
             "example": 1
           },
           "display_order": {
@@ -1981,7 +1924,7 @@
           },
           "requirements": {
             "type": "array",
-            "description": "Checklist items the content must satisfy",
+            "description": "Checklist items the content must satisfy. When `review_mode` is `autoreview`, these are the criteria the AI reviews each submission against \u2014 at least one is required.",
             "items": {
               "type": "string"
             },
@@ -2035,17 +1978,9 @@
             "format": "uri",
             "description": "Cover image shown with the task"
           },
-          "product_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "Limit this task to one of the campaign's products"
-          },
           "review_mode": {
             "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are approved automatically.",
+            "description": "`media_review`: you review each submission. `autoreview`: an AI reviews each submission against the task's `requirements` automatically \u2014 the task must have at least one requirement (422 otherwise).",
             "enum": [
               "media_review",
               "autoreview"
@@ -2062,7 +1997,7 @@
               "integer",
               "null"
             ],
-            "description": "Null means unlimited",
+            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
             "example": 1
           },
           "display_order": {
@@ -2079,103 +2014,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Task"
-            }
-          },
-          "has_more": {
-            "type": "boolean",
-            "example": false
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "FulfillmentProduct": {
-        "type": "object",
-        "description": "A product shipped or gifted to creators as part of the campaign. Managed through the campaign's `products` array on create and update.",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "example": "Glow Serum 30ml"
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "fulfillment_type": {
-            "type": "string",
-            "description": "How creators receive the product. `shopify`: ordered automatically from your connected store. `manual_ship`: you ship it yourself. `manual_redemption`: creators redeem a code or link. `manual`: handled outside Launchpoint.",
-            "enum": [
-              "shopify",
-              "manual",
-              "manual_redemption",
-              "manual_ship"
-            ],
-            "example": "shopify"
-          },
-          "is_gift": {
-            "type": "boolean",
-            "description": "Whether the product is a gift on top of the campaign's main product",
-            "example": false
-          },
-          "display_order": {
-            "type": "integer",
-            "example": 0
-          },
-          "shopify_variant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The Shopify variant to order, for `shopify` fulfillment"
-          },
-          "redemption_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Shared redemption code, for `manual_redemption` fulfillment"
-          },
-          "redemption_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "redemption_instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "sold_out": {
-            "type": "boolean",
-            "example": false
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "FulfillmentProductList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FulfillmentProduct"
             }
           },
           "has_more": {
@@ -2929,77 +2767,6 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "ProductInput": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "When updating: include the id to modify an existing product; omit it to add a new one"
-          },
-          "name": {
-            "type": "string",
-            "example": "Glow Serum 30ml"
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "fulfillment_type": {
-            "type": "string",
-            "description": "How creators receive the product. `shopify`: ordered automatically from your connected store. `manual_ship`: you ship it yourself. `manual_redemption`: creators redeem a code or link. `manual`: handled outside Launchpoint.",
-            "enum": [
-              "shopify",
-              "manual",
-              "manual_redemption",
-              "manual_ship"
-            ],
-            "example": "shopify"
-          },
-          "is_gift": {
-            "type": "boolean",
-            "description": "Whether the product is a gift on top of the campaign's main product",
-            "example": false
-          },
-          "display_order": {
-            "type": "integer",
-            "example": 0
-          },
-          "shopify_variant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The Shopify variant to order, for `shopify` fulfillment"
-          },
-          "redemption_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Shared redemption code, for `manual_redemption` fulfillment"
-          },
-          "redemption_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "redemption_instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
           }
         }
       }

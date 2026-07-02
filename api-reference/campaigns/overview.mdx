@@ -11,7 +11,7 @@ The Campaigns API lets brands and agencies manage campaigns end-to-end: create a
  SETUP           ACQUIRE           PRODUCE            GO LIVE         REPORT
  Campaign    →   Creators      →   Submissions    →   Posts       →   Metrics
  + Tasks         apply, you        content in         live posts      funnel, views,
- + Products      approve/reject    review — you        + metrics       spend
+                 approve/reject    review — you        + metrics       spend
                                    approve/reject
 ```
 
@@ -64,7 +64,7 @@ API keys carry scopes, chosen when the key is created in [dashboard settings](ht
 
 | Scope             | Grants                                                                          |
 | ----------------- | ------------------------------------------------------------------------------- |
-| `campaigns:read`  | List and read campaigns, tasks, products, creators, submissions, posts, metrics |
+| `campaigns:read`  | List and read campaigns, tasks, creators, submissions, posts, metrics          |
 | `campaigns:write` | Create, update, delete, and transition campaigns and tasks (implies read)       |
 | `approvals:write` | Approve/reject creator applications and content submissions                     |
 
@@ -101,9 +101,9 @@ Instead of polling, configure a webhook URL to receive events across the whole f
 
 ## Parity with the dashboard
 
-The API covers everything you configure in the dashboard's campaign editor: campaign info, visibility, creator targeting, links, example videos, fulfillment products, and the full task brief (captions, ad disclosure, sounds, requirements, review mode, product limits). Campaigns are editable in every status except `completed`, just like the dashboard.
+The API covers everything you configure in the dashboard's campaign editor: campaign info, visibility, creator targeting, links, example videos, and the full task brief (captions, ad disclosure, sounds, requirements, review mode). Campaigns are editable in every status except `completed`, just like the dashboard.
 
-A few dashboard features are intentionally not in the API: creator compensation and billing, paid-ads boosting, organic warm-up, and Canvas campaigns (readable, but their configuration is dashboard-only).
+A few dashboard features are intentionally not in the API: creator compensation and billing, product seeding (shipping or gifting products to creators — it depends on the Shopify integration, so configure it in the dashboard for now), paid-ads boosting, organic warm-up, and Canvas campaigns. Canvas campaigns are readable, but their configuration is dashboard-only and some task fields don't apply to them — for example `max_posts_per_creator`, since Canvas caps videos weekly instead.
 
 ## Conversions
 
