@@ -269,7 +269,7 @@
           "Campaigns"
         ],
         "summary": "Request publish",
-        "description": "Submits a draft campaign for review. Publishing is asynchronous: the campaign moves to `pending_approval` and becomes `active` once approved by Launchpoint (you'll receive a `campaign.status_changed` webhook, if configured). If the campaign is denied it returns to `draft` with `status_detail` explaining why. Fails with 422 if the campaign has no active tasks.",
+        "description": "Submits a draft campaign for review. Publishing is asynchronous: the campaign moves to `pending_approval` and becomes `active` once approved by Launchpoint (you'll receive a `campaign.status_changed` webhook, if configured). If the campaign is denied it returns to `draft` with `status_detail` explaining why. Publishing requires at least one active task (422) \u2014 unless the campaign requires creator approval, in which case it can publish as a waitlist and collect creators before its brief exists, or it's a Canvas campaign that auto-creates briefs from submissions.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CampaignId"
@@ -1633,7 +1633,7 @@
           },
           "tasks": {
             "type": "array",
-            "description": "Tasks to create with the campaign. Optional \u2014 drafts can be created without tasks, but at least one active task is required to publish.",
+            "description": "Tasks to create with the campaign. Optional \u2014 drafts can be created without tasks. Publishing requires at least one active task unless the campaign requires creator approval (waitlist).",
             "items": {
               "$ref": "#/components/schemas/TaskCreate"
             }
