@@ -1,0 +1,110 @@
+---
+title: "Overview"
+description: "How the Campaigns API works"
+---
+
+The Campaigns API lets brands and agencies manage campaigns end-to-end: create and publish campaigns, define the content creators produce, approve creators and their submissions, and read performance and spend data.
+
+## The campaign flow
+
+```
+ SETUP           ACQUIRE           PRODUCE            GO LIVE         REPORT
+ Campaign    →   Creators      →   Submissions    →   Posts       →   Metrics
+ + Tasks         apply, you        content in         live posts      funnel, views,
+ + Products      approve/reject    review — you        + metrics       spend
+                                   approve/reject
+```
+
+1. **Create** a campaign in `draft` with its [tasks](/api-reference/campaigns/create-task) — the deliverables creators complete.
+2. **Publish** it. Publishing is a request — the campaign moves to `pending_approval` while Launchpoint reviews it, then becomes `active`.
+3. **Creators apply.** If `creator_approval_required` is on, you [approve or reject](/api-reference/campaigns/approve-creator) each application.
+4. **Creators submit content.** Each submission lands in your review queue; you [approve](/api-reference/campaigns/approve-submission) it (clearing it to post) or [reject](/api-reference/campaigns/reject-submission) it with feedback (the creator revises and resubmits).
+5. **Approved content goes live** as [posts](/api-reference/campaigns/list-posts), whose engagement metrics refresh periodically.
+6. **Track everything** through [metrics](/api-reference/campaigns/metrics) — pipeline, performance, and spend in one call.
+
+## Campaign status
+
+```
+draft → pending_approval → active ⇄ paused → completed
+```
+
+| Status             | Meaning                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `draft`            | Being set up; editable freely. A denied publish also returns here.                  |
+| `pending_approval` | Submitted for Launchpoint review. Editing it withdraws the request back to `draft`. |
+| `active`           | Live — creators can work and submit.                                                |
+| `paused`           | Temporarily stopped, manually or automatically. Resume anytime.                     |
+| `completed`        | Ended permanently. Outstanding work is settled. Terminal.                           |
+
+When a campaign is auto-paused or a publish is denied, `status_detail` explains why — for example `{"kind": "auto_paused", "reason": "billing_issue"}`. Billing-related pauses must be fixed in the [dashboard](https://dashboard.launchpointhq.com) before resuming.
+
+<Note>
+  Publishing is asynchronous. Configure a webhook (below) to be notified when your campaign is approved instead of
+  polling.
+</Note>
+
+## Spend
+
+Spend is read-only in the API: each campaign carries `spent_cents` (total paid to creators, in cents), the [metrics report](/api-reference/campaigns/metrics) adds an effective CPM, and [each creator](/api-reference/campaigns/list-creators) shows their individual `spend_cents`. Billing itself is managed in the [dashboard](https://dashboard.launchpointhq.com).
+
+Note that **approving a submission commits the creator's compensation** — the spend follows once the content is posted and paid out, and the approval can't be undone.
+
+## Brand and agency keys
+
+One API serves both customer types; the key determines visibility:
+
+- A **brand key** sees only that brand's campaigns.
+- An **agency key** sees campaigns of every brand the agency manages. Listing defaults to all managed brands (filter with `brand_id`), and creating a campaign requires `brand_id`.
+
+Every campaign carries `brand_id`/`brand_name`, so payloads are identical for both key types. Requesting a campaign outside your key's scope returns `404`.
+
+### Scopes
+
+API keys carry scopes, chosen when the key is created in [dashboard settings](https://dashboard.launchpointhq.com/settings#api):
+
+| Scope             | Grants                                                                          |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `campaigns:read`  | List and read campaigns, tasks, products, creators, submissions, posts, metrics |
+| `campaigns:write` | Create, update, delete, and transition campaigns and tasks (implies read)       |
+| `approvals:write` | Approve/reject creator applications and content submissions                     |
+
+Approvals are a separate scope because approving a submission commits creator compensation — you can give a reporting integration read access without letting it move money. Keys created before version `2026-07` have no campaign scopes; re-scope them in the dashboard.
+
+## Pagination
+
+List endpoints return `{ "data": [...], "has_more": true, "next_cursor": "..." }`, sorted newest first. Pass `next_cursor` as `starting_after` to fetch the next page, with `limit` between 1 and 100 (default 25).
+
+## Idempotency
+
+Send an `Idempotency-Key` header (any unique string, max 255 chars) on [Create Campaign](/api-reference/campaigns/create) and [Add Task](/api-reference/campaigns/create-task) to retry safely: repeating the request within 24 hours returns the original response with an `Idempotent-Replay: true` header. Action endpoints (publish, pause, approve, ...) are naturally idempotent — repeating one is a no-op that returns the unchanged resource.
+
+## Rate limits
+
+120 requests per minute per key (bursts up to 20/s). Every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`; exceeding the limit returns `429` with a `Retry-After` header.
+
+## Errors
+
+Errors use the shared shape `{"error": <http status>, "message": "...", "code": "..."}`. The `code` field is machine-readable — the important ones:
+
+| Code                                   | Status | Meaning                                                   |
+| -------------------------------------- | ------ | --------------------------------------------------------- |
+| `missing_scope`                        | 403    | The key lacks the required scope                          |
+| `brand_not_managed`                    | 403    | Agency key referenced a brand it doesn't manage           |
+| `invalid_state_transition`             | 409    | e.g. pausing a draft, publishing an active campaign       |
+| `field_locked_for_status`              | 409    | Changing an immutable field, or editing a completed campaign |
+| `already_decided` / `already_reviewed` | 409    | Trying to reverse a creator or submission decision        |
+| `validation_failed`                    | 422    | Semantically invalid — the message names the field        |
+
+## Webhooks
+
+Instead of polling, configure a webhook URL to receive events across the whole flow — campaign status changes, creator applications and decisions, submissions and reviews, and live posts with metric refreshes. See [Webhooks](/api-reference/campaigns/webhooks) for the full event catalog, signature verification, and retry behavior.
+
+## Parity with the dashboard
+
+The API covers everything you configure in the dashboard's campaign editor: campaign info, visibility, creator targeting, links, example videos, fulfillment products, and the full task brief (captions, ad disclosure, sounds, requirements, review mode, product limits). Campaigns are editable in every status except `completed`, just like the dashboard.
+
+A few dashboard features are intentionally not in the API: creator compensation and billing, paid-ads boosting, organic warm-up, and Canvas campaigns (readable, but their configuration is dashboard-only).
+
+## Conversions
+
+Affiliate code and conversion reporting is not part of this version. A campaign-level codes and conversions report is planned for a future version.

@@ -7,7 +7,7 @@
     "light": "#7733E1",
     "dark": "#7733E1"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.jpeg",
   "navigation": {
     "tabs": [
       {
@@ -15,25 +15,69 @@
         "groups": [
           {
             "group": "Getting started",
-            "pages": ["api-reference/introduction"]
-          },
-          {
-            "group": "Affiliate Codes",
             "pages": [
-              "api-reference/codes/overview",
-              "api-reference/codes/shopify",
-              "api-reference/codes/levanta",
-              "api-reference/codes/manual",
-              "api-reference/codes/add",
-              "api-reference/codes/increment",
-              "api-reference/codes/update",
-              "api-reference/codes/get",
-              "api-reference/codes/delete"
+              "api-reference/introduction",
+              "api-reference/campaigns/overview",
+              "api-reference/campaigns/webhooks"
             ]
           },
           {
             "group": "Campaigns",
-            "pages": ["api-reference/campaigns"]
+            "pages": [
+              "api-reference/campaigns/list",
+              "api-reference/campaigns/create",
+              "api-reference/campaigns/get",
+              "api-reference/campaigns/update",
+              "api-reference/campaigns/delete"
+            ]
+          },
+          {
+            "group": "Products",
+            "pages": [
+              "api-reference/campaigns/list-products",
+              "api-reference/campaigns/create-product",
+              "api-reference/campaigns/update-product",
+              "api-reference/campaigns/delete-product"
+            ]
+          },
+          {
+            "group": "Lifecycle",
+            "pages": [
+              "api-reference/campaigns/publish",
+              "api-reference/campaigns/pause",
+              "api-reference/campaigns/resume",
+              "api-reference/campaigns/complete"
+            ]
+          },
+          {
+            "group": "Tasks",
+            "pages": [
+              "api-reference/campaigns/list-tasks",
+              "api-reference/campaigns/create-task",
+              "api-reference/campaigns/update-task",
+              "api-reference/campaigns/archive-task"
+            ]
+          },
+          {
+            "group": "Creators",
+            "pages": [
+              "api-reference/campaigns/list-creators",
+              "api-reference/campaigns/approve-creator",
+              "api-reference/campaigns/reject-creator"
+            ]
+          },
+          {
+            "group": "Submissions",
+            "pages": [
+              "api-reference/campaigns/list-submissions",
+              "api-reference/campaigns/get-submission",
+              "api-reference/campaigns/approve-submission",
+              "api-reference/campaigns/reject-submission"
+            ]
+          },
+          {
+            "group": "Reporting",
+            "pages": ["api-reference/campaigns/list-posts", "api-reference/campaigns/metrics"]
           }
         ]
       }
@@ -50,13 +94,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@launchpoint.nyc"
+        "href": "mailto:hi@launchpointhq.com"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://buyer.launchpoint.nyc"
+      "href": "https://dashboard.launchpointhq.com"
     }
   },
   "contextual": {

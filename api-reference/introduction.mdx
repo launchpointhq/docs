@@ -5,10 +5,11 @@ description: "Get set up with the Launchpoint API"
 
 ## Base URL
 
-All requests are under `https://buyer.launchpoint.nyc/api/{version}`. The current version is `2025-11`
+All requests are under `https://api.launchpoint.sh/{version}`. The current version is `2026-07`
 
 | Version | Status    | Release Date | Supported Until |
 | ------- | --------- | ------------ | --------------- |
+| 2026-07 | Supported | 2026-07-15   | —               |
 | 2025-11 | Supported | 2025-11-01   | 2026-12-31      |
 
 ## Authentication
@@ -19,10 +20,22 @@ To authenticate your requests, include the `Authorization` header with the value
 const headers = {
   Authorization: "Bearer <api_key>",
 };
-await fetch("https://buyer.launchpoint.nyc/api/2025-11/<endpoint>", {
+await fetch("https://api.launchpoint.sh/2026-07/<endpoint>", {
   method: "...",
   headers,
 });
 ```
 
-You can create an API key in your [dashboard](https://buyer.launchpoint.nyc/settings#api).
+You can create an API key in your [dashboard](https://dashboard.launchpointhq.com/settings#api).
+
+### Scopes
+
+Keys carry scopes, chosen at creation:
+
+| Scope             | Grants                                                            |
+| ----------------- | ----------------------------------------------------------------- |
+| `campaigns:read`  | Read campaigns, tasks, creators, submissions, posts, and metrics  |
+| `campaigns:write` | Create, update, and transition campaigns and tasks (implies read) |
+| `approvals:write` | Approve or reject creator applications and content submissions    |
+
+Keys created before version `2026-07` have no campaign scopes — re-scope them in the dashboard to use the [Campaigns API](/api-reference/campaigns/overview).
