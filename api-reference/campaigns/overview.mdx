@@ -22,6 +22,24 @@ The Campaigns API lets brands and agencies manage campaigns end-to-end: create a
 5. **Approved content goes live** as [posts](/api-reference/campaigns/list-posts), whose engagement metrics refresh periodically.
 6. **Track everything** through [metrics](/api-reference/campaigns/metrics) — pipeline, performance, and spend in one call.
 
+## Campaigns, tasks, and submissions
+
+**A campaign** is the container: what you're promoting, which creators can join, and how content gets reviewed and paid.
+
+**Tasks** are the campaign's deliverables — each one is a brief telling creators what to make: the platforms and formats, instructions, a required caption, sounds to use, whether ad disclosure is required. All creator work happens against a task. The campaign's `settings.completion_mode` controls how creators engage with the set of tasks: complete all of them (`all_required`), commit to exactly one (`pick_one`), any subset (`all_optional`), or per-task via each task's `is_required` flag (`some_required`).
+
+**Submissions** are the content itself: one creator's video (or carousel) for one task, submitted for review before anything goes live. A submission is reviewed — by you, or automatically when the task's `review_mode` is `autoreview` — and either approved or rejected with feedback, in which case the creator can revise and resubmit (same submission, higher `revision_count`).
+
+**Posts** are what approved submissions become once published: the live TikTok/Instagram/YouTube/Snapchat post, linked back to its submission and task, with engagement metrics that refresh over time.
+
+So the chain is: campaign → task (what to make) → submission (the content, reviewed) → post (live, measured). Creators, submissions, and posts all carry `task_id`, so you can slice any campaign's pipeline and performance by deliverable.
+
+### UGC (Canvas) campaigns vs standard campaigns
+
+Standard campaigns follow the model above: you author a fixed set of task briefs, creators complete them, content is reviewed and posted.
+
+**Canvas campaigns** are Launchpoint's continuous-UGC mode: instead of a fixed brief, approved creators keep producing videos week over week, volume is capped weekly rather than per task, and briefs can be generated from what creators submit. Through the API, Canvas campaigns are **readable with the same objects** — campaigns, tasks, submissions, posts all work — but their configuration lives in the dashboard: tasks on a Canvas campaign are write-locked (409), and per-task fields like `max_posts_per_creator` don't apply. Campaigns created through the API are always standard campaigns.
+
 ## Campaign status
 
 ```
@@ -103,7 +121,7 @@ Instead of polling, configure a webhook URL to receive events across the whole f
 
 The API covers everything you configure in the dashboard's campaign editor: campaign info, visibility, creator targeting, links, example videos, and the full task brief (captions, ad disclosure, sounds, automatic review). Campaigns are editable in every status except `completed`, just like the dashboard.
 
-A few dashboard features are intentionally not in the API: creator compensation and billing, product seeding (shipping or gifting products to creators — it depends on the Shopify integration, so configure it in the dashboard for now), paid-ads boosting, organic warm-up, and Canvas campaigns. Canvas campaigns are readable, but their configuration is dashboard-only and some task fields don't apply to them — for example `max_posts_per_creator`, since Canvas caps videos weekly instead.
+A few dashboard features are intentionally not in the API: creator compensation and billing, product seeding (shipping or gifting products to creators — it depends on the Shopify integration, so configure it in the dashboard for now), paid-ads boosting, organic warm-up, and Canvas campaign configuration (see [UGC campaigns](#ugc-canvas-campaigns-vs-standard-campaigns) above).
 
 ## Conversions
 
