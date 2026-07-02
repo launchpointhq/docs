@@ -32,15 +32,6 @@
             ]
           },
           {
-            "group": "Products",
-            "pages": [
-              "api-reference/campaigns/list-products",
-              "api-reference/campaigns/create-product",
-              "api-reference/campaigns/update-product",
-              "api-reference/campaigns/delete-product"
-            ]
-          },
-          {
             "group": "Lifecycle",
             "pages": [
               "api-reference/campaigns/publish",

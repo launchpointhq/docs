@@ -589,90 +589,6 @@
         }
       }
     },
-    "/campaigns/{campaign_id}/products": {
-      "get": {
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List products",
-        "description": "Returns the campaign's fulfillment products (items shipped or gifted to creators).",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The campaign's products",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FulfillmentProductList"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Add a product",
-        "description": "Adds a fulfillment product to the campaign.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/IdempotencyKey"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The created product",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FulfillmentProduct"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          }
-        }
-      }
-    },
     "/campaigns/{campaign_id}/creators": {
       "get": {
         "tags": [
@@ -1148,86 +1064,6 @@
           }
         }
       }
-    },
-    "/campaigns/{campaign_id}/products/{product_id}": {
-      "patch": {
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Update a product",
-        "description": "Partially updates a fulfillment product. Omitted fields are unchanged.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/ProductId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The updated product",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FulfillmentProduct"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Remove a product",
-        "description": "Removes a fulfillment product from the campaign. Products already selected by creators cannot be removed (409).",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/ProductId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Product removed"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          }
-        }
-      }
     }
   },
   "components": {
@@ -1300,16 +1136,6 @@
         "schema": {
           "type": "string",
           "maxLength": 255
-        }
-      },
-      "ProductId": {
-        "name": "product_id",
-        "in": "path",
-        "description": "The product ID",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
         }
       }
     },
@@ -1648,6 +1474,13 @@
             "type": "integer",
             "example": 2
           },
+          "products": {
+            "type": "array",
+            "description": "The campaign's fulfillment products. Embedded when fetching a single campaign; omitted in list responses.",
+            "items": {
+              "$ref": "#/components/schemas/FulfillmentProduct"
+            }
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -1741,20 +1574,27 @@
             "type": "array",
             "description": "Fulfillment products to create with the campaign",
             "items": {
-              "$ref": "#/components/schemas/ProductCreate"
+              "$ref": "#/components/schemas/ProductInput"
             }
           }
         }
       },
       "CampaignUpdate": {
         "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`video_examples`, `links`, `targeting`) are replaced wholesale. `type` and `brand_id` are immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
+        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`products`, `video_examples`, `links`, `targeting`) are replaced wholesale. `type` and `brand_id` are immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
         "properties": {
           "name": {
             "type": "string"
           },
           "product": {
             "$ref": "#/components/schemas/ProductInfo"
+          },
+          "products": {
+            "type": "array",
+            "description": "Replaces the campaign's product list. Items with an `id` update that product; items without one are added; existing products missing from the array are removed (unless already selected by a creator \u2014 409).",
+            "items": {
+              "$ref": "#/components/schemas/ProductInput"
+            }
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
@@ -2255,7 +2095,7 @@
       },
       "FulfillmentProduct": {
         "type": "object",
-        "description": "A product shipped or gifted to creators as part of the campaign",
+        "description": "A product shipped or gifted to creators as part of the campaign. Managed through the campaign's `products` array on create and update.",
         "properties": {
           "id": {
             "type": "string",
@@ -3062,136 +2902,6 @@
           }
         }
       },
-      "ProductCreate": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Glow Serum 30ml"
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "fulfillment_type": {
-            "type": "string",
-            "description": "How creators receive the product. `shopify`: ordered automatically from your connected store. `manual_ship`: you ship it yourself. `manual_redemption`: creators redeem a code or link. `manual`: handled outside Launchpoint.",
-            "enum": [
-              "shopify",
-              "manual",
-              "manual_redemption",
-              "manual_ship"
-            ],
-            "example": "shopify"
-          },
-          "is_gift": {
-            "type": "boolean",
-            "description": "Whether the product is a gift on top of the campaign's main product",
-            "example": false
-          },
-          "display_order": {
-            "type": "integer",
-            "example": 0
-          },
-          "shopify_variant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The Shopify variant to order, for `shopify` fulfillment"
-          },
-          "redemption_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Shared redemption code, for `manual_redemption` fulfillment"
-          },
-          "redemption_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "redemption_instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "ProductUpdate": {
-        "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Glow Serum 30ml"
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "fulfillment_type": {
-            "type": "string",
-            "description": "How creators receive the product. `shopify`: ordered automatically from your connected store. `manual_ship`: you ship it yourself. `manual_redemption`: creators redeem a code or link. `manual`: handled outside Launchpoint.",
-            "enum": [
-              "shopify",
-              "manual",
-              "manual_redemption",
-              "manual_ship"
-            ],
-            "example": "shopify"
-          },
-          "is_gift": {
-            "type": "boolean",
-            "description": "Whether the product is a gift on top of the campaign's main product",
-            "example": false
-          },
-          "display_order": {
-            "type": "integer",
-            "example": 0
-          },
-          "shopify_variant_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The Shopify variant to order, for `shopify` fulfillment"
-          },
-          "redemption_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Shared redemption code, for `manual_redemption` fulfillment"
-          },
-          "redemption_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "redemption_instructions": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
       "CreatorWebhookPayload": {
         "type": "object",
         "description": "Sent when a creator applies to a campaign or an application is decided",
@@ -3219,6 +2929,77 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ProductInput": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "When updating: include the id to modify an existing product; omit it to add a new one"
+          },
+          "name": {
+            "type": "string",
+            "example": "Glow Serum 30ml"
+          },
+          "image_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "fulfillment_type": {
+            "type": "string",
+            "description": "How creators receive the product. `shopify`: ordered automatically from your connected store. `manual_ship`: you ship it yourself. `manual_redemption`: creators redeem a code or link. `manual`: handled outside Launchpoint.",
+            "enum": [
+              "shopify",
+              "manual",
+              "manual_redemption",
+              "manual_ship"
+            ],
+            "example": "shopify"
+          },
+          "is_gift": {
+            "type": "boolean",
+            "description": "Whether the product is a gift on top of the campaign's main product",
+            "example": false
+          },
+          "display_order": {
+            "type": "integer",
+            "example": 0
+          },
+          "shopify_variant_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The Shopify variant to order, for `shopify` fulfillment"
+          },
+          "redemption_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Shared redemption code, for `manual_redemption` fulfillment"
+          },
+          "redemption_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "redemption_instructions": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
