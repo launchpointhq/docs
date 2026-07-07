@@ -5,14 +5,14 @@ description: "Get set up with the Launchpoint API"
 
 <Warning>
   This API is currently in Private Beta. Features and endpoints may change before public release. Contact us at{" "}
-  <a href="mailto:hi@launchpointhq.com">adam@launchpointhq.com</a> for questions or early access.
+  <a href="mailto:hi@launchpointhq.com">hi@launchpointhq.com</a> for questions or early access.
 </Warning>
 
 ## Base URL
 
 All requests are under `https://api.launchpoint.sh/{version}`. The current version is `2026-07`
 
-| Version | Status    | Release Date | Supported Until | Status       |
+| Version | Status    | Release Date | Supported Until | Phase        |
 | ------- | --------- | ------------ | --------------- | ------------ |
 | 2026-07 | Supported | 2026-07-15   | —               | Private Beta |
 | 2025-11 | Supported | 2025-11-01   | 2026-12-31      | Deprecated   |
@@ -40,7 +40,7 @@ Keys carry scopes, chosen at creation:
 | Scope             | Grants                                                            |
 | ----------------- | ----------------------------------------------------------------- |
 | `campaigns:read`  | Read campaigns, tasks, creators, submissions, posts, and metrics  |
-| `campaigns:write` | Create, update, and transition campaigns and tasks (implies read) |
+| `campaigns:write` | Create, update, delete, and transition campaigns and tasks (implies read) |
 | `approvals:write` | Approve or reject creator applications and content submissions    |
 
 Keys created before version `2026-07` have no campaign scopes — re-scope them in the dashboard to use the [Campaigns API](/api-reference/campaigns/overview).

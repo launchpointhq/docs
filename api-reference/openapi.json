@@ -28,6 +28,7 @@
   "paths": {
     "/campaigns": {
       "get": {
+        "operationId": "listCampaigns",
         "tags": [
           "Campaigns"
         ],
@@ -103,10 +104,14 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "post": {
+        "operationId": "createCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -136,6 +141,14 @@
                   "$ref": "#/components/schemas/Campaign"
                 }
               }
+            },
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "Present and `true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
             }
           },
           "400": {
@@ -152,12 +165,16 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}": {
       "get": {
+        "operationId": "getCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -184,15 +201,19 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "patch": {
+        "operationId": "updateCampaign",
         "tags": [
           "Campaigns"
         ],
         "summary": "Update a campaign",
-        "description": "Partially updates a campaign. Omitted fields are unchanged. `type` and `brand_id` are immutable and completed campaigns cannot be updated; everything else is editable in any other status \u2014 the same rules as the dashboard editor. Note that updating a `pending_approval` campaign withdraws the publish request and returns it to `draft`.",
+        "description": "Partially updates a campaign. Omitted fields are unchanged. `brand_id` is immutable and completed campaigns cannot be updated; everything else is editable in any other status \u2014 the same rules as the dashboard editor. Note that updating a `pending_approval` campaign withdraws the publish request and returns it to `draft`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CampaignId"
@@ -233,10 +254,14 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "delete": {
+        "operationId": "deleteCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -259,12 +284,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/publish": {
       "post": {
+        "operationId": "publishCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -297,12 +326,16 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/pause": {
       "post": {
+        "operationId": "pauseCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -332,12 +365,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/resume": {
       "post": {
+        "operationId": "resumeCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -367,12 +404,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/complete": {
       "post": {
+        "operationId": "completeCampaign",
         "tags": [
           "Campaigns"
         ],
@@ -402,12 +443,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/tasks": {
       "get": {
+        "operationId": "listTasks",
         "tags": [
           "Campaigns"
         ],
@@ -443,10 +488,14 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "post": {
+        "operationId": "createTask",
         "tags": [
           "Campaigns"
         ],
@@ -479,6 +528,14 @@
                   "$ref": "#/components/schemas/Task"
                 }
               }
+            },
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "Present and `true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
             }
           },
           "400": {
@@ -495,12 +552,16 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/tasks/{task_id}": {
       "patch": {
+        "operationId": "updateTask",
         "tags": [
           "Campaigns"
         ],
@@ -549,10 +610,14 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       },
       "delete": {
+        "operationId": "archiveTask",
         "tags": [
           "Campaigns"
         ],
@@ -585,12 +650,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/creators": {
       "get": {
+        "operationId": "listCreators",
         "tags": [
           "Campaigns"
         ],
@@ -632,12 +701,16 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/creators/{creator_id}/approve": {
       "post": {
+        "operationId": "approveCreator",
         "tags": [
           "Campaigns"
         ],
@@ -673,12 +746,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/creators/{creator_id}/reject": {
       "post": {
+        "operationId": "rejectCreator",
         "tags": [
           "Campaigns"
         ],
@@ -714,12 +791,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/submissions": {
       "get": {
+        "operationId": "listSubmissions",
         "tags": [
           "Campaigns"
         ],
@@ -800,12 +881,16 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/submissions/{submission_id}": {
       "get": {
+        "operationId": "getSubmission",
         "tags": [
           "Campaigns"
         ],
@@ -835,12 +920,16 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/submissions/{submission_id}/approve": {
       "post": {
+        "operationId": "approveSubmission",
         "tags": [
           "Campaigns"
         ],
@@ -876,12 +965,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/submissions/{submission_id}/reject": {
       "post": {
+        "operationId": "rejectSubmission",
         "tags": [
           "Campaigns"
         ],
@@ -927,20 +1020,37 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/posts": {
       "get": {
+        "operationId": "listPosts",
         "tags": [
           "Campaigns"
         ],
         "summary": "List posts",
-        "description": "Returns live published posts with their latest engagement metrics, newest first. Metrics are refreshed periodically; `metrics_updated_at` tells you how fresh they are.",
+        "description": "Returns published posts with their latest engagement metrics, newest first. Posts taken down after going live remain in the list with `status: \"deleted\"` \u2014 filter with `status` to include or exclude them. Metrics are refreshed periodically; `metrics_updated_at` tells you how fresh they are.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CampaignId"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by post status. Defaults to returning all posts, including `deleted` ones.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live",
+                "deleted"
+              ]
+            }
           },
           {
             "name": "creator_id",
@@ -1013,17 +1123,21 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/campaigns/{campaign_id}/metrics": {
       "get": {
+        "operationId": "getCampaignMetrics",
         "tags": [
           "Campaigns"
         ],
         "summary": "Get campaign metrics",
-        "description": "Returns the campaign's report: creator funnel, content performance, and spend. Pass `group_by` to additionally break performance and spend down by task or platform.",
+        "description": "Returns the campaign's report: creator funnel, content performance, and spend. Pass `group_by` to additionally break performance down by task or platform. Spend is reported only at the campaign level (and per creator via List Creators) \u2014 creator payouts are not attributable to a single platform, so groups carry no spend.",
         "parameters": [
           {
             "$ref": "#/components/parameters/CampaignId"
@@ -1061,12 +1175,16 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/targeting/properties": {
       "get": {
+        "operationId": "listTargetingProperties",
         "tags": [
           "Campaigns"
         ],
@@ -1085,12 +1203,16 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
     "/targeting/properties/{property_id}/values": {
       "get": {
+        "operationId": "listTargetingPropertyValues",
         "tags": [
           "Campaigns"
         ],
@@ -1132,6 +1254,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
@@ -1279,6 +1404,36 @@
             }
           }
         }
+      },
+      "TooManyRequests": {
+        "description": "The rate limit was exceeded (`rate_limited`). Wait for the number of seconds in the `Retry-After` header before retrying.",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before retrying.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "description": "Requests allowed per minute for this key.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Requests remaining in the current window.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -1318,17 +1473,6 @@
             "format": "date-time"
           }
         }
-      },
-      "CampaignType": {
-        "type": "string",
-        "description": "What the campaign promotes",
-        "enum": [
-          "product",
-          "app",
-          "song",
-          "generic"
-        ],
-        "example": "product"
       },
       "Platform": {
         "type": "string",
@@ -1399,12 +1543,11 @@
           },
           "post_approval_mode": {
             "type": "string",
-            "description": "How strictly content is reviewed before posting. `always` requires review of every submission.",
+            "description": "How strictly content is reviewed before posting.",
             "enum": [
               "strict",
               "moderate",
-              "lenient",
-              "always"
+              "lenient"
             ],
             "example": "strict"
           },
@@ -1439,9 +1582,6 @@
           },
           "status_detail": {
             "$ref": "#/components/schemas/CampaignStatusDetail"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CampaignType"
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
@@ -1562,17 +1702,12 @@
       "CampaignCreate": {
         "type": "object",
         "required": [
-          "name",
-          "type",
-          "product"
+          "name"
         ],
         "properties": {
           "name": {
             "type": "string",
             "example": "Spring UGC Push"
-          },
-          "type": {
-            "$ref": "#/components/schemas/CampaignType"
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
@@ -1642,7 +1777,7 @@
       },
       "CampaignUpdate": {
         "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`video_examples`, `links`, `targeting`) are replaced wholesale. `type` and `brand_id` are immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
+        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`video_examples`, `links`, `targeting`) are replaced wholesale. `brand_id` is immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
         "properties": {
           "name": {
             "type": "string"
@@ -1726,11 +1861,10 @@
       },
       "TaskStatus": {
         "type": "string",
-        "description": "`active` tasks accept new work; `archived` tasks accept no new creators; `closed` tasks are finished",
+        "description": "`active` tasks accept new work; `archived` tasks accept no new creators",
         "enum": [
           "active",
-          "archived",
-          "closed"
+          "archived"
         ],
         "example": "active"
       },
@@ -2241,11 +2375,13 @@
       },
       "SubmissionStatus": {
         "type": "string",
-        "description": "`in_review` submissions are waiting on your decision. Rejected submissions return to `in_review` when the creator submits a revision.",
+        "description": "`in_review`: waiting on your decision (a rejected submission returns here when the creator submits a revision). `approved`: cleared to post. `rejected`: you sent it back for changes. `failed`: automatic validation or processing failed \u2014 see `failure_reason`. `post_deleted`: the content was posted and later taken down.",
         "enum": [
           "in_review",
           "approved",
-          "rejected"
+          "rejected",
+          "failed",
+          "post_deleted"
         ],
         "example": "in_review"
       },
@@ -2306,6 +2442,13 @@
               "null"
             ],
             "description": "The most recent rejection feedback sent to the creator, if any"
+          },
+          "failure_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When `status` is `failed`, a short explanation of what went wrong (e.g. media could not be processed, or the required post could not be verified). Null for every other status."
           },
           "submitted_at": {
             "type": [
@@ -2393,6 +2536,15 @@
           "is_story": {
             "type": "boolean",
             "example": false
+          },
+          "status": {
+            "type": "string",
+            "description": "`live`: the post is up and its metrics keep refreshing. `deleted`: it was taken down after going live \u2014 metrics stop refreshing and hold their last values.",
+            "enum": [
+              "live",
+              "deleted"
+            ],
+            "example": "live"
           },
           "posted_at": {
             "type": [
@@ -2516,7 +2668,7 @@
           },
           "groups": {
             "type": "array",
-            "description": "Present when `group_by` is set: the same performance and spend blocks broken down per task or per platform",
+            "description": "Present when `group_by` is set: the same performance block broken down per task or per platform. Spend is not broken down per group.",
             "items": {
               "$ref": "#/components/schemas/CampaignMetricsGroup"
             }
@@ -2547,10 +2699,6 @@
           },
           "performance": {
             "$ref": "#/components/schemas/EngagementMetrics"
-          },
-          "spend_cents": {
-            "type": "integer",
-            "example": 61000
           }
         }
       },
@@ -2953,7 +3101,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "creator.applied": {
@@ -2973,7 +3132,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "creator.approved": {
@@ -2993,7 +3163,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "creator.rejected": {
@@ -3013,7 +3194,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "submission.created": {
@@ -3033,7 +3225,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "submission.approved": {
@@ -3053,7 +3256,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "submission.rejected": {
@@ -3073,7 +3287,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "post.created": {
@@ -3093,7 +3318,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "post.metrics_updated": {
@@ -3113,7 +3349,18 @@
           "200": {
             "description": "Return any 2xx status to acknowledge receipt"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-Launchpoint-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     }
   }
