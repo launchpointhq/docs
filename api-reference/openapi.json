@@ -1543,11 +1543,12 @@
           },
           "post_approval_mode": {
             "type": "string",
-            "description": "How strictly content is reviewed before posting.",
+            "description": "How strictly submitted content is reviewed before it can be posted. `strict`, `moderate`, and `lenient` tune the review bar; `always` auto-approves every submission with no manual review.",
             "enum": [
               "strict",
               "moderate",
-              "lenient"
+              "lenient",
+              "always"
             ],
             "example": "strict"
           },
@@ -2433,7 +2434,7 @@
           },
           "revision_count": {
             "type": "integer",
-            "description": "How many times the creator has revised this submission",
+            "description": "How many times the creator has re-submitted this content after a rejection. 0 for an initial submission that has never been sent back.",
             "example": 1
           },
           "feedback": {
@@ -2644,7 +2645,7 @@
               },
               "engagement_rate": {
                 "type": "number",
-                "description": "(likes + comments + shares + saves) / views",
+                "description": "(likes + comments + shares + saves) / views. 0 when the campaign has no views.",
                 "example": 0.057
               }
             }
@@ -2824,7 +2825,7 @@
         "properties": {
           "feedback": {
             "type": "string",
-            "description": "Feedback delivered to the creator \u2014 tells them what to fix before resubmitting.",
+            "description": "Feedback delivered to the creator, telling them what to fix before resubmitting. If omitted, the creator receives a generic 'changes requested' note.",
             "example": "Great energy! Please reshoot with the product visible in the first 3 seconds."
           }
         }
@@ -2900,8 +2901,8 @@
         "properties": {
           "property": {
             "type": "string",
-            "description": "The creator property to match on \u2014 an `id` from [List Targeting Properties](/api-reference/campaigns/list-targeting-properties)",
-            "example": "country"
+            "description": "The creator property to match on: an opaque `id` from [List Targeting Properties](/api-reference/campaigns/list-targeting-properties). It may be a UUID or a short slug (e.g. `followers`); pass it back exactly as returned.",
+            "example": "877972f8-af4b-4918-95df-d35377234817"
           },
           "operator": {
             "type": "string",
@@ -2916,10 +2917,9 @@
               "type": "string"
             },
             "example": [
-              "US",
-              "CA"
+              "9b1f8c72-3d4e-4a2b-8c1a-2f6e5d4c3b2a"
             ],
-            "description": "For `option` properties: values from the property's values list. For `number` properties: `\"min-max\"` range strings."
+            "description": "For `option` properties: opaque `value`s from the property's values list, passed verbatim (not the human-readable label). For `number` properties: a single `\"min-max\"` range string, e.g. `\"10000-50000\"`."
           }
         }
       },
@@ -3012,7 +3012,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Use as `property` in targeting conditions",
+            "description": "Use as `property` in a targeting condition. Opaque: pass it back exactly as returned (may be a UUID or a short slug like `followers`).",
             "example": "877972f8-af4b-4918-95df-d35377234817"
           },
           "name": {
@@ -3046,11 +3046,12 @@
         "properties": {
           "value": {
             "type": "string",
-            "description": "Use in a targeting condition's `values` array",
-            "example": "fitness"
+            "description": "Opaque identifier for this value. Pass it back verbatim in a targeting condition's `values` array. Do not send the `label` and do not construct these yourself; the format (often a UUID) is not guaranteed.",
+            "example": "9b1f8c72-3d4e-4a2b-8c1a-2f6e5d4c3b2a"
           },
           "label": {
             "type": "string",
+            "description": "Human-readable name for the value. For display only; never send this as a condition value.",
             "example": "Fitness"
           }
         }
