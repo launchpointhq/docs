@@ -501,6 +501,9 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid post id"
+          },
           "404": {
             "description": "Post not found"
           }
@@ -651,6 +654,9 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid post id"
+          },
           "404": {
             "description": "Post not found"
           }
@@ -680,7 +686,7 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Specific post IDs to export (overrides filters)"
+                    "description": "Specific post IDs to export. When present, this overrides filters; an empty array returns a header-only CSV."
                   }
                 }
               }
