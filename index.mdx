@@ -1,132 +1,110 @@
 ---
-title: "Launchpoint Public API"
-description: "Build reliable creator marketing tools with verified Launchpoint data."
-mode: "custom"
-hideFooterPagination: true
+title: "Make your first API request"
+sidebarTitle: "Quickstart"
+description: "Create a Launchpoint API key and fetch your first program in a few minutes."
+icon: "zap"
 ---
 
-<div className="lp-home">
-  <section className="lp-hero" aria-labelledby="lp-hero-title">
-    <div className="lp-hero-copy">
-      <div className="lp-kicker">
-        <span className="lp-kicker-dot" aria-hidden="true" />
-        PUBLIC API · V1
-      </div>
+You only need an enabled Launchpoint account, an API key, and a server that can keep that key private.
 
-      <h1 id="lp-hero-title" className="lp-title">
-        Build on verified creator data.
-      </h1>
+<Steps>
+  <Step title="Create an API key">
+    Open [Dashboard → Settings → API](https://dashboard.launchpointhq.com/settings#api), then create a key.
 
-      <p className="lp-lede">
-        Bring programs, posts, performance, creators, contracts, and payouts
-        into your own tools with one clear REST API.
-      </p>
+    API access must be enabled for your company. If the API section is hidden, ask [Launchpoint support](mailto:hi@launchpointhq.com) to enable it.
 
-      <div className="lp-actions">
-        <a className="lp-button lp-button-primary" href="/quickstart">
-          Make your first request
-          <span aria-hidden="true">→</span>
-        </a>
-        <a className="lp-button lp-button-secondary" href="/api-reference/introduction">
-          Read the API overview
-        </a>
-      </div>
-    </div>
+    <Warning>
+      Copy the key when it is created. Keep it out of browser code, mobile apps, logs, and source control.
+    </Warning>
+  </Step>
 
-    <div className="lp-request" aria-label="Example API request">
-      <div className="lp-request-bar">
-        <div className="lp-request-dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <span>GET /programs</span>
-      </div>
-      <pre><code><span className="lp-code-muted">curl</span> \
-  <span className="lp-code-blue">https://dashboard.launchpointhq.com/api/v1/programs</span> \
-  -H <span className="lp-code-string">&quot;x-api-key: $LAUNCHPOINT_API_KEY&quot;</span></code></pre>
-      <div className="lp-response">
-        <span className="lp-status-dot" aria-hidden="true" />
-        <span>200 OK</span>
-        <span className="lp-response-note">Verified data, ready to use</span>
-      </div>
-    </div>
-  </section>
+  <Step title="Store the key on your server">
+    Add the key to your server environment:
 
-  <section className="lp-path" aria-labelledby="lp-path-title">
-    <div className="lp-section-heading">
-      <p className="lp-eyebrow">START BUILDING</p>
-      <h2 id="lp-path-title">From key to live request in minutes.</h2>
-    </div>
+    ```bash
+    export LAUNCHPOINT_API_KEY="lp_pk_..."
+    ```
+  </Step>
 
-    <ol className="lp-steps">
-      <li>
-        <span className="lp-step-number">01</span>
-        <div>
-          <h3>Create a key</h3>
-          <p>Generate an API key from your Launchpoint dashboard settings.</p>
-        </div>
-      </li>
-      <li>
-        <span className="lp-step-number">02</span>
-        <div>
-          <h3>Send one request</h3>
-          <p>Add the key to the <code>x-api-key</code> header and call an endpoint.</p>
-        </div>
-      </li>
-      <li>
-        <span className="lp-step-number">03</span>
-        <div>
-          <h3>Build your workflow</h3>
-          <p>Use the same trusted data your team sees inside Launchpoint.</p>
-        </div>
-      </li>
-    </ol>
-  </section>
+  <Step title="Fetch your programs">
+    Send the key in the `x-api-key` header:
 
-  <section className="lp-capabilities" aria-labelledby="lp-capabilities-title">
-    <div className="lp-section-heading">
-      <p className="lp-eyebrow">ONE API, THE FULL PICTURE</p>
-      <h2 id="lp-capabilities-title">The data behind every creator program.</h2>
-    </div>
+    <CodeGroup>
+      ```bash cURL
+      curl "https://dashboard.launchpointhq.com/api/v1/programs" \
+        --header "x-api-key: $LAUNCHPOINT_API_KEY"
+      ```
 
-    <div className="lp-capability-list">
-      <div>
-        <span>Programs</span>
-        <p>Read campaign details and create program invite links.</p>
-      </div>
-      <div>
-        <span>Posts &amp; analytics</span>
-        <p>Track content, metrics history, KPIs, accounts, and recruitment.</p>
-      </div>
-      <div>
-        <span>Creators &amp; contracts</span>
-        <p>Connect creator records, collections, agreements, and status.</p>
-      </div>
-      <div>
-        <span>Payouts</span>
-        <p>Read wallet activity, pending payments, and payout totals.</p>
-      </div>
-    </div>
-  </section>
+      ```javascript JavaScript
+      const response = await fetch(
+        "https://dashboard.launchpointhq.com/api/v1/programs",
+        {
+          headers: {
+            "x-api-key": process.env.LAUNCHPOINT_API_KEY,
+          },
+        },
+      );
 
-  <section className="lp-bottom-cta" aria-labelledby="lp-bottom-title">
-    <div>
-      <p className="lp-eyebrow">READY WHEN YOU ARE</p>
-      <h2 id="lp-bottom-title">Make the first request.</h2>
-    </div>
-    <a className="lp-button lp-button-primary" href="/quickstart">
-      Open the quickstart
-      <span aria-hidden="true">→</span>
-    </a>
-  </section>
+      if (!response.ok) {
+        throw new Error(`Launchpoint API returned ${response.status}`);
+      }
 
-  <div className="lp-home-footer" role="contentinfo">
-    <span>Launchpoint Public API · v1</span>
-    <div>
-      <a href="https://www.launchpointhq.com">Launchpoint</a>
-      <a href="mailto:hi@launchpointhq.com">Support</a>
-      <a href="https://dashboard.launchpointhq.com">Dashboard</a>
-    </div>
-  </div>
-</div>
+      const programs = await response.json();
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Check the response
+
+A successful list request returns `data`, `page`, and `total`:
+
+```json
+{
+  "data": [],
+  "page": 1,
+  "total": 0
+}
+```
+
+Every response also includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+
+## Use company or agency scope
+
+Routes that support `scope` use `scope=company` by default. This returns only the API key company's data.
+
+A parent agency can pass `scope=agency` to include its own data and data from linked brands. Other keys receive `403` for this scope.
+
+## Stay within the rate limit
+
+The standard limit is 100 requests per minute per API key. Approved partner accounts receive 400 requests per minute. Requests over the limit return `429`.
+
+## Handle errors by status
+
+Errors use this shape:
+
+```json
+{ "error": "Invalid request" }
+```
+
+Some errors also include a `code`.
+
+| Status | Meaning |
+| --- | --- |
+| `400` | The request is missing or has an invalid value. |
+| `401` | The API key is missing or invalid. |
+| `402` | API access or the company's payment setup is not ready. |
+| `403` | The key cannot access the requested company or agency scope. |
+| `404` | The requested record was not found. |
+| `429` | The API key has reached its per-minute limit. |
+| `500` | Launchpoint could not complete the request. |
+
+## Read timestamps and pages
+
+Timestamps are Unix timestamps in milliseconds unless a field says otherwise.
+
+Most list endpoints accept `page` and `limit` and return `data`, `page`, and `total`. Some also return `totalPages`.
+
+## Choose your next endpoint
+
+Use the endpoint groups in the sidebar to explore programs, posts, analytics, payouts, creators, and contracts.
