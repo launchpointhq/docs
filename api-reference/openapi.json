@@ -2011,7 +2011,9 @@
                             "type": "string"
                           },
                           "contractId": {
-                            "type": "string"
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Offer-level contract id, or null when the pending reserve has no contract row"
                           },
                           "contractName": {
                             "type": "string"
