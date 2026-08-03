@@ -429,6 +429,8 @@
                         },
                         "contract": {
                           "type": "object",
+                          "nullable": true,
+                          "description": "Contract details, or null when the post creator has no offer-level contract.",
                           "properties": {
                             "id": {
                               "type": "string"
@@ -1960,9 +1962,11 @@
             "in": "query",
             "name": "minAmount",
             "schema": {
-              "type": "number"
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01
             },
-            "description": "Minimum payout amount filter (in dollars)"
+            "description": "Minimum payout amount in dollars, with at most two decimal places"
           },
           {
             "in": "query",
