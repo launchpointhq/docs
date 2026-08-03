@@ -2,20 +2,44 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Launchpoint",
+  "description": "Build on Launchpoint's verified creator marketing data with the Public API.",
   "colors": {
-    "primary": "#7733E1",
-    "light": "#7733E1",
-    "dark": "#7733E1"
+    "primary": "#00A5EF",
+    "light": "#40BCF3",
+    "dark": "#0B86D9"
+  },
+  "appearance": {
+    "default": "system",
+    "strict": false
+  },
+  "fonts": {
+    "heading": {
+      "family": "LP Display",
+      "source": "https://www.launchpointhq.com/assets/lp-display.woff2",
+      "format": "woff2",
+      "weight": 480
+    },
+    "body": {
+      "family": "Geist",
+      "source": "https://www.launchpointhq.com/assets/geist.woff2",
+      "format": "woff2",
+      "weight": 450
+    }
+  },
+  "icons": {
+    "library": "lucide"
   },
   "favicon": "/favicon.jpeg",
   "navigation": {
     "tabs": [
       {
-        "tab": "API reference",
+        "tab": "Public API",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Start here",
             "pages": [
+              "index",
+              "quickstart",
               "api-reference/introduction"
             ]
           },
@@ -35,10 +59,15 @@
   },
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://www.launchpointhq.com"
   },
   "navbar": {
     "links": [
+      {
+        "label": "Website",
+        "href": "https://www.launchpointhq.com"
+      },
       {
         "label": "Support",
         "href": "mailto:hi@launchpointhq.com"
@@ -46,12 +75,12 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
+      "label": "Open dashboard",
       "href": "https://dashboard.launchpointhq.com"
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
+    "options": ["copy", "view", "chatgpt", "claude"]
   },
   "footer": {
     "socials": {

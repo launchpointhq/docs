@@ -1,10 +1,132 @@
 ---
-title: "Welcome"
-description: "Manage your Launchpoint account programatically"
+title: "Launchpoint Public API"
+description: "Build reliable creator marketing tools with verified Launchpoint data."
+mode: "custom"
+hideFooterPagination: true
 ---
 
-## Get started
+<div className="lp-home">
+  <section className="lp-hero" aria-labelledby="lp-hero-title">
+    <div className="lp-hero-copy">
+      <div className="lp-kicker">
+        <span className="lp-kicker-dot" aria-hidden="true" />
+        PUBLIC API · V1
+      </div>
 
-<Card title="API Introduction" icon="rocket" href="/api-reference/introduction" horizontal>
-  Start here
-</Card>
+      <h1 id="lp-hero-title" className="lp-title">
+        Build on verified creator data.
+      </h1>
+
+      <p className="lp-lede">
+        Bring programs, posts, performance, creators, contracts, and payouts
+        into your own tools with one clear REST API.
+      </p>
+
+      <div className="lp-actions">
+        <a className="lp-button lp-button-primary" href="/quickstart">
+          Make your first request
+          <span aria-hidden="true">→</span>
+        </a>
+        <a className="lp-button lp-button-secondary" href="/api-reference/introduction">
+          Read the API overview
+        </a>
+      </div>
+    </div>
+
+    <div className="lp-request" aria-label="Example API request">
+      <div className="lp-request-bar">
+        <div className="lp-request-dots" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <span>GET /programs</span>
+      </div>
+      <pre><code><span className="lp-code-muted">curl</span> \
+  <span className="lp-code-blue">https://dashboard.launchpointhq.com/api/v1/programs</span> \
+  -H <span className="lp-code-string">&quot;x-api-key: $LAUNCHPOINT_API_KEY&quot;</span></code></pre>
+      <div className="lp-response">
+        <span className="lp-status-dot" aria-hidden="true" />
+        <span>200 OK</span>
+        <span className="lp-response-note">Verified data, ready to use</span>
+      </div>
+    </div>
+  </section>
+
+  <section className="lp-path" aria-labelledby="lp-path-title">
+    <div className="lp-section-heading">
+      <p className="lp-eyebrow">START BUILDING</p>
+      <h2 id="lp-path-title">From key to live request in minutes.</h2>
+    </div>
+
+    <ol className="lp-steps">
+      <li>
+        <span className="lp-step-number">01</span>
+        <div>
+          <h3>Create a key</h3>
+          <p>Generate an API key from your Launchpoint dashboard settings.</p>
+        </div>
+      </li>
+      <li>
+        <span className="lp-step-number">02</span>
+        <div>
+          <h3>Send one request</h3>
+          <p>Add the key to the <code>x-api-key</code> header and call an endpoint.</p>
+        </div>
+      </li>
+      <li>
+        <span className="lp-step-number">03</span>
+        <div>
+          <h3>Build your workflow</h3>
+          <p>Use the same trusted data your team sees inside Launchpoint.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section className="lp-capabilities" aria-labelledby="lp-capabilities-title">
+    <div className="lp-section-heading">
+      <p className="lp-eyebrow">ONE API, THE FULL PICTURE</p>
+      <h2 id="lp-capabilities-title">The data behind every creator program.</h2>
+    </div>
+
+    <div className="lp-capability-list">
+      <div>
+        <span>Programs</span>
+        <p>Read campaign details and create program invite links.</p>
+      </div>
+      <div>
+        <span>Posts &amp; analytics</span>
+        <p>Track content, metrics history, KPIs, accounts, and recruitment.</p>
+      </div>
+      <div>
+        <span>Creators &amp; contracts</span>
+        <p>Connect creator records, collections, agreements, and status.</p>
+      </div>
+      <div>
+        <span>Payouts</span>
+        <p>Read wallet activity, pending payments, and payout totals.</p>
+      </div>
+    </div>
+  </section>
+
+  <section className="lp-bottom-cta" aria-labelledby="lp-bottom-title">
+    <div>
+      <p className="lp-eyebrow">READY WHEN YOU ARE</p>
+      <h2 id="lp-bottom-title">Make the first request.</h2>
+    </div>
+    <a className="lp-button lp-button-primary" href="/quickstart">
+      Open the quickstart
+      <span aria-hidden="true">→</span>
+    </a>
+  </section>
+
+  <div className="lp-home-footer" role="contentinfo">
+    <span>Launchpoint Public API · v1</span>
+    <div>
+      <a href="https://www.launchpointhq.com">Launchpoint</a>
+      <a href="mailto:hi@launchpointhq.com">Support</a>
+      <a href="https://dashboard.launchpointhq.com">Dashboard</a>
+    </div>
+  </div>
+</div>
