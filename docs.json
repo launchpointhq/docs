@@ -16,66 +16,15 @@
           {
             "group": "Getting started",
             "pages": [
-              "api-reference/introduction",
-              "api-reference/campaigns/overview",
-              "api-reference/campaigns/webhooks"
+              "api-reference/introduction"
             ]
           },
           {
-            "group": "Campaigns",
-            "pages": [
-              "api-reference/campaigns/list",
-              "api-reference/campaigns/create",
-              "api-reference/campaigns/get",
-              "api-reference/campaigns/update",
-              "api-reference/campaigns/delete"
-            ]
-          },
-          {
-            "group": "Targeting",
-            "pages": [
-              "api-reference/campaigns/list-targeting-properties",
-              "api-reference/campaigns/list-targeting-property-values"
-            ]
-          },
-          {
-            "group": "Lifecycle",
-            "pages": [
-              "api-reference/campaigns/publish",
-              "api-reference/campaigns/pause",
-              "api-reference/campaigns/resume",
-              "api-reference/campaigns/complete"
-            ]
-          },
-          {
-            "group": "Tasks",
-            "pages": [
-              "api-reference/campaigns/list-tasks",
-              "api-reference/campaigns/create-task",
-              "api-reference/campaigns/update-task",
-              "api-reference/campaigns/archive-task"
-            ]
-          },
-          {
-            "group": "Creators",
-            "pages": [
-              "api-reference/campaigns/list-creators",
-              "api-reference/campaigns/approve-creator",
-              "api-reference/campaigns/reject-creator"
-            ]
-          },
-          {
-            "group": "Submissions",
-            "pages": [
-              "api-reference/campaigns/list-submissions",
-              "api-reference/campaigns/get-submission",
-              "api-reference/campaigns/approve-submission",
-              "api-reference/campaigns/reject-submission"
-            ]
-          },
-          {
-            "group": "Reporting",
-            "pages": ["api-reference/campaigns/list-posts", "api-reference/campaigns/metrics"]
+            "group": "Endpoints",
+            "openapi": {
+              "source": "api-reference/openapi.json",
+              "directory": "api-reference/v1"
+            }
           }
         ]
       }

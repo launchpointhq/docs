@@ -1,991 +1,1599 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.4",
   "info": {
-    "title": "Launchpoint Buyer API",
-    "description": "The API Launchpoint brands and agencies can use to manage their campaigns",
-    "license": {
-      "name": "MIT",
-      "identifier": "MIT"
-    },
-    "version": "2026-07"
+    "title": "Launchpoint Public API",
+    "version": "1.0.0",
+    "description": "REST API for Launchpoint brands and agencies. Authenticate with an API key in the `x-api-key` header.\n\n## Requirements\n- Public API access must be enabled for the company.\n- The company must have money in its Launchpoint wallet or a saved payment method. Otherwise requests return `402 { \"error\": \"Active subscription required\" }`.\n- Create and manage API keys in Dashboard → Settings → API.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
   },
   "servers": [
     {
-      "url": "https://api.launchpoint.sh/2026-07"
-    }
-  ],
-  "security": [
-    {
-      "bearerAuth": []
+      "url": "https://dashboard.launchpointhq.com/api/v1",
+      "description": "Production server"
     }
   ],
   "tags": [
     {
-      "name": "Campaigns",
-      "description": "Create and manage campaigns, review creators and content, and read performance data"
+      "name": "Programs",
+      "description": "Campaign and program management"
+    },
+    {
+      "name": "Posts",
+      "description": "Social media posts and content"
+    },
+    {
+      "name": "Analytics",
+      "description": "Performance metrics and KPIs"
+    },
+    {
+      "name": "Payouts",
+      "description": "Payout history, balances, and pending creator money"
+    },
+    {
+      "name": "Contracts",
+      "description": "Creator contracts and agreements"
+    },
+    {
+      "name": "Creators",
+      "description": "Creator profiles and statistics"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key from Dashboard → Settings → API"
+      }
+    },
+    "parameters": {
+      "ScopeParam": {
+        "in": "query",
+        "name": "scope",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "company",
+            "agency"
+          ],
+          "default": "company"
+        },
+        "description": "Data scope. `company` (default) returns only the API key company's data. `agency` returns the parent agency plus its linked brands. `scope=agency` requires a parent agency key; other keys receive `403`."
+      }
+    },
+    "schemas": {}
+  },
+  "security": [
+    {
+      "apiKeyAuth": []
     }
   ],
   "paths": {
-    "/campaigns": {
+    "/programs": {
       "get": {
-        "operationId": "listCampaigns",
         "tags": [
-          "Campaigns"
+          "Programs"
         ],
-        "summary": "List campaigns",
-        "description": "Returns campaigns visible to the API key. Brand keys see their own campaigns; agency keys see campaigns of all brands they manage. Results are sorted by creation date, newest first.",
+        "summary": "List programs",
+        "description": "Retrieve all programs for your company with pagination and filtering.\n\nPrograms represent campaigns or marketing initiatives that creators participate in.\n",
         "parameters": [
           {
-            "name": "status",
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
             "in": "query",
-            "description": "Filter by status. Repeat the parameter to match any of several statuses (e.g. `?status=active&status=paused`).",
-            "required": false,
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "active",
+                "paused",
+                "completed",
+                "archived"
+              ]
+            },
+            "description": "Filter programs by status"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search programs by name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved programs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "integer"
+                          },
+                          "updatedAt": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid API key"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/posts": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "List posts",
+        "description": "Retrieve social media posts with comprehensive filtering options.\n\nPosts can be filtered by program, platform, creator, date range, and more.\nResults include engagement metrics (views, likes, comments, etc.)\n\nAgency accounts can pass `scope=agency` to list posts across the parent\nagency and every subaccount in one call.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "program",
+            "style": "form",
             "explode": true,
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/CampaignStatus"
-              }
-            }
-          },
-          {
-            "name": "brand_id",
-            "in": "query",
-            "description": "Narrow results to a single brand. Agency keys only; must be a brand the agency manages.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "created_after",
-            "in": "query",
-            "description": "Only campaigns created at or after this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "created_before",
-            "in": "query",
-            "description": "Only campaigns created before this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/StartingAfter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A page of campaigns",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CampaignList"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      },
-      "post": {
-        "operationId": "createCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Create a campaign",
-        "description": "Creates a campaign in `draft` status. Drafts can be skeletal \u2014 tasks may be added later \u2014 but a campaign must have at least one active task before it can be published. Requires the `campaigns:write` scope. Agency keys must specify `brand_id`.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/IdempotencyKey"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CampaignCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The created campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
+                "type": "string"
               }
             },
-            "headers": {
-              "Idempotent-Replay": {
-                "description": "Present and `true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}": {
-      "get": {
-        "operationId": "getCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Get a campaign",
-        "description": "Returns a single campaign with its tasks embedded.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      },
-      "patch": {
-        "operationId": "updateCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Update a campaign",
-        "description": "Partially updates a campaign. Omitted fields are unchanged. `brand_id` is immutable and completed campaigns cannot be updated; everything else is editable in any other status \u2014 the same rules as the dashboard editor. Note that updating a `pending_approval` campaign withdraws the publish request and returns it to `draft`.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CampaignUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The updated campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Delete a draft campaign",
-        "description": "Deletes a campaign that has never gone live. Only campaigns in `draft` or `pending_approval` status can be deleted; published campaigns should be completed instead.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Campaign deleted"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/publish": {
-      "post": {
-        "operationId": "publishCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Request publish",
-        "description": "Submits a draft campaign for review. Publishing is asynchronous: the campaign moves to `pending_approval` and becomes `active` once approved by Launchpoint (you'll receive a `campaign.status_changed` webhook, if configured). If the campaign is denied it returns to `draft` with `status_detail` explaining why. Publishing requires at least one active task (422) \u2014 unless the campaign requires creator approval, in which case it can publish as a waitlist and collect creators before its brief exists, or it's a Canvas campaign that auto-creates briefs from submissions.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Publish request accepted; campaign is pending approval",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/pause": {
-      "post": {
-        "operationId": "pauseCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Pause a campaign",
-        "description": "Pauses an active campaign. Creators can no longer start work or submit content until the campaign is resumed. Pausing an already-paused campaign is a no-op and returns the unchanged campaign.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The paused campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/resume": {
-      "post": {
-        "operationId": "resumeCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Resume a campaign",
-        "description": "Resumes a paused campaign. Resuming an already-active campaign is a no-op and returns the unchanged campaign. A campaign that was auto-paused for a billing issue cannot be resumed until the issue is fixed in the dashboard.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The resumed campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/complete": {
-      "post": {
-        "operationId": "completeCampaign",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Complete a campaign",
-        "description": "Ends a campaign permanently. Outstanding work is settled. This is a terminal action \u2014 a completed campaign cannot be resumed or edited.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The completed campaign",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Campaign"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/tasks": {
-      "get": {
-        "operationId": "listTasks",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List tasks",
-        "description": "Returns the campaign's tasks (deliverables).",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
+            "description": "Filter by program IDs (multiple allowed)"
           },
           {
-            "name": "status",
             "in": "query",
-            "description": "Filter by task status",
-            "required": false,
+            "name": "platform",
+            "style": "form",
+            "explode": true,
             "schema": {
-              "$ref": "#/components/schemas/TaskStatus"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The campaign's tasks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskList"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      },
-      "post": {
-        "operationId": "createTask",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Add a task",
-        "description": "Adds a task (deliverable) to a campaign. API-created tasks use Launchpoint's standard creator compensation for the campaign; custom compensation is configured in the dashboard.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/IdempotencyKey"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The created task",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "tiktok",
+                  "instagram",
+                  "youtube"
+                ]
               }
             },
-            "headers": {
-              "Idempotent-Replay": {
-                "description": "Present and `true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/tasks/{task_id}": {
-      "patch": {
-        "operationId": "updateTask",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Update a task",
-        "description": "Partially updates a task. Omitted fields are unchanged.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
+            "description": "Filter by platforms (multiple allowed)"
           },
           {
-            "$ref": "#/components/parameters/TaskId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The updated task",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationFailed"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "archiveTask",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Archive a task",
-        "description": "Archives a task so no new creators can start it. Work already in progress is unaffected. Tasks are never hard-deleted; the archived task is returned with `status: \"archived\"`.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/TaskId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The archived task",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/creators": {
-      "get": {
-        "operationId": "listCreators",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List creators",
-        "description": "Returns creators on the campaign with their application status, content pipeline counts, performance metrics, and spend.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "name": "status",
             "in": "query",
-            "description": "Filter by application status",
-            "required": false,
+            "name": "creator",
+            "style": "form",
+            "explode": true,
             "schema": {
-              "$ref": "#/components/schemas/CreatorStatus"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/StartingAfter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A page of campaign creators",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CampaignCreatorList"
-                }
+              "type": "array",
+              "items": {
+                "type": "string"
               }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/creators/{creator_id}/approve": {
-      "post": {
-        "operationId": "approveCreator",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Approve a creator",
-        "description": "Approves a creator's pending application to the campaign. Requires the `approvals:write` scope. Approving an already-approved creator is a no-op; reversing a rejection returns 409.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
+            },
+            "description": "Filter by creator IDs (multiple allowed)"
           },
           {
-            "$ref": "#/components/parameters/CreatorId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The approved creator",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CampaignCreator"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/creators/{creator_id}/reject": {
-      "post": {
-        "operationId": "rejectCreator",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Reject a creator",
-        "description": "Rejects a creator's pending application to the campaign. Requires the `approvals:write` scope. Rejecting an already-rejected creator is a no-op; reversing an approval returns 409.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/CreatorId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The rejected creator",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CampaignCreator"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/submissions": {
-      "get": {
-        "operationId": "listSubmissions",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List submissions",
-        "description": "Returns content submitted by creators for review, newest first. Use `status=in_review` to fetch your review queue.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "name": "status",
             "in": "query",
-            "description": "Filter by review status",
-            "required": false,
+            "name": "fromDate",
             "schema": {
-              "$ref": "#/components/schemas/SubmissionStatus"
-            }
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter posts from this date (YYYY-MM-DD)"
           },
           {
-            "name": "creator_id",
             "in": "query",
-            "description": "Only submissions from this creator",
-            "required": false,
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter posts until this date (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved posts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "platform": {
+                            "type": "string"
+                          },
+                          "views": {
+                            "type": "integer"
+                          },
+                          "likes": {
+                            "type": "integer"
+                          },
+                          "comments": {
+                            "type": "integer"
+                          },
+                          "shares": {
+                            "type": "integer"
+                          },
+                          "earnings": {
+                            "type": "number"
+                          },
+                          "paid": {
+                            "type": "boolean"
+                          },
+                          "contractorName": {
+                            "type": "string"
+                          },
+                          "uploadedAt": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/posts/{id}": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Get video details",
+        "description": "Retrieve detailed information about a specific post/video.\n\nIncludes metrics, engagement data, payment status, and related contract/program information.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "task_id",
-            "in": "query",
-            "description": "Only submissions for this task",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "submitted_after",
-            "in": "query",
-            "description": "Only submissions submitted at or after this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "submitted_before",
-            "in": "query",
-            "description": "Only submissions submitted before this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/StartingAfter"
+            },
+            "description": "Post ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "A page of submissions",
+            "description": "Successfully retrieved post details",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubmissionList"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "platform": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "thumbnail": {
+                          "type": "string"
+                        },
+                        "creator": {
+                          "type": "string",
+                          "description": "Social media handle"
+                        },
+                        "uploadedAt": {
+                          "type": "integer"
+                        },
+                        "createdAt": {
+                          "type": "integer"
+                        },
+                        "views": {
+                          "type": "integer"
+                        },
+                        "likes": {
+                          "type": "integer"
+                        },
+                        "comments": {
+                          "type": "integer"
+                        },
+                        "shares": {
+                          "type": "integer"
+                        },
+                        "bookmarks": {
+                          "type": "integer"
+                        },
+                        "engagementRate": {
+                          "type": "string",
+                          "description": "Percentage as string"
+                        },
+                        "earnings": {
+                          "type": "number"
+                        },
+                        "paid": {
+                          "type": "boolean"
+                        },
+                        "lastPaidAt": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "lastSyncedAt": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "contract": {
+                          "type": "object",
+                          "nullable": true,
+                          "description": "Contract details, or null when the post creator has no offer-level contract.",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "contractorName": {
+                              "type": "string"
+                            },
+                            "contractorId": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "isGhostHandle": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "program": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "creatorInfo": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "profileImageUrl": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "awardedBonuses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "bonusAmount": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
+          "400": {
+            "description": "Invalid post id"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
+            "description": "Post not found"
           }
         }
       }
     },
-    "/campaigns/{campaign_id}/submissions/{submission_id}": {
+    "/posts/{id}/metrics-history": {
       "get": {
-        "operationId": "getSubmission",
         "tags": [
-          "Campaigns"
+          "Posts"
         ],
-        "summary": "Get a submission",
-        "description": "Returns a single content submission.",
+        "summary": "Get video metrics history",
+        "description": "Retrieve historical daily metrics data for a specific post/video over time.\n\nShows how views, likes, comments, and other metrics have evolved day-by-day.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/CampaignId"
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Post ID"
           },
           {
-            "$ref": "#/components/parameters/SubmissionId"
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "type": "integer",
+              "default": 30
+            },
+            "description": "Number of days of history to retrieve (0 for all)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 500
+            },
+            "description": "Maximum number of data points"
           }
         ],
         "responses": {
           "200": {
-            "description": "The submission",
+            "description": "Successfully retrieved metrics history",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Submission"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "postId": {
+                          "type": "string"
+                        },
+                        "history": {
+                          "type": "array",
+                          "description": "Daily snapshots in chronological order (oldest to newest)",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "description": "Date in YYYY-MM-DD format"
+                              },
+                              "timestamp": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "views": {
+                                "type": "integer",
+                                "description": "Total views on this date"
+                              },
+                              "likes": {
+                                "type": "integer"
+                              },
+                              "comments": {
+                                "type": "integer"
+                              },
+                              "shares": {
+                                "type": "integer"
+                              },
+                              "bookmarks": {
+                                "type": "integer"
+                              },
+                              "engagementRate": {
+                                "type": "string"
+                              },
+                              "viewsDelta": {
+                                "type": "integer",
+                                "description": "Change from previous day"
+                              },
+                              "likesDelta": {
+                                "type": "integer"
+                              },
+                              "commentsDelta": {
+                                "type": "integer"
+                              },
+                              "sharesDelta": {
+                                "type": "integer"
+                              },
+                              "bookmarksDelta": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
+                        "growth": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "viewsGrowth": {
+                              "type": "string",
+                              "description": "Percentage growth over period"
+                            },
+                            "likesGrowth": {
+                              "type": "string"
+                            },
+                            "commentsGrowth": {
+                              "type": "string"
+                            },
+                            "sharesGrowth": {
+                              "type": "string"
+                            },
+                            "bookmarksGrowth": {
+                              "type": "string"
+                            },
+                            "periodDays": {
+                              "type": "integer"
+                            },
+                            "totalDaysTracked": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "totalDataPoints": {
+                          "type": "integer"
+                        },
+                        "periodDays": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
           },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
+          "400": {
+            "description": "Invalid post id"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
+            "description": "Post not found"
           }
         }
       }
     },
-    "/campaigns/{campaign_id}/submissions/{submission_id}/approve": {
+    "/posts/export": {
       "post": {
-        "operationId": "approveSubmission",
         "tags": [
-          "Campaigns"
+          "Posts"
         ],
-        "summary": "Approve a submission",
-        "description": "Approves submitted content, clearing the creator to post it. Requires the `approvals:write` scope. Approving commits the creator's compensation, so it cannot be undone. Approving an already-approved submission is a no-op; reversing a rejection returns 409.",
+        "summary": "Export posts as CSV",
+        "description": "Generate and download a CSV export of posts.\n\nThe response is a streaming CSV file with all post data including metrics.\n",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filters": {
+                    "type": "object",
+                    "description": "Same filter options as GET /posts"
+                  },
+                  "selectedIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Specific post IDs to export. When present, this overrides filters; an empty array returns a header-only CSV."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CSV file stream",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "attachment; filename=\"posts-export.csv\""
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/kpis": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get comprehensive KPIs",
+        "description": "Retrieve key performance indicators with status breakdowns.\n\nIncludes metrics for:\n- Programs (by status: active, draft, paused, etc.)\n- Contracts (by status: active, pending, completed, etc.)\n- Posts (total, views, engagement, paid/unpaid)\n- Creators (total, with active contracts)\n\nAgency accounts can pass `scope=agency` to compute KPIs across the\nparent agency and every subaccount.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "$ref": "#/components/parameters/SubmissionId"
+            "$ref": "#/components/parameters/ScopeParam"
           }
         ],
         "responses": {
           "200": {
-            "description": "The approved submission",
+            "description": "Successfully retrieved KPIs",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Submission"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "programs": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer"
+                            },
+                            "active": {
+                              "type": "integer"
+                            },
+                            "draft": {
+                              "type": "integer"
+                            },
+                            "paused": {
+                              "type": "integer"
+                            },
+                            "completed": {
+                              "type": "integer"
+                            },
+                            "archived": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "contracts": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer"
+                            },
+                            "active": {
+                              "type": "integer"
+                            },
+                            "pending": {
+                              "type": "integer"
+                            },
+                            "completed": {
+                              "type": "integer"
+                            },
+                            "declined": {
+                              "type": "integer"
+                            },
+                            "cancelled": {
+                              "type": "integer"
+                            },
+                            "expired": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "posts": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer"
+                            },
+                            "totalViews": {
+                              "type": "integer"
+                            },
+                            "totalLikes": {
+                              "type": "integer"
+                            },
+                            "totalComments": {
+                              "type": "integer"
+                            },
+                            "totalShares": {
+                              "type": "integer"
+                            },
+                            "paid": {
+                              "type": "integer"
+                            },
+                            "unpaid": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "creators": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer"
+                            },
+                            "withActiveContracts": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
     },
-    "/campaigns/{campaign_id}/submissions/{submission_id}/reject": {
-      "post": {
-        "operationId": "rejectSubmission",
+    "/analytics/videos": {
+      "get": {
         "tags": [
-          "Campaigns"
+          "Analytics"
         ],
-        "summary": "Reject a submission",
-        "description": "Rejects submitted content and requests changes. Requires the `approvals:write` scope. Include `feedback` to tell the creator what to fix \u2014 it is delivered with the rejection. The creator may submit a revision, which returns the submission to `in_review` and increments `revision_count`.",
+        "summary": "List all tracked videos with analytics",
+        "description": "Retrieve all tracked videos/posts with comprehensive analytics and filtering.\n\nIncludes engagement metrics, sorting, and detailed statistics for each video.\n\nAgency accounts can pass `scope=agency` to aggregate tracked videos\nacross the parent agency and every subaccount.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/CampaignId"
+            "$ref": "#/components/parameters/ScopeParam"
           },
           {
-            "$ref": "#/components/parameters/SubmissionId"
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "uploadedAt",
+                "views",
+                "likes",
+                "engagement"
+              ],
+              "default": "uploadedAt"
+            },
+            "description": "Field to sort by"
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "program",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "tiktok",
+                  "instagram",
+                  "youtube"
+                ]
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "creator",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minViews",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Minimum view count filter"
+          },
+          {
+            "in": "query",
+            "name": "paid",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false",
+                "all"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved tracked videos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "platform": {
+                            "type": "string"
+                          },
+                          "views": {
+                            "type": "integer"
+                          },
+                          "likes": {
+                            "type": "integer"
+                          },
+                          "comments": {
+                            "type": "integer"
+                          },
+                          "shares": {
+                            "type": "integer"
+                          },
+                          "bookmarks": {
+                            "type": "integer"
+                          },
+                          "engagementRate": {
+                            "type": "number"
+                          },
+                          "totalEngagement": {
+                            "type": "integer"
+                          },
+                          "earnings": {
+                            "type": "number"
+                          },
+                          "paid": {
+                            "type": "boolean"
+                          },
+                          "contractorName": {
+                            "type": "string"
+                          },
+                          "uploadedAt": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalVideos": {
+                          "type": "integer"
+                        },
+                        "totalViews": {
+                          "type": "integer"
+                        },
+                        "totalLikes": {
+                          "type": "integer"
+                        },
+                        "totalComments": {
+                          "type": "integer"
+                        },
+                        "totalShares": {
+                          "type": "integer"
+                        },
+                        "totalBookmarks": {
+                          "type": "integer"
+                        },
+                        "totalEngagement": {
+                          "type": "integer"
+                        },
+                        "averageEngagementRate": {
+                          "type": "number"
+                        },
+                        "totalEarnings": {
+                          "type": "number"
+                        },
+                        "paidVideos": {
+                          "type": "integer"
+                        },
+                        "unpaidVideos": {
+                          "type": "integer"
+                        },
+                        "platformBreakdown": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/accounts": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "List all tracked accounts",
+        "description": "Retrieve all tracked social media accounts with aggregated analytics.\n\nGroups posts by social media handle and platform, providing comprehensive metrics per account.\n\nAgency accounts can pass `scope=agency` to aggregate accounts across the\nparent agency and every subaccount.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific platform"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific program"
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "totalViews",
+                "totalPosts",
+                "engagementRate",
+                "creator"
+              ],
+              "default": "totalViews"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved tracked accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "handle": {
+                            "type": "string"
+                          },
+                          "platform": {
+                            "type": "string"
+                          },
+                          "contractorId": {
+                            "type": "string"
+                          },
+                          "contractorName": {
+                            "type": "string"
+                          },
+                          "isGhostHandle": {
+                            "type": "boolean"
+                          },
+                          "totalPosts": {
+                            "type": "integer"
+                          },
+                          "totalViews": {
+                            "type": "integer"
+                          },
+                          "totalLikes": {
+                            "type": "integer"
+                          },
+                          "totalComments": {
+                            "type": "integer"
+                          },
+                          "totalShares": {
+                            "type": "integer"
+                          },
+                          "totalBookmarks": {
+                            "type": "integer"
+                          },
+                          "totalEngagement": {
+                            "type": "integer"
+                          },
+                          "totalEarnings": {
+                            "type": "number"
+                          },
+                          "paidPosts": {
+                            "type": "integer"
+                          },
+                          "unpaidPosts": {
+                            "type": "integer"
+                          },
+                          "engagementRate": {
+                            "type": "number"
+                          },
+                          "averageViewsPerPost": {
+                            "type": "integer"
+                          },
+                          "averageEngagementPerPost": {
+                            "type": "integer"
+                          },
+                          "contracts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "programs": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "contractCount": {
+                            "type": "integer"
+                          },
+                          "programCount": {
+                            "type": "integer"
+                          },
+                          "firstPostDate": {
+                            "type": "integer"
+                          },
+                          "lastPostDate": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalAccounts": {
+                          "type": "integer"
+                        },
+                        "totalPosts": {
+                          "type": "integer"
+                        },
+                        "totalViews": {
+                          "type": "integer"
+                        },
+                        "totalLikes": {
+                          "type": "integer"
+                        },
+                        "totalEngagement": {
+                          "type": "integer"
+                        },
+                        "averageEngagementRate": {
+                          "type": "number"
+                        },
+                        "totalEarnings": {
+                          "type": "number"
+                        },
+                        "platformBreakdown": {
+                          "type": "object"
+                        },
+                        "ghostHandles": {
+                          "type": "integer"
+                        },
+                        "realHandles": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/overview": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "General analytics overview",
+        "description": "Get comprehensive analytics with filtering capabilities.\n\nSimilar to the /overall page in the web app, this endpoint provides:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` uses the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nremain upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to compute the overview across\nthe parent agency and every subaccount.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter analytics by specific program"
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter analytics by specific creator"
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube"
+              ]
+            },
+            "description": "Filter analytics by platform"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved analytics overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "totalPosts": {
+                              "type": "integer"
+                            },
+                            "totalViews": {
+                              "type": "integer"
+                            },
+                            "totalLikes": {
+                              "type": "integer"
+                            },
+                            "totalComments": {
+                              "type": "integer"
+                            },
+                            "totalShares": {
+                              "type": "integer"
+                            },
+                            "totalBookmarks": {
+                              "type": "integer"
+                            },
+                            "totalEarnings": {
+                              "type": "number"
+                            },
+                            "engagementRate": {
+                              "type": "number"
+                            },
+                            "totalContracts": {
+                              "type": "integer"
+                            },
+                            "activeContracts": {
+                              "type": "integer"
+                            },
+                            "uniqueCreators": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "snapshotSummary": {
+                          "type": "object",
+                          "description": "Legacy upload-date snapshot totals for the same filters",
+                          "properties": {
+                            "totalPosts": {
+                              "type": "integer"
+                            },
+                            "totalViews": {
+                              "type": "integer"
+                            },
+                            "totalLikes": {
+                              "type": "integer"
+                            },
+                            "totalComments": {
+                              "type": "integer"
+                            },
+                            "totalShares": {
+                              "type": "integer"
+                            },
+                            "totalBookmarks": {
+                              "type": "integer"
+                            },
+                            "totalEarnings": {
+                              "type": "number"
+                            },
+                            "engagementRate": {
+                              "type": "number"
+                            },
+                            "uniqueCreators": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "topPosts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "Top 10 posts by snapshot views for posts uploaded in the selected range"
+                        },
+                        "topCreators": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "Top 10 creators by snapshot views for posts uploaded in the selected range"
+                        },
+                        "platformBreakdown": {
+                          "type": "object",
+                          "description": "Snapshot metrics grouped by platform for posts uploaded in the selected range"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/recruitment": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get daily recruitment outreach analytics",
+        "description": "Retrieve daily counts for recruitment invites sent and candidate responses received.\n\nDate buckets are UTC days in `YYYY-MM-DD` format.\n\nAgency accounts can pass `scope=agency` to aggregate recruitment\noutreach across the parent agency and every subaccount.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Start date in YYYY-MM-DD format (UTC). Defaults to 29 days before `toDate`."
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "End date in YYYY-MM-DD format (UTC). Defaults to today."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved recruitment analytics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "totalInvitesSent": {
+                              "type": "integer"
+                            },
+                            "totalResponsesReceived": {
+                              "type": "integer"
+                            },
+                            "responseRate": {
+                              "type": "number",
+                              "description": "Responses divided by invites sent, expressed as a percentage"
+                            }
+                          }
+                        },
+                        "daily": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "description": "UTC date bucket in YYYY-MM-DD format"
+                              },
+                              "invitesSent": {
+                                "type": "integer"
+                              },
+                              "responsesReceived": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
+                        "filters": {
+                          "type": "object",
+                          "properties": {
+                            "fromDate": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "toDate": {
+                              "type": "string",
+                              "format": "date"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date range or date format"
+          }
+        }
+      }
+    },
+    "/programs/{id}/invite": {
+      "post": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "Request program invite link",
+        "description": "Generate a shareable invite link for a program.\n\nCreators who use this link can join the program directly.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Program ID"
           }
         ],
         "requestBody": {
@@ -993,2375 +1601,926 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmissionRejection"
+                "type": "object",
+                "properties": {
+                  "expiresInDays": {
+                    "type": "integer",
+                    "description": "Days until link expires (null for never, max 90)",
+                    "example": 14,
+                    "nullable": true
+                  },
+                  "maxUses": {
+                    "type": "integer",
+                    "description": "Maximum number of times link can be used (null for unlimited)",
+                    "example": 50,
+                    "nullable": true
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The rejected submission",
+            "description": "Invite link created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Submission"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/posts": {
-      "get": {
-        "operationId": "listPosts",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List posts",
-        "description": "Returns published posts with their latest engagement metrics, newest first. Posts taken down after going live remain in the list with `status: \"deleted\"` \u2014 filter with `status` to include or exclude them. Metrics are refreshed periodically; `metrics_updated_at` tells you how fresh they are.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "description": "Filter by post status. Defaults to returning all posts, including `deleted` ones.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "live",
-                "deleted"
-              ]
-            }
-          },
-          {
-            "name": "creator_id",
-            "in": "query",
-            "description": "Only posts from this creator",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "task_id",
-            "in": "query",
-            "description": "Only posts for this task",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "platform",
-            "in": "query",
-            "description": "Only posts on this platform",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/Platform"
-            }
-          },
-          {
-            "name": "posted_after",
-            "in": "query",
-            "description": "Only posts published at or after this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "posted_before",
-            "in": "query",
-            "description": "Only posts published before this time (ISO 8601)",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/StartingAfter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A page of posts",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PostList"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/campaigns/{campaign_id}/metrics": {
-      "get": {
-        "operationId": "getCampaignMetrics",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "Get campaign metrics",
-        "description": "Returns the campaign's report: creator funnel, content performance, and spend. Pass `group_by` to additionally break performance down by task or platform. Spend is reported only at the campaign level (and per creator via List Creators) \u2014 creator payouts are not attributable to a single platform, so groups carry no spend.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CampaignId"
-          },
-          {
-            "name": "group_by",
-            "in": "query",
-            "description": "Break metrics down by task or platform",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "task",
-                "platform"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The campaign metrics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CampaignMetrics"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "link": {
+                      "type": "string",
+                      "description": "Full invite URL"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "Invite token"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "maxUses": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "programId": {
+                      "type": "string"
+                    },
+                    "programName": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "description": "Invalid request"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
+            "description": "Program not found"
           }
         }
       }
     },
-    "/targeting/properties": {
+    "/payouts": {
       "get": {
-        "operationId": "listTargetingProperties",
         "tags": [
-          "Campaigns"
+          "Payouts"
         ],
-        "summary": "List targeting properties",
-        "description": "Returns the creator properties available for campaign targeting. Use a property's `id` in targeting conditions; fetch an `option` property's allowed values from its values endpoint.",
-        "responses": {
-          "200": {
-            "description": "The available targeting properties",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TargetingPropertyList"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/targeting/properties/{property_id}/values": {
-      "get": {
-        "operationId": "listTargetingPropertyValues",
-        "tags": [
-          "Campaigns"
-        ],
-        "summary": "List targeting property values",
-        "description": "Returns the allowed values for an `option` targeting property. Large catalogs (locations, schools) are paginated \u2014 use `search` to narrow. Returns 404 for `number` properties, which take `\"min-max\"` ranges instead of listed values.",
+        "summary": "List wallet activity",
+        "description": "Read-only access to your company's wallet ledger entries.\n\nShows all credits and debits to your wallet including:\n- Payouts to creators\n- Adjustments\n- Refunds\n\n**Note:** Executing payouts via API is not supported for security reasons.\n",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PropertyId"
-          },
-          {
-            "name": "search",
             "in": "query",
-            "description": "Filter values by name",
-            "required": false,
+            "name": "page",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "default": 1
             }
           },
           {
-            "$ref": "#/components/parameters/Limit"
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 200
+            }
           },
           {
-            "$ref": "#/components/parameters/StartingAfter"
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific creator"
+          },
+          {
+            "in": "query",
+            "name": "contractId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific contract"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "confirmed",
+                "pending",
+                "failed"
+              ]
+            },
+            "description": "Filter by transaction status"
+          },
+          {
+            "in": "query",
+            "name": "reason",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by description (e.g., \"payout\", \"adjustment\")"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "A page of allowed values",
+            "description": "Successfully retrieved wallet activity",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TargetingPropertyValueList"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number",
+                            "description": "Transaction amount in dollars (negative for debits)"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "credit",
+                              "debit"
+                            ],
+                            "description": "Transaction type"
+                          },
+                          "balanceAfter": {
+                            "type": "number",
+                            "nullable": true,
+                            "description": "Wallet balance after transaction (in dollars)"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Transaction description (e.g., \"Payout to creator\")"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "confirmed",
+                              "pending",
+                              "failed"
+                            ]
+                          },
+                          "contractId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorProfileImageUrl": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "programId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalCredits": {
+                          "type": "number",
+                          "description": "Sum of all credits in dollars"
+                        },
+                        "totalDebits": {
+                          "type": "number",
+                          "description": "Sum of all debits in dollars (absolute value)"
+                        },
+                        "confirmedCount": {
+                          "type": "integer"
+                        },
+                        "pendingCount": {
+                          "type": "integer"
+                        },
+                        "failedCount": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts/stats": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "summary": "Get payout wallet stats",
+        "description": "Read-only summary of your company's payout wallet balances and lifetime activity.\n\nReturns the same metrics shown on the payouts dashboard:\n- **Available balance** — funds ready to pay creators\n- **Pending balance** — incoming top-ups still processing\n- **Total owed** — calculated amount owed across active contracts\n- **Lifetime deposits** — total confirmed wallet top-ups\n- **Lifetime paid out** — total confirmed payouts to creators\n\nAll amounts are in USD dollars.\n",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved payout stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "availableBalance": {
+                      "type": "number",
+                      "description": "Available wallet balance in dollars"
+                    },
+                    "pendingBalance": {
+                      "type": "number",
+                      "description": "Pending top-up balance in dollars"
+                    },
+                    "totalOwed": {
+                      "type": "number",
+                      "description": "Total amount owed to creators across active contracts in dollars"
+                    },
+                    "lifetimeDeposits": {
+                      "type": "number",
+                      "description": "Lifetime confirmed wallet deposits in dollars"
+                    },
+                    "lifetimePaidOut": {
+                      "type": "number",
+                      "description": "Lifetime confirmed payouts to creators in dollars"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "usd"
+                      ]
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/Unauthorized"
+            "description": "Invalid or missing API key"
           },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
+          "402": {
+            "description": "Active subscription required"
           },
           "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "parameters": {
-      "CampaignId": {
-        "name": "campaign_id",
-        "in": "path",
-        "description": "The campaign ID",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      },
-      "TaskId": {
-        "name": "task_id",
-        "in": "path",
-        "description": "The task ID",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      },
-      "SubmissionId": {
-        "name": "submission_id",
-        "in": "path",
-        "description": "The submission ID",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      },
-      "CreatorId": {
-        "name": "creator_id",
-        "in": "path",
-        "description": "The creator ID",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      },
-      "Limit": {
-        "name": "limit",
-        "in": "query",
-        "description": "Number of items to return per page",
-        "required": false,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100,
-          "default": 25
-        }
-      },
-      "StartingAfter": {
-        "name": "starting_after",
-        "in": "query",
-        "description": "Opaque pagination cursor from a previous response's `next_cursor`",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      "IdempotencyKey": {
-        "name": "Idempotency-Key",
-        "in": "header",
-        "description": "A unique key (max 255 characters) to safely retry the request. Repeating a request with the same key within 24 hours returns the original response with an `Idempotent-Replay: true` header. Reusing a key with a different body returns 409.",
-        "required": false,
-        "schema": {
-          "type": "string",
-          "maxLength": 255
-        }
-      },
-      "PropertyId": {
-        "name": "property_id",
-        "in": "path",
-        "description": "The targeting property ID",
-        "required": true,
-        "schema": {
-          "type": "string"
-        }
-      }
-    },
-    "responses": {
-      "BadRequest": {
-        "description": "The request is malformed \u2014 invalid JSON, unknown parameter value, or bad cursor (`invalid_request`)",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "Unauthorized": {
-        "description": "The API key is missing, unknown, or revoked (`unauthenticated`)",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "Forbidden": {
-        "description": "The API key lacks a required scope (`missing_scope`) or referenced a brand it does not manage (`brand_not_managed`)",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "NotFound": {
-        "description": "The resource does not exist or is not visible to this API key (`not_found`)",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "Conflict": {
-        "description": "The action conflicts with the resource's current state \u2014 e.g. `invalid_state_transition`, `field_locked_for_status`, `already_decided`, `already_reviewed`, or `idempotency_conflict`",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "ValidationFailed": {
-        "description": "The request is well-formed but semantically invalid (`validation_failed`) \u2014 the message names the offending field",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "TooManyRequests": {
-        "description": "The rate limit was exceeded (`rate_limited`). Wait for the number of seconds in the `Retry-After` header before retrying.",
-        "headers": {
-          "Retry-After": {
-            "description": "Seconds to wait before retrying.",
-            "schema": {
-              "type": "integer"
-            }
+            "description": "Rate limit exceeded"
           },
-          "X-RateLimit-Limit": {
-            "description": "Requests allowed per minute for this key.",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          "X-RateLimit-Remaining": {
-            "description": "Requests remaining in the current window.",
-            "schema": {
-              "type": "integer"
-            }
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
           }
-        }
+        ]
       }
     },
-    "schemas": {
-      "CampaignStatus": {
-        "type": "string",
-        "description": "Campaign lifecycle status. `draft` \u2192 `pending_approval` (submitted for Launchpoint review) \u2192 `active` \u21c4 `paused` \u2192 `completed`. A denied publish returns the campaign to `draft` with `status_detail` populated.",
-        "enum": [
-          "draft",
-          "pending_approval",
-          "active",
-          "paused",
-          "completed"
+    "/payouts/pending": {
+      "get": {
+        "tags": [
+          "Payouts"
         ],
-        "example": "active"
-      },
-      "CampaignStatusDetail": {
-        "type": [
-          "object",
-          "null"
-        ],
-        "description": "Why the campaign is in its current status. Null unless the campaign was auto-paused or a publish request was denied.",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "auto_paused",
-              "publish_denied"
-            ]
+        "summary": "Get pending payouts",
+        "description": "Retrieve list of pending payouts for active contracts.\n\nIncludes detailed payment calculations, pro-rata adjustments, and creator information.\nShows payouts that are due, overdue, or upcoming based on contract schedules.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
           },
-          "reason": {
-            "type": "string",
-            "description": "For `auto_paused`: one of `billing_issue`, `other`. For `publish_denied`: the reviewer's explanation.",
-            "example": "billing_issue"
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
           },
-          "occurred_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "Platform": {
-        "type": "string",
-        "enum": [
-          "tiktok",
-          "instagram",
-          "youtube",
-          "snapchat"
-        ],
-        "example": "tiktok"
-      },
-      "Format": {
-        "type": "string",
-        "description": "The content format for a task",
-        "enum": [
-          "feed_video",
-          "feed_images",
-          "feed_video_ugc",
-          "feed_video_music",
-          "feed_images_music",
-          "story_video",
-          "story_images"
-        ],
-        "example": "feed_video"
-      },
-      "ProductInfo": {
-        "type": "object",
-        "description": "The product this campaign promotes",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Acme Glow Serum"
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
           },
-          "url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "example": "https://acme.com/products/glow-serum"
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific program"
           },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "example": "https://cdn.acme.com/glow-serum.png"
-          }
-        }
-      },
-      "CampaignSettings": {
-        "type": "object",
-        "description": "Approval workflow and task-completion settings",
-        "properties": {
-          "creator_approval_required": {
-            "type": "boolean",
-            "description": "Whether creators must be approved before starting work",
-            "example": true
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by specific creator"
           },
-          "brand_approval_required": {
-            "type": "boolean",
-            "description": "For agency-managed campaigns: whether the brand also signs off on content after the agency's review",
-            "example": false
+          {
+            "in": "query",
+            "name": "minAmount",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01
+            },
+            "description": "Minimum payout amount in dollars, with at most two decimal places"
           },
-          "post_approval_mode": {
-            "type": "string",
-            "description": "How strictly submitted content is reviewed before it can be posted. `strict`, `moderate`, and `lenient` tune the review bar; `always` auto-approves every submission with no manual review.",
-            "enum": [
-              "strict",
-              "moderate",
-              "lenient",
-              "always"
-            ],
-            "example": "strict"
-          },
-          "completion_mode": {
-            "$ref": "#/components/schemas/CompletionMode"
-          }
-        }
-      },
-      "Campaign": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "example": "3f8e4567-e89b-12d3-a456-426614174000"
-          },
-          "name": {
-            "type": "string",
-            "example": "Spring UGC Push"
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid",
-            "example": "9a2b4567-e89b-12d3-a456-426614174000"
-          },
-          "brand_name": {
-            "type": "string",
-            "example": "Acme Skincare"
-          },
-          "status": {
-            "$ref": "#/components/schemas/CampaignStatus"
-          },
-          "status_detail": {
-            "$ref": "#/components/schemas/CampaignStatusDetail"
-          },
-          "visibility": {
-            "$ref": "#/components/schemas/Visibility"
-          },
-          "invite_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Access code creators use to join an `unlisted` campaign. Null for `public` campaigns.",
-            "example": "GLOW2026"
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "What the campaign is about, shown to creators",
-            "example": "Short-form UGC for our spring launch."
-          },
-          "instructions": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Campaign-wide instructions for creators",
-            "example": "Film in daylight and show the product in the first 3 seconds."
-          },
-          "icon_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Campaign icon shown to creators"
-          },
-          "brief_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Link to an external full brief document"
-          },
-          "video_examples": {
-            "type": "array",
-            "description": "Campaign-level example video URLs",
-            "items": {
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
               "type": "string",
-              "format": "uri"
+              "enum": [
+                "amount",
+                "dueDate",
+                "creator"
+              ],
+              "default": "amount"
             }
           },
-          "links": {
-            "type": "array",
-            "description": "Links given to creators alongside the brief",
-            "items": {
-              "$ref": "#/components/schemas/CampaignLink"
-            }
-          },
-          "targeting": {
-            "$ref": "#/components/schemas/Targeting"
-          },
-          "product": {
-            "$ref": "#/components/schemas/ProductInfo"
-          },
-          "spent_cents": {
-            "type": "integer",
-            "description": "Total paid to creators on this campaign, in cents. Read-only.",
-            "example": 123400
-          },
-          "accepting_submissions": {
-            "type": "boolean",
-            "description": "Whether new creators can currently start work. Controlled by pause/resume.",
-            "example": true
-          },
-          "content_deadline_date": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date",
-            "description": "Date by which creators must submit content for review",
-            "example": "2026-03-01"
-          },
-          "post_deadline_date": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date",
-            "description": "Date by which approved content must be posted",
-            "example": "2026-03-15"
-          },
-          "settings": {
-            "$ref": "#/components/schemas/CampaignSettings"
-          },
-          "tasks": {
-            "type": "array",
-            "description": "The campaign's tasks. Embedded when fetching a single campaign; omitted in list responses (use `tasks_count`).",
-            "items": {
-              "$ref": "#/components/schemas/Task"
-            }
-          },
-          "tasks_count": {
-            "type": "integer",
-            "example": 2
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CampaignCreate": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Spring UGC Push"
-          },
-          "visibility": {
-            "$ref": "#/components/schemas/Visibility"
-          },
-          "invite_code": {
-            "type": "string",
-            "description": "Custom access code for an `unlisted` campaign. Optional \u2014 one is generated if omitted."
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The brand this campaign belongs to. Required for agency keys; optional for brand keys (must match the key's own brand if present)."
-          },
-          "product": {
-            "$ref": "#/components/schemas/ProductInfo"
-          },
-          "description": {
-            "type": "string"
-          },
-          "instructions": {
-            "type": "string"
-          },
-          "icon_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "brief_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "video_examples": {
-            "type": "array",
-            "items": {
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
               "type": "string",
-              "format": "uri"
-            }
-          },
-          "links": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CampaignLink"
-            }
-          },
-          "targeting": {
-            "$ref": "#/components/schemas/Targeting"
-          },
-          "content_deadline_date": {
-            "type": "string",
-            "format": "date",
-            "description": "Must be on or before post_deadline_date"
-          },
-          "post_deadline_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "settings": {
-            "$ref": "#/components/schemas/CampaignSettings"
-          },
-          "tasks": {
-            "type": "array",
-            "description": "Tasks to create with the campaign. Optional \u2014 drafts can be created without tasks. Publishing requires at least one active task unless the campaign requires creator approval (waitlist).",
-            "items": {
-              "$ref": "#/components/schemas/TaskCreate"
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
             }
           }
-        }
-      },
-      "CampaignUpdate": {
-        "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged. Arrays (`video_examples`, `links`, `targeting`) are replaced wholesale. `brand_id` is immutable, and completed campaigns cannot be updated; everything else is editable in any other status, matching the dashboard. Updating a `pending_approval` campaign withdraws the publish request.",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "product": {
-            "$ref": "#/components/schemas/ProductInfo"
-          },
-          "visibility": {
-            "$ref": "#/components/schemas/Visibility"
-          },
-          "invite_code": {
-            "type": "string",
-            "description": "Custom access code for an `unlisted` campaign"
-          },
-          "description": {
-            "type": "string"
-          },
-          "instructions": {
-            "type": "string"
-          },
-          "icon_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "brief_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "video_examples": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "links": {
-            "type": "array",
-            "description": "Replaces the campaign's links",
-            "items": {
-              "$ref": "#/components/schemas/CampaignLink"
-            }
-          },
-          "targeting": {
-            "$ref": "#/components/schemas/Targeting"
-          },
-          "content_deadline_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "post_deadline_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "settings": {
-            "$ref": "#/components/schemas/CampaignSettings"
-          }
-        }
-      },
-      "CampaignList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Campaign"
-            }
-          },
-          "has_more": {
-            "type": "boolean",
-            "example": true
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Pass as `starting_after` to fetch the next page. Null when there are no more results.",
-            "example": "Y2FtcGFpZ25fMTIz"
-          }
-        }
-      },
-      "TaskStatus": {
-        "type": "string",
-        "description": "`active` tasks accept new work; `archived` tasks accept no new creators",
-        "enum": [
-          "active",
-          "archived"
         ],
-        "example": "active"
-      },
-      "Task": {
-        "type": "object",
-        "description": "A deliverable creators complete for the campaign. Tasks on Canvas campaigns are readable but not writable via the API, and some fields (e.g. `max_posts_per_creator`) don't apply to them.",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string",
-            "example": "15s unboxing video"
-          },
-          "instructions": {
-            "type": "string",
-            "example": "Open the package on camera and show your first reaction."
-          },
-          "platforms": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Platform"
-            },
-            "example": [
-              "tiktok",
-              "instagram"
-            ]
-          },
-          "formats": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Format"
-            },
-            "example": [
-              "feed_video"
-            ]
-          },
-          "caption": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Caption the creator must use when posting",
-            "example": "Obsessed with my new glow \u2728 @acmeskincare"
-          },
-          "require_ad_disclosure": {
-            "type": "boolean",
-            "description": "Whether the post must carry the platform's paid-partnership / ad disclosure",
-            "example": true
-          },
-          "tiktok_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "TikTok sound the content must use"
-          },
-          "instagram_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Instagram sound the content must use"
-          },
-          "video_examples": {
-            "type": "array",
-            "description": "URLs of example videos showing creators what to make",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Cover image shown with the task"
-          },
-          "review_mode": {
-            "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
-            "enum": [
-              "media_review",
-              "autoreview"
-            ],
-            "example": "media_review"
-          },
-          "autoreview_prompt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
-            "example": "The product must be clearly visible and mentioned by name."
-          },
-          "is_required": {
-            "type": "boolean",
-            "description": "Whether every creator must complete this task. Only authored directly when the campaign's `settings.completion_mode` is `some_required`; other modes derive it.",
-            "example": true
-          },
-          "max_posts_per_creator": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
-            "example": 1
-          },
-          "display_order": {
-            "type": "integer",
-            "description": "Position of the task in the campaign's brief",
-            "example": 0
-          },
-          "status": {
-            "$ref": "#/components/schemas/TaskStatus"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "TaskCreate": {
-        "type": "object",
-        "required": [
-          "title",
-          "instructions",
-          "platforms"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "example": "15s unboxing video"
-          },
-          "instructions": {
-            "type": "string",
-            "example": "Open the package on camera and show your first reaction."
-          },
-          "platforms": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Platform"
-            },
-            "example": [
-              "tiktok",
-              "instagram"
-            ],
-            "minItems": 1
-          },
-          "formats": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Format"
-            },
-            "example": [
-              "feed_video"
-            ]
-          },
-          "caption": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Caption the creator must use when posting",
-            "example": "Obsessed with my new glow \u2728 @acmeskincare"
-          },
-          "require_ad_disclosure": {
-            "type": "boolean",
-            "description": "Whether the post must carry the platform's paid-partnership / ad disclosure",
-            "example": true
-          },
-          "tiktok_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "TikTok sound the content must use"
-          },
-          "instagram_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Instagram sound the content must use"
-          },
-          "video_examples": {
-            "type": "array",
-            "description": "URLs of example videos showing creators what to make",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Cover image shown with the task"
-          },
-          "review_mode": {
-            "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
-            "enum": [
-              "media_review",
-              "autoreview"
-            ],
-            "example": "media_review"
-          },
-          "autoreview_prompt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
-            "example": "The product must be clearly visible and mentioned by name."
-          },
-          "is_required": {
-            "type": "boolean",
-            "description": "Whether every creator must complete this task. Only authored directly when the campaign's `settings.completion_mode` is `some_required`; other modes derive it.",
-            "example": true
-          },
-          "max_posts_per_creator": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
-            "example": 1
-          },
-          "display_order": {
-            "type": "integer",
-            "description": "Position of the task in the campaign's brief",
-            "example": 0
-          }
-        }
-      },
-      "TaskUpdate": {
-        "type": "object",
-        "description": "Partial update \u2014 omitted fields are unchanged",
-        "properties": {
-          "title": {
-            "type": "string",
-            "example": "15s unboxing video"
-          },
-          "instructions": {
-            "type": "string",
-            "example": "Open the package on camera and show your first reaction."
-          },
-          "platforms": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Platform"
-            },
-            "example": [
-              "tiktok",
-              "instagram"
-            ],
-            "minItems": 1
-          },
-          "formats": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Format"
-            },
-            "example": [
-              "feed_video"
-            ]
-          },
-          "caption": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Caption the creator must use when posting",
-            "example": "Obsessed with my new glow \u2728 @acmeskincare"
-          },
-          "require_ad_disclosure": {
-            "type": "boolean",
-            "description": "Whether the post must carry the platform's paid-partnership / ad disclosure",
-            "example": true
-          },
-          "tiktok_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "TikTok sound the content must use"
-          },
-          "instagram_sound_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Instagram sound the content must use"
-          },
-          "video_examples": {
-            "type": "array",
-            "description": "URLs of example videos showing creators what to make",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "image_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "Cover image shown with the task"
-          },
-          "review_mode": {
-            "type": "string",
-            "description": "`media_review`: you review each submission. `autoreview`: submissions are reviewed automatically \u2014 set `autoreview_prompt` to have the AI check content against it first.",
-            "enum": [
-              "media_review",
-              "autoreview"
-            ],
-            "example": "media_review"
-          },
-          "autoreview_prompt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "What the AI should verify before approving a submission. Only used when `review_mode` is `autoreview`. Optional \u2014 with no prompt, autoreview approves every submission.",
-            "example": "The product must be clearly visible and mentioned by name."
-          },
-          "is_required": {
-            "type": "boolean",
-            "description": "Whether every creator must complete this task. Only authored directly when the campaign's `settings.completion_mode` is `some_required`; other modes derive it.",
-            "example": true
-          },
-          "max_posts_per_creator": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "description": "Null means unlimited. Not applicable to Canvas campaigns, which cap videos weekly instead \u2014 always null there.",
-            "example": 1
-          },
-          "display_order": {
-            "type": "integer",
-            "description": "Position of the task in the campaign's brief",
-            "example": 0
-          }
-        }
-      },
-      "TaskList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Task"
-            }
-          },
-          "has_more": {
-            "type": "boolean",
-            "example": false
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "CreatorStatus": {
-        "type": "string",
-        "description": "The creator's application status on the campaign",
-        "enum": [
-          "applied",
-          "approved",
-          "rejected"
-        ],
-        "example": "approved"
-      },
-      "ContentCounts": {
-        "type": "object",
-        "description": "The creator's content pipeline on this campaign",
-        "properties": {
-          "submitted": {
-            "type": "integer",
-            "description": "Total submissions, including revisions",
-            "example": 4
-          },
-          "in_review": {
-            "type": "integer",
-            "example": 1
-          },
-          "approved": {
-            "type": "integer",
-            "example": 3
-          },
-          "rejected": {
-            "type": "integer",
-            "example": 0
-          }
-        }
-      },
-      "EngagementMetrics": {
-        "type": "object",
-        "description": "Engagement totals across posts",
-        "properties": {
-          "views": {
-            "type": "integer",
-            "example": 32000
-          },
-          "likes": {
-            "type": "integer",
-            "example": 2100
-          },
-          "comments": {
-            "type": "integer",
-            "example": 90
-          },
-          "shares": {
-            "type": "integer",
-            "example": 25
-          },
-          "saves": {
-            "type": "integer",
-            "example": 40
-          }
-        }
-      },
-      "CampaignCreator": {
-        "type": "object",
-        "description": "A creator's participation in the campaign: application status, content pipeline, performance, and spend",
-        "properties": {
-          "creator_id": {
-            "type": "string",
-            "example": "cr_8f14e45fceea"
-          },
-          "username": {
-            "type": "string",
-            "example": "somecreator"
-          },
-          "status": {
-            "$ref": "#/components/schemas/CreatorStatus"
-          },
-          "applied_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "decided_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "description": "When the application was approved or rejected"
-          },
-          "content": {
-            "$ref": "#/components/schemas/ContentCounts"
-          },
-          "posts": {
-            "type": "integer",
-            "description": "Number of live posts",
-            "example": 3
-          },
-          "metrics": {
-            "$ref": "#/components/schemas/EngagementMetrics"
-          },
-          "spend_cents": {
-            "type": "integer",
-            "description": "Total paid to this creator on this campaign, in cents",
-            "example": 45000
-          }
-        }
-      },
-      "CampaignCreatorList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CampaignCreator"
-            }
-          },
-          "has_more": {
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "SubmissionStatus": {
-        "type": "string",
-        "description": "`in_review`: waiting on your decision (a rejected submission returns here when the creator submits a revision). `approved`: cleared to post. `rejected`: you sent it back for changes. `failed`: automatic validation or processing failed \u2014 see `failure_reason`. `post_deleted`: the content was posted and later taken down.",
-        "enum": [
-          "in_review",
-          "approved",
-          "rejected",
-          "failed",
-          "post_deleted"
-        ],
-        "example": "in_review"
-      },
-      "Submission": {
-        "type": "object",
-        "description": "Content a creator submitted for review before posting",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "creator_id": {
-            "type": "string",
-            "example": "cr_8f14e45fceea"
-          },
-          "creator_username": {
-            "type": "string",
-            "example": "somecreator"
-          },
-          "task_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "$ref": "#/components/schemas/SubmissionStatus"
-          },
-          "media_type": {
-            "type": "string",
-            "enum": [
-              "video",
-              "carousel"
-            ],
-            "example": "video"
-          },
-          "media_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "description": "URL of the submitted video, or the first image of a carousel"
-          },
-          "thumbnail_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri"
-          },
-          "revision_count": {
-            "type": "integer",
-            "description": "How many times the creator has re-submitted this content after a rejection. 0 for an initial submission that has never been sent back.",
-            "example": 1
-          },
-          "feedback": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The most recent rejection feedback sent to the creator, if any"
-          },
-          "failure_reason": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "When `status` is `failed`, a short explanation of what went wrong (e.g. media could not be processed, or the required post could not be verified). Null for every other status."
-          },
-          "submitted_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "reviewed_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "SubmissionList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Submission"
-            }
-          },
-          "has_more": {
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "Post": {
-        "type": "object",
-        "description": "A live published post with its latest engagement metrics",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "creator_id": {
-            "type": "string",
-            "example": "cr_8f14e45fceea"
-          },
-          "creator_username": {
-            "type": "string",
-            "example": "somecreator"
-          },
-          "task_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "submission_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "The approved submission this post was published from"
-          },
-          "platform": {
-            "$ref": "#/components/schemas/Platform"
-          },
-          "url": {
-            "type": "string",
-            "format": "uri",
-            "example": "https://www.tiktok.com/@somecreator/video/7301234567890"
-          },
-          "is_story": {
-            "type": "boolean",
-            "example": false
-          },
-          "status": {
-            "type": "string",
-            "description": "`live`: the post is up and its metrics keep refreshing. `deleted`: it was taken down after going live \u2014 metrics stop refreshing and hold their last values.",
-            "enum": [
-              "live",
-              "deleted"
-            ],
-            "example": "live"
-          },
-          "posted_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "metrics": {
-            "$ref": "#/components/schemas/EngagementMetrics"
-          },
-          "metrics_updated_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "description": "When the metrics were last refreshed"
-          }
-        }
-      },
-      "PostList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Post"
-            }
-          },
-          "has_more": {
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "CampaignMetrics": {
-        "type": "object",
-        "description": "The campaign report: pipeline health (funnel), content performance, and spend",
-        "properties": {
-          "campaign_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "funnel": {
-            "type": "object",
-            "properties": {
-              "creators_applied": {
-                "type": "integer",
-                "example": 30
-              },
-              "creators_approved": {
-                "type": "integer",
-                "example": 12
-              },
-              "submissions_in_review": {
-                "type": "integer",
-                "example": 3
-              },
-              "submissions_approved": {
-                "type": "integer",
-                "example": 28
-              },
-              "posts": {
-                "type": "integer",
-                "example": 31
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved pending payouts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "contractId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Offer-level contract id, or null when the pending reserve has no contract row"
+                          },
+                          "contractName": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number",
+                            "description": "Amount in dollars"
+                          },
+                          "amountCents": {
+                            "type": "integer"
+                          },
+                          "originalAmount": {
+                            "type": "number",
+                            "description": "Amount before pro-rata"
+                          },
+                          "originalAmountCents": {
+                            "type": "integer"
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "overdue",
+                              "due",
+                              "upcoming"
+                            ]
+                          },
+                          "dueDate": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "isOverdue": {
+                            "type": "boolean"
+                          },
+                          "isDue": {
+                            "type": "boolean"
+                          },
+                          "programId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "programName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorId": {
+                            "type": "string"
+                          },
+                          "creatorName": {
+                            "type": "string"
+                          },
+                          "creatorEmail": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorProfileImageUrl": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "hasStripeAccount": {
+                            "type": "boolean"
+                          },
+                          "deliveredPosts": {
+                            "type": "integer"
+                          },
+                          "requiredPosts": {
+                            "type": "integer"
+                          },
+                          "deliveryPercentage": {
+                            "type": "number"
+                          },
+                          "totalViews": {
+                            "type": "integer"
+                          },
+                          "isProRata": {
+                            "type": "boolean"
+                          },
+                          "paymentComponents": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          },
+                          "paymentStructure": {
+                            "type": "object",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "totalPending": {
+                          "type": "integer"
+                        },
+                        "totalAmount": {
+                          "type": "number"
+                        },
+                        "totalAmountCents": {
+                          "type": "integer"
+                        },
+                        "overdueCount": {
+                          "type": "integer"
+                        },
+                        "dueCount": {
+                          "type": "integer"
+                        },
+                        "upcomingCount": {
+                          "type": "integer"
+                        },
+                        "readyToPay": {
+                          "type": "integer"
+                        },
+                        "needsSetup": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
-          },
-          "performance": {
-            "type": "object",
-            "properties": {
-              "views": {
-                "type": "integer",
-                "example": 410000
-              },
-              "likes": {
-                "type": "integer",
-                "example": 22000
-              },
-              "comments": {
-                "type": "integer",
-                "example": 900
-              },
-              "shares": {
-                "type": "integer",
-                "example": 300
-              },
-              "saves": {
-                "type": "integer",
-                "example": 800
-              },
-              "engagement_rate": {
-                "type": "number",
-                "description": "(likes + comments + shares + saves) / views. 0 when the campaign has no views.",
-                "example": 0.057
-              }
-            }
-          },
-          "spend": {
-            "type": "object",
-            "properties": {
-              "spent_cents": {
-                "type": "integer",
-                "example": 123400
-              },
-              "effective_cpm_cents": {
-                "type": [
-                  "integer",
-                  "null"
-                ],
-                "description": "spent_cents / views \u00d7 1000. Null until the campaign has views.",
-                "example": 301
-              }
-            }
-          },
-          "groups": {
-            "type": "array",
-            "description": "Present when `group_by` is set: the same performance block broken down per task or per platform. Spend is not broken down per group.",
-            "items": {
-              "$ref": "#/components/schemas/CampaignMetricsGroup"
-            }
-          },
-          "as_of": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When this report was computed"
           }
         }
-      },
-      "CampaignMetricsGroup": {
-        "type": "object",
-        "properties": {
-          "group_key": {
-            "type": "string",
-            "description": "The task ID or platform name this row aggregates",
-            "example": "tiktok"
-          },
-          "group_label": {
-            "type": "string",
-            "description": "Human-readable name \u2014 the task title or platform name",
-            "example": "TikTok"
-          },
-          "posts": {
-            "type": "integer",
-            "example": 14
-          },
-          "performance": {
-            "$ref": "#/components/schemas/EngagementMetrics"
-          }
-        }
-      },
-      "CampaignWebhookPayload": {
-        "type": "object",
-        "description": "Sent when a campaign changes status \u2014 including publish approval, publish denial, and auto-pauses",
-        "properties": {
-          "event_type": {
-            "type": "string",
-            "enum": [
-              "campaign.status_changed"
-            ],
-            "example": "campaign.status_changed"
-          },
-          "campaign_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "previous_status": {
-            "$ref": "#/components/schemas/CampaignStatus"
-          },
-          "status": {
-            "$ref": "#/components/schemas/CampaignStatus"
-          },
-          "status_detail": {
-            "$ref": "#/components/schemas/CampaignStatusDetail"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "SubmissionWebhookPayload": {
-        "type": "object",
-        "description": "Sent when a creator submits content for review (including revisions) or a submission is decided",
-        "properties": {
-          "event_type": {
-            "type": "string",
-            "enum": [
-              "submission.created",
-              "submission.approved",
-              "submission.rejected"
-            ],
-            "example": "submission.created"
-          },
-          "campaign_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "submission": {
-            "$ref": "#/components/schemas/Submission"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "PostWebhookPayload": {
-        "type": "object",
-        "description": "Sent when a creator's approved content goes live, and when a live post's metrics are refreshed",
-        "properties": {
-          "event_type": {
-            "type": "string",
-            "enum": [
-              "post.created",
-              "post.metrics_updated"
-            ],
-            "example": "post.created"
-          },
-          "campaign_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "post": {
-            "$ref": "#/components/schemas/Post"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
+      }
+    },
+    "/creators": {
+      "get": {
+        "tags": [
+          "Creators"
         ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32",
-            "description": "The HTTP status code"
+        "summary": "List creators",
+        "description": "Retrieve creators associated with your company, including their email and a per-campaign\ncontract status map. Use this to determine which creators are active across your campaigns.\n\nEach creator includes a `campaigns` array showing every program they are (or were) contracted\nunder, along with the contract status. A creator's top-level `status` is `\"active\"` if they\nhave at least one active contract, otherwise `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
           },
-          "message": {
-            "type": "string",
-            "description": "Human-readable explanation, naming the offending field where applicable"
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number for pagination"
           },
-          "code": {
-            "type": "string",
-            "description": "Machine-readable error code, e.g. `invalid_state_transition`, `missing_scope`, `already_reviewed`",
-            "example": "invalid_state_transition"
-          }
-        }
-      },
-      "SubmissionRejection": {
-        "type": "object",
-        "description": "Optional context for a rejection",
-        "properties": {
-          "feedback": {
-            "type": "string",
-            "description": "Feedback delivered to the creator, telling them what to fix before resubmitting. If omitted, the creator receives a generic 'changes requested' note.",
-            "example": "Great energy! Please reshoot with the product visible in the first 3 seconds."
-          }
-        }
-      },
-      "Visibility": {
-        "type": "string",
-        "description": "`public` campaigns appear in creator discovery; `unlisted` campaigns are reachable only via an access code or direct link",
-        "enum": [
-          "public",
-          "unlisted"
-        ],
-        "example": "public"
-      },
-      "CompletionMode": {
-        "type": "string",
-        "description": "How creators engage with the campaign's tasks. `all_required`: every task must be completed. `pick_one`: the creator commits to exactly one task. `all_optional`: any subset. `some_required`: each task's own `is_required` flag decides.",
-        "enum": [
-          "all_required",
-          "pick_one",
-          "all_optional",
-          "some_required"
-        ],
-        "example": "all_optional"
-      },
-      "CampaignLink": {
-        "type": "object",
-        "description": "A link given to creators alongside the brief (store page, app listing, affiliate link, ...)",
-        "required": [
-          "url"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Results per page"
           },
-          "url": {
-            "type": "string",
-            "format": "uri",
-            "example": "https://acme.com/products/glow-serum"
-          },
-          "service": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "What the link points at, e.g. `shopify`, `appstore`, `playstore`",
-            "example": "shopify"
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "Product page to link in bio"
-          },
-          "affiliate_code": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "CREATOR20"
-          }
-        }
-      },
-      "TargetingCondition": {
-        "type": "object",
-        "required": [
-          "property",
-          "operator",
-          "values"
-        ],
-        "properties": {
-          "property": {
-            "type": "string",
-            "description": "The creator property to match on: an opaque `id` from [List Targeting Properties](/api-reference/campaigns/list-targeting-properties). It may be a UUID or a short slug (e.g. `followers`); pass it back exactly as returned.",
-            "example": "877972f8-af4b-4918-95df-d35377234817"
-          },
-          "operator": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "NOT_IN"
-            ]
-          },
-          "values": {
-            "type": "array",
-            "items": {
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
               "type": "string"
             },
-            "example": [
-              "9b1f8c72-3d4e-4a2b-8c1a-2f6e5d4c3b2a"
-            ],
-            "description": "For `option` properties: opaque `value`s from the property's values list, passed verbatim (not the human-readable label). For `number` properties: a single `\"min-max\"` range string, e.g. `\"10000-50000\"`."
+            "description": "Filter to creators with a contract in this program"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by creator name or email"
           }
-        }
-      },
-      "TargetingGroup": {
-        "type": "object",
-        "required": [
-          "operator",
-          "conditions"
         ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "North America"
-          },
-          "operator": {
-            "type": "string",
-            "description": "How conditions within this group combine",
-            "enum": [
-              "AND",
-              "OR"
-            ]
-          },
-          "conditions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TargetingCondition"
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved creators",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Creator user ID"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "phone": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "profileImageUrl": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "inactive"
+                            ],
+                            "description": "\"active\" if the creator has at least one active contract"
+                          },
+                          "campaigns": {
+                            "type": "array",
+                            "description": "Contract status per campaign/program",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "programId": {
+                                  "type": "string"
+                                },
+                                "programName": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "contractId": {
+                                  "type": "string"
+                                },
+                                "contractStatus": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pending",
+                                    "active",
+                                    "completed",
+                                    "declined",
+                                    "cancelled"
+                                  ]
+                                },
+                                "handles": {
+                                  "type": "array",
+                                  "description": "Social media handles associated with this contract",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "platform": {
+                                        "type": "string"
+                                      },
+                                      "handle": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
           }
         }
-      },
-      "Targeting": {
-        "type": [
-          "object",
-          "null"
+      }
+    },
+    "/creators/collections": {
+      "get": {
+        "tags": [
+          "Creators"
         ],
-        "description": "Which creators can join the campaign. Groups combine via `root_operator`; conditions within a group combine via the group's `operator`. Null means no targeting (open to all).",
-        "required": [
-          "root_operator",
-          "groups"
+        "summary": "List creator collections",
+        "description": "List the creator collections (saved account groups) for the\nauthenticated company.\n",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved creator collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "color": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorCount": {
+                            "type": "integer"
+                          },
+                          "creatorIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid API key"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          }
+        ]
+      }
+    },
+    "/contracts": {
+      "get": {
+        "tags": [
+          "Contracts"
         ],
-        "properties": {
-          "root_operator": {
-            "type": "string",
-            "enum": [
-              "AND",
-              "OR"
-            ]
+        "summary": "List contracts",
+        "description": "Retrieve creator contracts with sensitive payment details hidden.\n\nContracts define the relationship between your company and creators.\nIncludes metadata only - no payment execution capabilities via API.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
           },
-          "groups": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TargetingGroup"
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 25
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by status (pending, active, completed, declined, cancelled)"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved contracts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "contractorId": {
+                            "type": "string"
+                          },
+                          "contractorName": {
+                            "type": "string"
+                          },
+                          "programId": {
+                            "type": "string"
+                          },
+                          "contractName": {
+                            "type": "string"
+                          },
+                          "position": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "contractType": {
+                            "type": "string"
+                          },
+                          "paymentType": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "paymentSchedule": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "socialProfiles": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          },
+                          "platform": {
+                            "type": "string"
+                          },
+                          "handle": {
+                            "type": "string"
+                          },
+                          "isGhostHandle": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "integer"
+                          },
+                          "updatedAt": {
+                            "type": "integer"
+                          },
+                          "startsAt": {
+                            "type": "integer"
+                          },
+                          "expiresAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "Contract end time in Unix milliseconds, or null when the contract is ongoing."
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
           }
         }
-      },
-      "CreatorWebhookPayload": {
-        "type": "object",
-        "description": "Sent when a creator applies to a campaign or an application is decided",
-        "properties": {
-          "event_type": {
-            "type": "string",
-            "enum": [
-              "creator.applied",
-              "creator.approved",
-              "creator.rejected"
-            ],
-            "example": "creator.applied"
-          },
-          "campaign_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "brand_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "creator": {
-            "$ref": "#/components/schemas/CampaignCreator"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "TargetingProperty": {
-        "type": "object",
-        "description": "A creator property campaigns can target on",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Use as `property` in a targeting condition. Opaque: pass it back exactly as returned (may be a UUID or a short slug like `followers`).",
-            "example": "877972f8-af4b-4918-95df-d35377234817"
-          },
-          "name": {
-            "type": "string",
-            "example": "Gender"
-          },
-          "kind": {
-            "type": "string",
-            "description": "`option` properties match against values from the property's values list. `number` properties match against ranges encoded as `\"min-max\"` strings (e.g. `\"10000-50000\"` followers).",
-            "enum": [
-              "option",
-              "number"
-            ],
-            "example": "option"
-          }
-        }
-      },
-      "TargetingPropertyList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TargetingProperty"
-            }
-          }
-        }
-      },
-      "TargetingPropertyValue": {
-        "type": "object",
-        "properties": {
-          "value": {
-            "type": "string",
-            "description": "Opaque identifier for this value. Pass it back verbatim in a targeting condition's `values` array. Do not send the `label` and do not construct these yourself; the format (often a UUID) is not guaranteed.",
-            "example": "9b1f8c72-3d4e-4a2b-8c1a-2f6e5d4c3b2a"
-          },
-          "label": {
-            "type": "string",
-            "description": "Human-readable name for the value. For display only; never send this as a condition value.",
-            "example": "Fitness"
-          }
-        }
-      },
-      "TargetingPropertyValueList": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TargetingPropertyValue"
-            }
-          },
-          "has_more": {
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
-      }
-    }
-  },
-  "webhooks": {
-    "campaign.status_changed": {
-      "post": {
-        "summary": "Campaign changed status",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CampaignWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "creator.applied": {
-      "post": {
-        "summary": "Creator applied to a campaign",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatorWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "creator.approved": {
-      "post": {
-        "summary": "Creator application approved",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatorWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "creator.rejected": {
-      "post": {
-        "summary": "Creator application rejected",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatorWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "submission.created": {
-      "post": {
-        "summary": "Content submitted for review",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmissionWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "submission.approved": {
-      "post": {
-        "summary": "Submission approved",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmissionWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "submission.rejected": {
-      "post": {
-        "summary": "Submission rejected",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmissionWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "post.created": {
-      "post": {
-        "summary": "Approved content went live",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PostWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "post.metrics_updated": {
-      "post": {
-        "summary": "Post metrics refreshed",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PostWebhookPayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return any 2xx status to acknowledge receipt"
-          }
-        },
-        "parameters": [
-          {
-            "name": "X-Launchpoint-Signature",
-            "in": "header",
-            "required": true,
-            "description": "Hex-encoded HMAC-SHA256 of the raw request body, signed with your webhook secret. Verify this before trusting the payload.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
       }
     }
   }
