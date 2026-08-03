@@ -75,6 +75,10 @@ Routes that support `scope` use `scope=company` by default. This returns only th
 
 A parent agency can pass `scope=agency` to include its own data and data from linked brands. Other keys receive `403` for this scope.
 
+## Creator privacy
+
+API responses never include creator phone numbers or email addresses.
+
 ## Stay within the rate limit
 
 The standard limit is 100 requests per minute per API key. Approved partner accounts receive 400 requests per minute. Requests over the limit return `429`.
