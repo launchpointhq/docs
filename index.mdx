@@ -77,7 +77,9 @@ A parent agency can pass `scope=agency` to include its own data and data from li
 
 ## Creator privacy
 
-API responses never include creator phone numbers or email addresses.
+API responses never include creator email addresses.
+
+`GET /creators` returns a creator `phone`. It is `null` when no number is on file, and `null` for every creator while your creator access is locked, which happens when your wallet balance is under the minimum.
 
 ## Stay within the rate limit
 

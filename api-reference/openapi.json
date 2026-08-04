@@ -2161,7 +2161,7 @@
           "Creators"
         ],
         "summary": "List creators",
-        "description": "Retrieve creators associated with your company, including a per-campaign contract status map.\nUse this to determine which creators are active across your campaigns. Creator phone numbers\nand email addresses are never returned.\n\nEach creator includes a `campaigns` array showing every program they are (or were) contracted\nunder, along with the contract status. A creator's top-level `status` is `\"active\"` if they\nhave at least one active contract, otherwise `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
+        "description": "Retrieve creators associated with your company, including a per-campaign contract status map.\nUse this to determine which creators are active across your campaigns. Each creator includes a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nEach creator includes a `campaigns` array showing every program they are (or were) contracted\nunder, along with the contract status. A creator's top-level `status` is `\"active\"` if they\nhave at least one active contract, otherwise `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2223,6 +2223,11 @@
                           },
                           "name": {
                             "type": "string"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Creator phone number. `null` when no number is on file, and `null` for every creator while your creator access is locked (wallet balance under the minimum)."
                           },
                           "profileImageUrl": {
                             "type": "string",
