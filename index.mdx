@@ -1,29 +1,29 @@
 ---
 title: "Make your first API request"
 sidebarTitle: "Quickstart"
-description: "Create a Launchpoint API key and fetch your first program in a few minutes."
+description: "Generate a Launchpoint API key and pull your first program in a couple of minutes."
 icon: "zap"
 ---
 
 <Note>
-  **The Launchpoint Public API is in private preview.** It is only open to trusted partners we work with directly. Access is not self-serve and is granted case by case. To ask about access, email [Launchpoint support](mailto:hi@launchpointhq.com).
+  **The Launchpoint Public API is in private preview.** Availability is limited to trusted partners we work with directly. There is no self-serve signup; access is reviewed case by case. To ask about access, email [Launchpoint support](mailto:hi@launchpointhq.com).
 </Note>
 
-You only need an enabled Launchpoint account, an API key, and a server that can keep that key private.
+All you need is an enabled Launchpoint account, an API key, and a server that can hold that key privately.
 
 <Steps>
   <Step title="Create an API key">
-    Open [Dashboard → Settings → API](https://dashboard.launchpointhq.com/settings#api), then create a key.
+    Go to [Dashboard → Settings → API](https://dashboard.launchpointhq.com/settings#api) and generate a key.
 
-    API access must be enabled for your company. Because the API is in private preview, the API section is hidden for most companies, and it is only enabled for trusted partners. If you do not see it, email [Launchpoint support](mailto:hi@launchpointhq.com) to ask about access.
+    Your company needs API access turned on first. While the API stays in private preview, the API section is hidden for most companies and enabled only for trusted partners. If it is not there, email [Launchpoint support](mailto:hi@launchpointhq.com) to ask about access.
 
     <Warning>
-      Copy the key when it is created. Keep it out of browser code, mobile apps, logs, and source control.
+      Copy the key at creation time. Never place it in browser code, mobile apps, logs, or source control.
     </Warning>
   </Step>
 
   <Step title="Store the key on your server">
-    Add the key to your server environment:
+    Set the key in your server environment:
 
     ```bash
     export LAUNCHPOINT_API_KEY="lp_pk_..."
@@ -31,7 +31,7 @@ You only need an enabled Launchpoint account, an API key, and a server that can 
   </Step>
 
   <Step title="Fetch your programs">
-    Send the key in the `x-api-key` header:
+    Pass the key through the `x-api-key` header:
 
     <CodeGroup>
       ```bash cURL
@@ -59,9 +59,9 @@ You only need an enabled Launchpoint account, an API key, and a server that can 
   </Step>
 </Steps>
 
-## Check the response
+## Read the response
 
-A successful list request returns `data`, `page`, and `total`:
+A list request that succeeds comes back with `data`, `page`, and `total`:
 
 ```json
 {
@@ -71,50 +71,50 @@ A successful list request returns `data`, `page`, and `total`:
 }
 ```
 
-Every response also includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+The `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers are attached to every response.
 
 ## Use company or agency scope
 
-Routes that support `scope` use `scope=company` by default. This returns only the API key company's data.
+Any route that supports `scope` defaults to `scope=company`, which returns data belonging to the API key's company only.
 
-A parent agency can pass `scope=agency` to include its own data and data from linked brands. Other keys receive `403` for this scope.
+A parent agency may send `scope=agency` to cover its own data plus the data of linked brands. Every other key gets a `403` for that scope.
 
 ## Creator privacy
 
-API responses never include creator email addresses.
+Creator email addresses are never present in API responses.
 
-`GET /creators` returns a creator `phone`. It is `null` when no number is on file, and `null` for every creator while your creator access is locked, which happens when your wallet balance is under the minimum.
+`GET /creators` does return a creator `phone`. That field is `null` when there is no number on file, and `null` across all creators whenever your creator access is locked, which happens once your wallet balance drops below the minimum.
 
 ## Stay within the rate limit
 
-The standard limit is 100 requests per minute per API key. Approved partner accounts receive 400 requests per minute. Requests over the limit return `429`.
+Each API key gets 100 requests per minute by default, and approved partner accounts get 400 per minute. Anything beyond the limit returns `429`.
 
-## Handle errors by status
+## Handle each error status
 
-Errors use this shape:
+Errors come back in this shape:
 
 ```json
 { "error": "Invalid request" }
 ```
 
-Some errors also include a `code`.
+A `code` is included on some errors.
 
 | Status | Meaning |
 | --- | --- |
-| `400` | The request is missing or has an invalid value. |
-| `401` | The API key is missing or invalid. |
-| `402` | API access or the company's payment setup is not ready. |
-| `403` | The key cannot access the requested company or agency scope. |
-| `404` | The requested record was not found. |
-| `429` | The API key has reached its per-minute limit. |
-| `500` | Launchpoint could not complete the request. |
+| `400` | A required value is missing, or a supplied value is invalid. |
+| `401` | No API key was sent, or the key is invalid. |
+| `402` | API access or the company's payment setup is not in place yet. |
+| `403` | The key is not allowed to reach the requested company or agency scope. |
+| `404` | No matching record exists. |
+| `429` | The API key hit its per-minute limit. |
+| `500` | Launchpoint was unable to complete the request. |
 
-## Read timestamps and pages
+## Work with timestamps and paging
 
-Timestamps are Unix timestamps in milliseconds unless a field says otherwise.
+Unless a field states otherwise, timestamps are Unix timestamps in milliseconds.
 
-Most list endpoints accept `page` and `limit` and return `data`, `page`, and `total`. Some also return `totalPages`.
+Most list endpoints take `page` and `limit`, then return `data`, `page`, and `total`. A few add `totalPages`.
 
-## Choose your next endpoint
+## Pick your next endpoint
 
-Use the endpoint groups in the sidebar to explore programs, posts, analytics, payouts, creators, and contracts.
+Browse the endpoint groups in the sidebar for programs, posts, analytics, payouts, creators, and contracts.
