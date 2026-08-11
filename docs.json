@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Launchpoint",
-  "description": "Build on Launchpoint's verified creator marketing data with the Public API.",
+  "description": "Use the Public API to build with Launchpoint's verified creator marketing data.",
   "colors": {
     "primary": "#00A5EF",
     "light": "#40BCF3",
@@ -36,7 +36,7 @@
         "tab": "Public API",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Get started",
             "pages": [
               "index"
             ]
@@ -63,17 +63,17 @@
   "navbar": {
     "links": [
       {
-        "label": "Website",
+        "label": "Visit website",
         "href": "https://www.launchpointhq.com"
       },
       {
-        "label": "Support",
+        "label": "Get support",
         "href": "mailto:hi@launchpointhq.com"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Open dashboard",
+      "label": "Go to dashboard",
       "href": "https://dashboard.launchpointhq.com"
     }
   },
