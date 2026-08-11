@@ -115,7 +115,7 @@
                 "archived"
               ]
             },
-            "description": "Limit programs by status"
+            "description": "Narrow programs by status"
           },
           {
             "in": "query",
@@ -222,7 +222,7 @@
                 "type": "string"
               }
             },
-            "description": "Limit results by program IDs (multiple allowed)"
+            "description": "Narrow results by program IDs (multiple allowed)"
           },
           {
             "in": "query",
@@ -240,7 +240,7 @@
                 ]
               }
             },
-            "description": "Limit results by platforms (multiple allowed)"
+            "description": "Narrow results by platforms (multiple allowed)"
           },
           {
             "in": "query",
@@ -253,7 +253,7 @@
                 "type": "string"
               }
             },
-            "description": "Limit results by creator IDs (multiple allowed)"
+            "description": "Narrow results by creator IDs (multiple allowed)"
           },
           {
             "in": "query",
@@ -1119,7 +1119,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a platform"
+            "description": "Narrow results to a platform"
           },
           {
             "in": "query",
@@ -1127,7 +1127,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a program"
+            "description": "Narrow results to a program"
           },
           {
             "in": "query",
@@ -1322,7 +1322,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit analytics to a program"
+            "description": "Narrow analytics to a program"
           },
           {
             "in": "query",
@@ -1330,7 +1330,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit analytics to a creator"
+            "description": "Narrow analytics to a creator"
           },
           {
             "in": "query",
@@ -1343,7 +1343,7 @@
                 "youtube"
               ]
             },
-            "description": "Limit analytics to a platform"
+            "description": "Narrow analytics to a platform"
           },
           {
             "in": "query",
@@ -1696,7 +1696,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a creator"
+            "description": "Narrow results to a creator"
           },
           {
             "in": "query",
@@ -1704,7 +1704,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a contract"
+            "description": "Narrow results to a contract"
           },
           {
             "in": "query",
@@ -1717,7 +1717,7 @@
                 "failed"
               ]
             },
-            "description": "Limit results by transaction status"
+            "description": "Narrow results by transaction status"
           },
           {
             "in": "query",
@@ -1725,7 +1725,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results by description (e.g., \"payout\", \"adjustment\")"
+            "description": "Narrow results by description (e.g., \"payout\", \"adjustment\")"
           },
           {
             "in": "query",
@@ -1951,7 +1951,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a program"
+            "description": "Narrow results to a program"
           },
           {
             "in": "query",
@@ -1959,7 +1959,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to a creator"
+            "description": "Narrow results to a creator"
           },
           {
             "in": "query",
@@ -2193,7 +2193,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit results to creators contracted in this program"
+            "description": "Narrow results to creators contracted in this program"
           },
           {
             "in": "query",
@@ -2402,7 +2402,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Limit by status (pending, active, completed, declined, cancelled)"
+            "description": "Narrow by status (pending, active, completed, declined, cancelled)"
           },
           {
             "in": "query",
