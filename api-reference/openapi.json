@@ -76,7 +76,7 @@
           "Payouts"
         ],
         "summary": "Browse creator pay structures",
-        "description": "Get the pay terms for each visible creator and program.\n\nThis endpoint includes offer-level cash terms and active Canvas payscales. `baseRateCents` contains cash entries only. Manual and Shopify entries are returned separately in `nonCashBaseRateEntries` with their `valueCents`; a product seed is not cash. `platformRatios: null` means there is no platform split. In the Canvas `assigned` block, `assignment` is `explicit` for a creator-specific assignment and `campaign_default` when the creator uses the campaign's default payscale; `assignedAt` is epoch milliseconds and is null for a campaign-default assignment.\n",
+        "description": "Get the pay terms for each visible creator and program.\n\nThis endpoint includes offer-level cash terms and active Canvas payscales. `baseRateCents` contains cash entries only. Manual and Shopify entries are returned separately in `nonCashBaseRateEntries` with their `valueCents`; a product seed is not cash. `platformRatios: null` means there is no platform split. In the Canvas `assigned` block, `assignment: \"explicit\"` means the creator really resolves to that payscale group. `assignment: \"campaign_default\"` covers both a creator who was never assigned and a creator whose assigned group no longer exists; `assignedAt` is epoch milliseconds for an explicit assignment and is null for `campaign_default`.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -255,12 +255,13 @@
                                             "enum": [
                                               "explicit",
                                               "campaign_default"
-                                            ]
+                                            ],
+                                            "description": "`explicit` means the creator resolves to this payscale group. `campaign_default` means the creator was never assigned to a group or the assigned group no longer exists."
                                           },
                                           "assignedAt": {
                                             "type": "integer",
                                             "nullable": true,
-                                            "description": "Unix timestamp in milliseconds"
+                                            "description": "Unix timestamp in milliseconds for an explicit assignment; null when `assignment` is `campaign_default`."
                                           }
                                         }
                                       }
@@ -483,6 +484,7 @@
                                   },
                                   "fallbackPay": {
                                     "nullable": true,
+                                    "description": "The pay config used when content matches no rule. This can be null for a non-default payscale group with no fallback configured; null means the creator has no fallback pay yet.",
                                     "type": "object",
                                     "properties": {
                                       "payoutType": {
@@ -869,7 +871,7 @@
           "Creators"
         ],
         "summary": "View creator audience demographics",
-        "description": "Get saved audience demographics for each linked social account of a visible creator.\n\nPercentages use a `0` to `100` scale, including `usAudiencePercentage`. Audience data can be up to about 30 days old; `lastUpdatedAt` is a Unix timestamp in milliseconds for the newest data in that account block. `reason` is set only when the entire audience block has no data. When country data is missing but age, gender, or city data exists, `countriesReason` describes the missing country data instead.\n\nThe possible no-data reasons are `unsupported_platform`, `no_data_marker`, and `never_fetched`. A creator the API key cannot see returns `404`.\n",
+        "description": "Get saved audience demographics for each linked social account of a visible creator.\n\nPercentages use a `0` to `100` scale, including `usAudiencePercentage`. Audience data can be up to about 30 days old; `lastUpdatedAt` is a Unix timestamp in milliseconds for the newest data in that account block. `countries` comes from the monthly country refresh when available and falls back to the Instagram account's own country split otherwise. `usAudiencePercentage` is populated only from the monthly country refresh, so null does not mean the US share is zero. `reason` is set only when the entire audience block has no data. When country data is missing but age, gender, or city data exists, `countriesReason` describes the missing country data instead.\n\nThe possible no-data reasons are `unsupported_platform`, `no_data_marker`, and `never_fetched`. A creator the API key cannot see returns `404`.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -942,10 +944,12 @@
                               },
                               "usAudiencePercentage": {
                                 "type": "number",
-                                "nullable": true
+                                "nullable": true,
+                                "description": "US audience percentage from the monthly country refresh only; null does not mean zero."
                               },
                               "countries": {
                                 "type": "array",
+                                "description": "Country distribution from the monthly country refresh when available, or the Instagram account's own country split when no monthly geo row exists.",
                                 "items": {
                                   "type": "object",
                                   "properties": {
