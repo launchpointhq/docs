@@ -3,38 +3,38 @@
   "info": {
     "title": "Launchpoint Public API",
     "version": "1.0.0",
-    "description": "**Private preview.** The Launchpoint Public API is in private preview and is only open to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Authenticate with an API key in the `x-api-key` header.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview it is only enabled for trusted partners.\n- The company must have money in its Launchpoint wallet or a saved payment method. Otherwise requests return `402 { \"error\": \"Active subscription required\" }`.\n- Create and manage API keys in Dashboard → Settings → API.\n\n## Creator privacy\n- Responses never include creator phone numbers or email addresses.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
+    "description": "**Private preview.** The Launchpoint Public API is in private preview and available only to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Use an API key in the `x-api-key` header to authenticate.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview, access is limited to trusted partners.\n- The company must have money in its Launchpoint wallet or a saved payment method. Otherwise requests return `402 { \"error\": \"Active subscription required\" }`.\n- Create and manage API keys in Dashboard → Settings → API.\n\n## Creator privacy\n- Responses never include creator phone numbers or email addresses.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
   },
   "servers": [
     {
       "url": "https://dashboard.launchpointhq.com/api/v1",
-      "description": "Production server"
+      "description": "Live API server"
     }
   ],
   "tags": [
     {
       "name": "Programs",
-      "description": "Campaign and program management"
+      "description": "Programs and campaign management"
     },
     {
       "name": "Posts",
-      "description": "Social media posts and content"
+      "description": "Posts and social content"
     },
     {
       "name": "Analytics",
-      "description": "Performance metrics and KPIs"
+      "description": "KPIs and performance metrics"
     },
     {
       "name": "Payouts",
-      "description": "Payout history, balances, and pending creator money"
+      "description": "Payouts, balances, and pending creator funds"
     },
     {
       "name": "Contracts",
-      "description": "Creator contracts and agreements"
+      "description": "Contracts and creator agreements"
     },
     {
       "name": "Creators",
-      "description": "Creator profiles and statistics"
+      "description": "Creator profiles and metrics"
     }
   ],
   "components": {
@@ -43,7 +43,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API key from Dashboard → Settings → API"
+        "description": "API key created in Dashboard → Settings → API"
       }
     },
     "parameters": {
@@ -59,7 +59,7 @@
           ],
           "default": "company"
         },
-        "description": "Data scope. `company` (default) returns only the API key company's data. `agency` returns the parent agency plus its linked brands. `scope=agency` requires a parent agency key; other keys receive `403`."
+        "description": "Choose the data scope. `company` (default) limits results to the API key company's data. `agency` includes the parent agency and its linked brands. `scope=agency` requires a parent agency key; other keys receive `403`."
       }
     },
     "schemas": {}
@@ -75,8 +75,8 @@
         "tags": [
           "Programs"
         ],
-        "summary": "List programs",
-        "description": "Retrieve all programs for your company with pagination and filtering.\n\nPrograms represent campaigns or marketing initiatives that creators participate in.\n",
+        "summary": "Browse programs",
+        "description": "Get your company's programs with pagination and filters.\n\nPrograms are campaigns or marketing initiatives that creators take part in.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -89,7 +89,7 @@
               "minimum": 1,
               "default": 1
             },
-            "description": "Page number for pagination"
+            "description": "Pagination page number"
           },
           {
             "in": "query",
@@ -100,7 +100,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Number of items per page"
+            "description": "Items to return per page"
           },
           {
             "in": "query",
@@ -115,7 +115,7 @@
                 "archived"
               ]
             },
-            "description": "Filter programs by status"
+            "description": "Limit programs by status"
           },
           {
             "in": "query",
@@ -123,12 +123,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "Search programs by name"
+            "description": "Find programs by name"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved programs",
+            "description": "Programs returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -175,10 +175,10 @@
             }
           },
           "401": {
-            "description": "Unauthorized - invalid API key"
+            "description": "Unauthorized - API key is invalid"
           },
           "429": {
-            "description": "Rate limit exceeded"
+            "description": "Request rate limit exceeded"
           }
         }
       }
@@ -188,8 +188,8 @@
         "tags": [
           "Posts"
         ],
-        "summary": "List posts",
-        "description": "Retrieve social media posts with comprehensive filtering options.\n\nPosts can be filtered by program, platform, creator, date range, and more.\nResults include engagement metrics (views, likes, comments, etc.)\n\nAgency accounts can pass `scope=agency` to list posts across the parent\nagency and every subaccount in one call.\n",
+        "summary": "Browse posts",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more.\nResults contain engagement metrics (views, likes, comments, etc.).\n\nAgency accounts can pass `scope=agency` to return posts from the parent\nagency and every subaccount in one request.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -222,7 +222,7 @@
                 "type": "string"
               }
             },
-            "description": "Filter by program IDs (multiple allowed)"
+            "description": "Limit results by program IDs (multiple allowed)"
           },
           {
             "in": "query",
@@ -240,7 +240,7 @@
                 ]
               }
             },
-            "description": "Filter by platforms (multiple allowed)"
+            "description": "Limit results by platforms (multiple allowed)"
           },
           {
             "in": "query",
@@ -253,7 +253,7 @@
                 "type": "string"
               }
             },
-            "description": "Filter by creator IDs (multiple allowed)"
+            "description": "Limit results by creator IDs (multiple allowed)"
           },
           {
             "in": "query",
@@ -262,7 +262,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Filter posts from this date (YYYY-MM-DD)"
+            "description": "Include posts from this date (YYYY-MM-DD)"
           },
           {
             "in": "query",
@@ -271,12 +271,12 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Filter posts until this date (YYYY-MM-DD)"
+            "description": "Include posts through this date (YYYY-MM-DD)"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved posts",
+            "description": "Posts returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -342,8 +342,8 @@
         "tags": [
           "Posts"
         ],
-        "summary": "Get video details",
-        "description": "Retrieve detailed information about a specific post/video.\n\nIncludes metrics, engagement data, payment status, and related contract/program information.\n",
+        "summary": "View post details",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n",
         "parameters": [
           {
             "in": "path",
@@ -352,12 +352,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "Post ID"
+            "description": "ID of the post"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved post details",
+            "description": "Post details returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -386,7 +386,7 @@
                         },
                         "creator": {
                           "type": "string",
-                          "description": "Social media handle"
+                          "description": "Social handle"
                         },
                         "uploadedAt": {
                           "type": "integer"
@@ -411,7 +411,7 @@
                         },
                         "engagementRate": {
                           "type": "string",
-                          "description": "Percentage as string"
+                          "description": "Percentage represented as a string"
                         },
                         "earnings": {
                           "type": "number"
@@ -430,7 +430,7 @@
                         "contract": {
                           "type": "object",
                           "nullable": true,
-                          "description": "Contract details, or null when the post creator has no offer-level contract.",
+                          "description": "Contract details, or null if the post creator has no offer-level contract.",
                           "properties": {
                             "id": {
                               "type": "string"
@@ -499,10 +499,10 @@
             }
           },
           "400": {
-            "description": "Invalid post id"
+            "description": "Post ID is invalid"
           },
           "404": {
-            "description": "Post not found"
+            "description": "No post was found"
           }
         }
       }
@@ -512,8 +512,8 @@
         "tags": [
           "Posts"
         ],
-        "summary": "Get video metrics history",
-        "description": "Retrieve historical daily metrics data for a specific post/video over time.\n\nShows how views, likes, comments, and other metrics have evolved day-by-day.\n",
+        "summary": "View post metrics history",
+        "description": "Get daily historical metrics for one post/video.\n\nSee how views, likes, comments, and other metrics changed over time.\n",
         "parameters": [
           {
             "in": "path",
@@ -522,7 +522,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Post ID"
+            "description": "ID of the post"
           },
           {
             "in": "query",
@@ -531,7 +531,7 @@
               "type": "integer",
               "default": 30
             },
-            "description": "Number of days of history to retrieve (0 for all)"
+            "description": "History length in days (0 for all)"
           },
           {
             "in": "query",
@@ -541,12 +541,12 @@
               "default": 100,
               "maximum": 500
             },
-            "description": "Maximum number of data points"
+            "description": "Maximum data points to return"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved metrics history",
+            "description": "Metrics history returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -560,13 +560,13 @@
                         },
                         "history": {
                           "type": "array",
-                          "description": "Daily snapshots in chronological order (oldest to newest)",
+                          "description": "Daily snapshots ordered from oldest to newest",
                           "items": {
                             "type": "object",
                             "properties": {
                               "date": {
                                 "type": "string",
-                                "description": "Date in YYYY-MM-DD format"
+                                "description": "Date formatted as YYYY-MM-DD"
                               },
                               "timestamp": {
                                 "type": "integer",
@@ -574,7 +574,7 @@
                               },
                               "views": {
                                 "type": "integer",
-                                "description": "Total views on this date"
+                                "description": "Views recorded on this date"
                               },
                               "likes": {
                                 "type": "integer"
@@ -593,7 +593,7 @@
                               },
                               "viewsDelta": {
                                 "type": "integer",
-                                "description": "Change from previous day"
+                                "description": "Change since the previous day"
                               },
                               "likesDelta": {
                                 "type": "integer"
@@ -616,7 +616,7 @@
                           "properties": {
                             "viewsGrowth": {
                               "type": "string",
-                              "description": "Percentage growth over period"
+                              "description": "Growth percentage for the period"
                             },
                             "likesGrowth": {
                               "type": "string"
@@ -652,10 +652,10 @@
             }
           },
           "400": {
-            "description": "Invalid post id"
+            "description": "Post ID is invalid"
           },
           "404": {
-            "description": "Post not found"
+            "description": "No post was found"
           }
         }
       }
@@ -665,8 +665,8 @@
         "tags": [
           "Posts"
         ],
-        "summary": "Export posts as CSV",
-        "description": "Generate and download a CSV export of posts.\n\nThe response is a streaming CSV file with all post data including metrics.\n",
+        "summary": "Download posts as CSV",
+        "description": "Create and download a CSV file containing posts.\n\nThe response streams all post data, including metrics, as CSV.\n",
         "requestBody": {
           "required": false,
           "content": {
@@ -676,14 +676,14 @@
                 "properties": {
                   "filters": {
                     "type": "object",
-                    "description": "Same filter options as GET /posts"
+                    "description": "Uses the same filters as GET /posts"
                   },
                   "selectedIds": {
                     "type": "array",
                     "items": {
                       "type": "string"
                     },
-                    "description": "Specific post IDs to export. When present, this overrides filters; an empty array returns a header-only CSV."
+                    "description": "Post IDs to export. When provided, these override filters; an empty array returns a header-only CSV."
                   }
                 }
               }
@@ -692,7 +692,7 @@
         },
         "responses": {
           "200": {
-            "description": "CSV file stream",
+            "description": "CSV stream",
             "content": {
               "text/csv": {
                 "schema": {
@@ -718,8 +718,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "Get comprehensive KPIs",
-        "description": "Retrieve key performance indicators with status breakdowns.\n\nIncludes metrics for:\n- Programs (by status: active, draft, paused, etc.)\n- Contracts (by status: active, pending, completed, etc.)\n- Posts (total, views, engagement, paid/unpaid)\n- Creators (total, with active contracts)\n\nAgency accounts can pass `scope=agency` to compute KPIs across the\nparent agency and every subaccount.\n",
+        "summary": "View key KPIs",
+        "description": "Get key performance indicators grouped by status.\n\nThe response includes:\n- Programs (by status: active, draft, paused, etc.)\n- Contracts (by status: active, pending, completed, etc.)\n- Posts (total, views, engagement, paid/unpaid)\n- Creators (total, with active contracts)\n\nAgency accounts can pass `scope=agency` to calculate KPIs across the\nparent agency and every subaccount.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -727,7 +727,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved KPIs",
+            "description": "KPIs returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -837,8 +837,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "List all tracked videos with analytics",
-        "description": "Retrieve all tracked videos/posts with comprehensive analytics and filtering.\n\nIncludes engagement metrics, sorting, and detailed statistics for each video.\n\nAgency accounts can pass `scope=agency` to aggregate tracked videos\nacross the parent agency and every subaccount.\n",
+        "summary": "Browse tracked videos and analytics",
+        "description": "Get tracked videos/posts with analytics and filters.\n\nEach video includes engagement metrics, sorting, and detailed statistics.\n\nAgency accounts can pass `scope=agency` to combine tracked videos from the\nparent agency and every subaccount.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -873,7 +873,7 @@
               ],
               "default": "uploadedAt"
             },
-            "description": "Field to sort by"
+            "description": "Sort results by field"
           },
           {
             "in": "query",
@@ -950,7 +950,7 @@
             "schema": {
               "type": "integer"
             },
-            "description": "Minimum view count filter"
+            "description": "Minimum views to include"
           },
           {
             "in": "query",
@@ -968,7 +968,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved tracked videos",
+            "description": "Tracked videos returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1090,8 +1090,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "List all tracked accounts",
-        "description": "Retrieve all tracked social media accounts with aggregated analytics.\n\nGroups posts by social media handle and platform, providing comprehensive metrics per account.\n\nAgency accounts can pass `scope=agency` to aggregate accounts across the\nparent agency and every subaccount.\n",
+        "summary": "Browse tracked accounts",
+        "description": "Get tracked social media accounts with aggregated analytics.\n\nPosts are grouped by social handle and platform, with metrics for each account.\n\nAgency accounts can pass `scope=agency` to combine accounts from the\nparent agency and every subaccount.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1119,7 +1119,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific platform"
+            "description": "Limit results to a platform"
           },
           {
             "in": "query",
@@ -1127,7 +1127,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific program"
+            "description": "Limit results to a program"
           },
           {
             "in": "query",
@@ -1158,7 +1158,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved tracked accounts",
+            "description": "Tracked accounts returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1310,8 +1310,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "General analytics overview",
-        "description": "Get comprehensive analytics with filtering capabilities.\n\nSimilar to the /overall page in the web app, this endpoint provides:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` uses the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nremain upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to compute the overview across\nthe parent agency and every subaccount.\n",
+        "summary": "View analytics overview",
+        "description": "Get analytics with filtering support.\n\nLike the /overall page in the web app, this endpoint returns:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` follows the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nstay as upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to calculate the overview across\nthe parent agency and every subaccount.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1322,7 +1322,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter analytics by specific program"
+            "description": "Limit analytics to a program"
           },
           {
             "in": "query",
@@ -1330,7 +1330,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter analytics by specific creator"
+            "description": "Limit analytics to a creator"
           },
           {
             "in": "query",
@@ -1343,7 +1343,7 @@
                 "youtube"
               ]
             },
-            "description": "Filter analytics by platform"
+            "description": "Limit analytics to a platform"
           },
           {
             "in": "query",
@@ -1364,7 +1364,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved analytics overview",
+            "description": "Analytics overview returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1413,7 +1413,7 @@
                         },
                         "snapshotSummary": {
                           "type": "object",
-                          "description": "Legacy upload-date snapshot totals for the same filters",
+                          "description": "Legacy snapshot totals by upload date for the same filters",
                           "properties": {
                             "totalPosts": {
                               "type": "integer"
@@ -1449,18 +1449,18 @@
                           "items": {
                             "type": "object"
                           },
-                          "description": "Top 10 posts by snapshot views for posts uploaded in the selected range"
+                          "description": "Top 10 posts by snapshot views among posts uploaded in the selected range"
                         },
                         "topCreators": {
                           "type": "array",
                           "items": {
                             "type": "object"
                           },
-                          "description": "Top 10 creators by snapshot views for posts uploaded in the selected range"
+                          "description": "Top 10 creators by snapshot views among posts uploaded in the selected range"
                         },
                         "platformBreakdown": {
                           "type": "object",
-                          "description": "Snapshot metrics grouped by platform for posts uploaded in the selected range"
+                          "description": "Snapshot metrics by platform for posts uploaded in the selected range"
                         }
                       }
                     }
@@ -1477,8 +1477,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "Get daily recruitment outreach analytics",
-        "description": "Retrieve daily counts for recruitment invites sent and candidate responses received.\n\nDate buckets are UTC days in `YYYY-MM-DD` format.\n\nAgency accounts can pass `scope=agency` to aggregate recruitment\noutreach across the parent agency and every subaccount.\n",
+        "summary": "View daily recruitment outreach analytics",
+        "description": "Get daily totals for sent recruitment invites and candidate responses.\n\nDates are grouped by UTC day in `YYYY-MM-DD` format.\n\nAgency accounts can pass `scope=agency` to combine recruitment outreach\nfrom the parent agency and every subaccount.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1490,7 +1490,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Start date in YYYY-MM-DD format (UTC). Defaults to 29 days before `toDate`."
+            "description": "Beginning date in YYYY-MM-DD format (UTC). Defaults to 29 days before `toDate`."
           },
           {
             "in": "query",
@@ -1499,12 +1499,12 @@
               "type": "string",
               "format": "date"
             },
-            "description": "End date in YYYY-MM-DD format (UTC). Defaults to today."
+            "description": "Ending date in YYYY-MM-DD format (UTC). Defaults to today."
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved recruitment analytics",
+            "description": "Recruitment analytics returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1524,7 +1524,7 @@
                             },
                             "responseRate": {
                               "type": "number",
-                              "description": "Responses divided by invites sent, expressed as a percentage"
+                              "description": "Responses divided by invites sent and shown as a percentage"
                             }
                           }
                         },
@@ -1535,7 +1535,7 @@
                             "properties": {
                               "date": {
                                 "type": "string",
-                                "description": "UTC date bucket in YYYY-MM-DD format"
+                                "description": "UTC date bucket formatted as YYYY-MM-DD"
                               },
                               "invitesSent": {
                                 "type": "integer"
@@ -1567,7 +1567,7 @@
             }
           },
           "400": {
-            "description": "Invalid date range or date format"
+            "description": "Date range or format is invalid"
           }
         }
       }
@@ -1577,8 +1577,8 @@
         "tags": [
           "Programs"
         ],
-        "summary": "Request program invite link",
-        "description": "Generate a shareable invite link for a program.\n\nCreators who use this link can join the program directly.\n",
+        "summary": "Create a program invite link",
+        "description": "Create a shareable invite link for a program.\n\nCreators can join the program directly through this link.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1590,7 +1590,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Program ID"
+            "description": "ID of the program"
           }
         ],
         "requestBody": {
@@ -1602,13 +1602,13 @@
                 "properties": {
                   "expiresInDays": {
                     "type": "integer",
-                    "description": "Days until link expires (null for never, max 90)",
+                    "description": "Days before the link expires (null for never, max 90)",
                     "example": 14,
                     "nullable": true
                   },
                   "maxUses": {
                     "type": "integer",
-                    "description": "Maximum number of times link can be used (null for unlimited)",
+                    "description": "Maximum link uses (null for unlimited)",
                     "example": 50,
                     "nullable": true
                   }
@@ -1619,7 +1619,7 @@
         },
         "responses": {
           "200": {
-            "description": "Invite link created successfully",
+            "description": "Invite link was created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1630,11 +1630,11 @@
                     },
                     "link": {
                       "type": "string",
-                      "description": "Full invite URL"
+                      "description": "Complete invite URL"
                     },
                     "token": {
                       "type": "string",
-                      "description": "Invite token"
+                      "description": "Token for the invite"
                     },
                     "expiresAt": {
                       "type": "string",
@@ -1657,10 +1657,10 @@
             }
           },
           "400": {
-            "description": "Invalid request"
+            "description": "Request is invalid"
           },
           "404": {
-            "description": "Program not found"
+            "description": "No program was found"
           }
         }
       }
@@ -1670,8 +1670,8 @@
         "tags": [
           "Payouts"
         ],
-        "summary": "List wallet activity",
-        "description": "Read-only access to your company's wallet ledger entries.\n\nShows all credits and debits to your wallet including:\n- Payouts to creators\n- Adjustments\n- Refunds\n\n**Note:** Executing payouts via API is not supported for security reasons.\n",
+        "summary": "View wallet activity",
+        "description": "Read-only view of your company's wallet ledger entries.\n\nThe ledger lists wallet credits and debits, including:\n- Payouts to creators\n- Adjustments\n- Refunds\n\n**Note:** The API does not support executing payouts for security reasons.\n",
         "parameters": [
           {
             "in": "query",
@@ -1696,7 +1696,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific creator"
+            "description": "Limit results to a creator"
           },
           {
             "in": "query",
@@ -1704,7 +1704,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific contract"
+            "description": "Limit results to a contract"
           },
           {
             "in": "query",
@@ -1717,7 +1717,7 @@
                 "failed"
               ]
             },
-            "description": "Filter by transaction status"
+            "description": "Limit results by transaction status"
           },
           {
             "in": "query",
@@ -1725,7 +1725,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by description (e.g., \"payout\", \"adjustment\")"
+            "description": "Limit results by description (e.g., \"payout\", \"adjustment\")"
           },
           {
             "in": "query",
@@ -1746,7 +1746,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved wallet activity",
+            "description": "Wallet activity returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1762,7 +1762,7 @@
                           },
                           "amount": {
                             "type": "number",
-                            "description": "Transaction amount in dollars (negative for debits)"
+                            "description": "Transaction amount in dollars (negative values are debits)"
                           },
                           "type": {
                             "type": "string",
@@ -1770,16 +1770,16 @@
                               "credit",
                               "debit"
                             ],
-                            "description": "Transaction type"
+                            "description": "Type of transaction"
                           },
                           "balanceAfter": {
                             "type": "number",
                             "nullable": true,
-                            "description": "Wallet balance after transaction (in dollars)"
+                            "description": "Wallet balance after the transaction (in dollars)"
                           },
                           "description": {
                             "type": "string",
-                            "description": "Transaction description (e.g., \"Payout to creator\")"
+                            "description": "Description of the transaction (e.g., \"Payout to creator\")"
                           },
                           "status": {
                             "type": "string",
@@ -1826,11 +1826,11 @@
                       "properties": {
                         "totalCredits": {
                           "type": "number",
-                          "description": "Sum of all credits in dollars"
+                          "description": "Total credits in dollars"
                         },
                         "totalDebits": {
                           "type": "number",
-                          "description": "Sum of all debits in dollars (absolute value)"
+                          "description": "Total debits in dollars (absolute value)"
                         },
                         "confirmedCount": {
                           "type": "integer"
@@ -1856,11 +1856,11 @@
         "tags": [
           "Payouts"
         ],
-        "summary": "Get payout wallet stats",
-        "description": "Read-only summary of your company's payout wallet balances and lifetime activity.\n\nReturns the same metrics shown on the payouts dashboard:\n- **Available balance** — funds ready to pay creators\n- **Pending balance** — incoming top-ups still processing\n- **Total owed** — calculated amount owed across active contracts\n- **Lifetime deposits** — total confirmed wallet top-ups\n- **Lifetime paid out** — total confirmed payouts to creators\n\nAll amounts are in USD dollars.\n",
+        "summary": "View payout wallet statistics",
+        "description": "Read-only summary of your company's payout wallet balances and lifetime activity.\n\nThese are the same metrics shown on the payouts dashboard:\n- **Available balance** — funds ready to pay creators\n- **Pending balance** — incoming top-ups still processing\n- **Total owed** — calculated amount owed across active contracts\n- **Lifetime deposits** — total confirmed wallet top-ups\n- **Lifetime paid out** — total confirmed payouts to creators\n\nAll amounts are in USD dollars.\n",
         "responses": {
           "200": {
-            "description": "Successfully retrieved payout stats",
+            "description": "Payout statistics returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1868,23 +1868,23 @@
                   "properties": {
                     "availableBalance": {
                       "type": "number",
-                      "description": "Available wallet balance in dollars"
+                      "description": "Available wallet balance, in dollars"
                     },
                     "pendingBalance": {
                       "type": "number",
-                      "description": "Pending top-up balance in dollars"
+                      "description": "Pending top-up balance, in dollars"
                     },
                     "totalOwed": {
                       "type": "number",
-                      "description": "Total amount owed to creators across active contracts in dollars"
+                      "description": "Total owed to creators across active contracts, in dollars"
                     },
                     "lifetimeDeposits": {
                       "type": "number",
-                      "description": "Lifetime confirmed wallet deposits in dollars"
+                      "description": "Confirmed wallet deposits over time, in dollars"
                     },
                     "lifetimePaidOut": {
                       "type": "number",
-                      "description": "Lifetime confirmed payouts to creators in dollars"
+                      "description": "Confirmed payouts to creators over time, in dollars"
                     },
                     "currency": {
                       "type": "string",
@@ -1898,16 +1898,16 @@
             }
           },
           "401": {
-            "description": "Invalid or missing API key"
+            "description": "API key is invalid or missing"
           },
           "402": {
-            "description": "Active subscription required"
+            "description": "Active subscription is required"
           },
           "429": {
-            "description": "Rate limit exceeded"
+            "description": "Request rate limit exceeded"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         },
         "parameters": [
@@ -1922,8 +1922,8 @@
         "tags": [
           "Payouts"
         ],
-        "summary": "Get pending payouts",
-        "description": "Retrieve list of pending payouts for active contracts.\n\nIncludes detailed payment calculations, pro-rata adjustments, and creator information.\nShows payouts that are due, overdue, or upcoming based on contract schedules.\n",
+        "summary": "View pending payouts",
+        "description": "Get pending payouts for active contracts.\n\nThe response includes payment calculations, pro-rata adjustments, and creator information.\nIt shows payouts that are due, overdue, or upcoming based on contract schedules.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1951,7 +1951,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific program"
+            "description": "Limit results to a program"
           },
           {
             "in": "query",
@@ -1959,7 +1959,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by specific creator"
+            "description": "Limit results to a creator"
           },
           {
             "in": "query",
@@ -1969,7 +1969,7 @@
               "minimum": 0,
               "multipleOf": 0.01
             },
-            "description": "Minimum payout amount in dollars, with at most two decimal places"
+            "description": "Minimum payout in dollars, with at most two decimal places"
           },
           {
             "in": "query",
@@ -1999,7 +1999,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved pending payouts",
+            "description": "Pending payouts returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -2016,21 +2016,21 @@
                           "contractId": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Offer-level contract id, or null when the pending reserve has no contract row"
+                            "description": "Offer-level contract ID, or null when the pending reserve has no contract row"
                           },
                           "contractName": {
                             "type": "string"
                           },
                           "amount": {
                             "type": "number",
-                            "description": "Amount in dollars"
+                            "description": "Amount, in dollars"
                           },
                           "amountCents": {
                             "type": "integer"
                           },
                           "originalAmount": {
                             "type": "number",
-                            "description": "Amount before pro-rata"
+                            "description": "Amount before the pro-rata adjustment"
                           },
                           "originalAmountCents": {
                             "type": "integer"
@@ -2160,8 +2160,8 @@
         "tags": [
           "Creators"
         ],
-        "summary": "List creators",
-        "description": "Retrieve creators associated with your company, including a per-campaign contract status map.\nUse this to determine which creators are active across your campaigns. Each creator includes a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nEach creator includes a `campaigns` array showing every program they are (or were) contracted\nunder, along with the contract status. A creator's top-level `status` is `\"active\"` if they\nhave at least one active contract, otherwise `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
+        "summary": "Browse creators",
+        "description": "Get creators associated with your company, along with a contract status map for each campaign.\nUse this to see which creators are active across your campaigns. Each creator has a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nThe `campaigns` array lists every program a creator is or was contracted under,\nalong with its contract status. A creator's top-level `status` is `\"active\"` when they\nhave at least one active contract; otherwise, it is `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2174,7 +2174,7 @@
               "minimum": 1,
               "default": 1
             },
-            "description": "Page number for pagination"
+            "description": "Pagination page number"
           },
           {
             "in": "query",
@@ -2185,7 +2185,7 @@
               "maximum": 100,
               "default": 25
             },
-            "description": "Results per page"
+            "description": "Results to return per page"
           },
           {
             "in": "query",
@@ -2193,7 +2193,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter to creators with a contract in this program"
+            "description": "Limit results to creators contracted in this program"
           },
           {
             "in": "query",
@@ -2201,12 +2201,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "Search by creator name or social handle"
+            "description": "Find creators by name or social handle"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved creators",
+            "description": "Creators returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -2219,7 +2219,7 @@
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "Creator user ID"
+                            "description": "User ID for the creator"
                           },
                           "name": {
                             "type": "string"
@@ -2227,7 +2227,7 @@
                           "phone": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Creator phone number. `null` when no number is on file, and `null` for every creator while your creator access is locked (wallet balance under the minimum)."
+                            "description": "Creator phone number. `null` when no number is on file, and `null` for every creator while creator access is locked (wallet balance under the minimum)."
                           },
                           "profileImageUrl": {
                             "type": "string",
@@ -2239,11 +2239,11 @@
                               "active",
                               "inactive"
                             ],
-                            "description": "\"active\" if the creator has at least one active contract"
+                            "description": "`\"active\"` when the creator has at least one active contract"
                           },
                           "campaigns": {
                             "type": "array",
-                            "description": "Contract status per campaign/program",
+                            "description": "Contract status for each campaign/program",
                             "items": {
                               "type": "object",
                               "properties": {
@@ -2269,7 +2269,7 @@
                                 },
                                 "handles": {
                                   "type": "array",
-                                  "description": "Social media handles associated with this contract",
+                                  "description": "Social handles linked to this contract",
                                   "items": {
                                     "type": "object",
                                     "properties": {
@@ -2310,11 +2310,11 @@
         "tags": [
           "Creators"
         ],
-        "summary": "List creator collections",
-        "description": "List the creator collections (saved account groups) for the\nauthenticated company.\n",
+        "summary": "Browse creator collections",
+        "description": "Get the creator collections (saved account groups) for the\nauthenticated company.\n",
         "responses": {
           "200": {
-            "description": "Successfully retrieved creator collections",
+            "description": "Creator collections returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -2356,10 +2356,10 @@
             }
           },
           "401": {
-            "description": "Unauthorized - invalid API key"
+            "description": "Unauthorized - API key is invalid"
           },
           "429": {
-            "description": "Rate limit exceeded"
+            "description": "Request rate limit exceeded"
           }
         },
         "parameters": [
@@ -2374,8 +2374,8 @@
         "tags": [
           "Contracts"
         ],
-        "summary": "List contracts",
-        "description": "Retrieve creator contracts with sensitive payment details hidden.\n\nContracts define the relationship between your company and creators.\nIncludes metadata only - no payment execution capabilities via API.\n",
+        "summary": "Browse contracts",
+        "description": "Get creator contracts with sensitive payment details hidden.\n\nContracts describe the relationship between your company and creators.\nThe API returns metadata only; it cannot execute payments.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2402,7 +2402,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Filter by status (pending, active, completed, declined, cancelled)"
+            "description": "Limit by status (pending, active, completed, declined, cancelled)"
           },
           {
             "in": "query",
@@ -2421,7 +2421,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved contracts",
+            "description": "Contracts returned successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -2494,7 +2494,7 @@
                           "expiresAt": {
                             "type": "integer",
                             "nullable": true,
-                            "description": "Contract end time in Unix milliseconds, or null when the contract is ongoing."
+                            "description": "Contract end time in Unix milliseconds, or null if the contract is ongoing."
                           }
                         }
                       }

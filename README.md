@@ -1,6 +1,6 @@
 # Launchpoint Public API Docs
 
-Public docs site: [https://docs.launchpointhq.com](https://docs.launchpointhq.com/)
+Documentation site: [https://docs.launchpointhq.com](https://docs.launchpointhq.com/)
 
 ## Local preview
 
@@ -8,4 +8,4 @@ Public docs site: [https://docs.launchpointhq.com](https://docs.launchpointhq.co
 mint dev
 ```
 
-The docs use the Launchpoint brand fonts hosted by the main website and generate endpoint pages from `api-reference/openapi.json`.
+The site uses Launchpoint brand fonts hosted by the main website and builds endpoint pages from `api-reference/openapi.json`.
