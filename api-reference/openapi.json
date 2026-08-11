@@ -76,7 +76,7 @@
           "Payouts"
         ],
         "summary": "Browse creator pay structures",
-        "description": "Get the pay terms for each visible creator and program.\n\nThis endpoint includes offer-level cash terms and active Canvas payscales. `baseRateCents` contains cash entries only. Manual and Shopify entries are returned separately in `nonCashBaseRateEntries` with their `valueCents`; a product seed is not cash. `platformRatios: null` means there is no platform split.\n",
+        "description": "Get the pay terms for each visible creator and program.\n\nThis endpoint includes offer-level cash terms and active Canvas payscales. `baseRateCents` contains cash entries only. Manual and Shopify entries are returned separately in `nonCashBaseRateEntries` with their `valueCents`; a product seed is not cash. `platformRatios: null` means there is no platform split. In the Canvas `assigned` block, `assignment` is `explicit` for a creator-specific assignment and `campaign_default` when the creator uses the campaign's default payscale; `assignedAt` is epoch milliseconds and is null for a campaign-default assignment.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -719,10 +719,124 @@
                         }
                       },
                       "canvas": null
+                    },
+                    {
+                      "creatorId": "crt_demo_creator_9k4",
+                      "creatorName": "Sample Creator",
+                      "programId": "00000000-0000-4000-8000-000000000103",
+                      "programName": "Always-On Video Program",
+                      "contractId": null,
+                      "createdAt": 1785916800000,
+                      "updatedAt": 1786089600000,
+                      "money": {
+                        "payModelKind": "canvas_payscale",
+                        "baseRateCents": 0,
+                        "nonCashBaseRateEntries": [],
+                        "cpmCents": null,
+                        "cpcCents": null,
+                        "viewCap": null,
+                        "minViewThreshold": null,
+                        "maxCpmEarnableCents": null,
+                        "maxTotalEarnableCents": null,
+                        "platformRatios": null
+                      },
+                      "canvas": {
+                        "assigned": {
+                          "id": "scale-growth",
+                          "label": "Growth",
+                          "isDefault": false,
+                          "isTrial": false,
+                          "assignment": "explicit",
+                          "assignedAt": 1786003200000
+                        },
+                        "contentRules": [
+                          {
+                            "id": "rule-talking-head",
+                            "label": "Talking head",
+                            "matcher": {
+                              "kind": "content",
+                              "description": "Creator speaks directly to camera"
+                            },
+                            "pay": {
+                              "payoutType": "view_bonus",
+                              "platformPayoutMode": "per_post",
+                              "viewTrackingDays": 30,
+                              "trialCutoff": {
+                                "views": 10000,
+                                "posts": 10,
+                                "days": 14,
+                                "enabled": true
+                              },
+                              "perCreatorCap": {
+                                "enabled": true,
+                                "capCents": 150000,
+                                "periodDays": 30
+                              },
+                              "inactivityCutoff": {
+                                "enabled": true,
+                                "days": 30
+                              },
+                              "baseRateDisabled": false,
+                              "tiers": [
+                                {
+                                  "viewsThreshold": 1000,
+                                  "bonusCents": 2000
+                                },
+                                {
+                                  "viewsThreshold": 10000,
+                                  "bonusCents": 10000
+                                },
+                                {
+                                  "viewsThreshold": 50000,
+                                  "bonusCents": 30000
+                                }
+                              ],
+                              "flatFeeCents": 0
+                            }
+                          }
+                        ],
+                        "fallbackPay": {
+                          "payoutType": "view_bonus",
+                          "platformPayoutMode": "per_post",
+                          "viewTrackingDays": 30,
+                          "trialCutoff": {
+                            "views": 10000,
+                            "posts": 10,
+                            "days": 14,
+                            "enabled": true
+                          },
+                          "perCreatorCap": {
+                            "enabled": true,
+                            "capCents": 150000,
+                            "periodDays": 30
+                          },
+                          "inactivityCutoff": {
+                            "enabled": true,
+                            "days": 30
+                          },
+                          "baseRateDisabled": false,
+                          "tiers": [
+                            {
+                              "viewsThreshold": 1000,
+                              "bonusCents": 2000
+                            },
+                            {
+                              "viewsThreshold": 10000,
+                              "bonusCents": 10000
+                            },
+                            {
+                              "viewsThreshold": 50000,
+                              "bonusCents": 30000
+                            }
+                          ],
+                          "flatFeeCents": 0
+                        },
+                        "maxVideosPerWeek": 5
+                      }
                     }
                   ],
                   "page": 1,
-                  "total": 1,
+                  "total": 2,
                   "totalPages": 1
                 }
               }
