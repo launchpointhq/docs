@@ -62,7 +62,161 @@
         "description": "Choose the data scope. `company` (default) limits results to the API key company's data. `agency` includes the parent agency and its linked brands. `scope=agency` requires a parent agency key; other keys receive `403`."
       }
     },
-    "schemas": {}
+    "schemas": {
+      "AudienceDistribution": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "number"
+          }
+        }
+      },
+      "InstagramAudience": {
+        "type": "object",
+        "properties": {
+          "basis": {
+            "type": "string",
+            "enum": [
+              "reached",
+              "engaged",
+              "followers"
+            ]
+          },
+          "sampleSize": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Number of people behind the country distribution, or null when the source has percentages without counts"
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "ages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "genders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "cities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          }
+        }
+      },
+      "CreatorAudienceBlock": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "no_data"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "unsupported_platform",
+              "no_data_marker",
+              "never_fetched"
+            ]
+          },
+          "countriesReason": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "unsupported_platform",
+              "no_data_marker",
+              "never_fetched"
+            ]
+          },
+          "usAudiencePercentage": {
+            "type": "number",
+            "nullable": true,
+            "description": "US audience percentage from the monthly country refresh only; null does not mean zero. A saved no-data marker can return 0; that does not prove the US share is zero."
+          },
+          "sampleSize": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Number of people behind the returned country distribution, or null when the saved source has percentages without counts"
+          },
+          "countries": {
+            "type": "array",
+            "description": "Country distribution from the monthly country refresh when available, or the Instagram account's own country split when no monthly geo row exists.",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "ages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "genders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "cities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudienceDistribution"
+            }
+          },
+          "demographicsBasis": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "reached",
+              "followers"
+            ]
+          },
+          "instagramAudiences": {
+            "type": "array",
+            "description": "Separate Instagram populations reported by Meta: people reached, people who engaged, and followers. These are different sets of people and should not be added together.",
+            "items": {
+              "$ref": "#/components/schemas/InstagramAudience"
+            }
+          }
+        }
+      },
+      "CreatorAudienceAccount": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUpdatedAt": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Unix timestamp in milliseconds; audience data may be up to about 30 days old"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/CreatorAudienceBlock"
+          }
+        }
+      }
+    }
   },
   "security": [
     {
@@ -871,7 +1025,7 @@
           "Creators"
         ],
         "summary": "View creator audience demographics",
-        "description": "Get saved audience demographics for each linked social account of a visible creator.\n\nPercentages use a `0` to `100` scale, including `usAudiencePercentage`. Audience data can be up to about 30 days old; `lastUpdatedAt` is a Unix timestamp in milliseconds for the newest data in that account block. `countries` comes from the monthly country refresh when available and falls back to the Instagram account's own country split otherwise. `usAudiencePercentage` is populated only from the monthly country refresh, so null does not mean the US share is zero. `reason` is set only when the entire audience block has no data. When country data is missing but age, gender, or city data exists, `countriesReason` describes the missing country data instead.\n\nThe possible no-data reasons are `unsupported_platform`, `no_data_marker`, and `never_fetched`. A creator the API key cannot see returns `404`.\n",
+        "description": "Get saved audience demographics for each linked social account of a visible creator.\n\nPercentages use a `0` to `100` scale, including `usAudiencePercentage`. Audience data can be up to about 30 days old; `lastUpdatedAt` is a Unix timestamp in milliseconds for the newest data in that account block. `countries` comes from the monthly country refresh when available and falls back to the Instagram account's own country split otherwise. `usAudiencePercentage` is populated only from the monthly country refresh, so null does not mean the US share is zero. A saved no-data marker can return `0`; that does not prove the US share is zero. `reason` is set only when the entire audience block has no data. When country data is missing but age, gender, or city data exists, `countriesReason` describes the missing country data instead.\n\nThe `instagramAudiences` entries expose separate populations Meta reports: people reached, people who engaged, and followers. These are different sets of people, so do not add them together.\n\nThe possible no-data reasons are `unsupported_platform`, `no_data_marker`, and `never_fetched`. A creator the API key cannot see returns `404`.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -900,121 +1054,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "platform": {
-                            "type": "string"
-                          },
-                          "handle": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "lastUpdatedAt": {
-                            "type": "integer",
-                            "nullable": true,
-                            "description": "Unix timestamp in milliseconds; audience data may be up to about 30 days old"
-                          },
-                          "audience": {
-                            "type": "object",
-                            "properties": {
-                              "status": {
-                                "type": "string",
-                                "enum": [
-                                  "available",
-                                  "no_data"
-                                ]
-                              },
-                              "reason": {
-                                "type": "string",
-                                "nullable": true,
-                                "enum": [
-                                  "unsupported_platform",
-                                  "no_data_marker",
-                                  "never_fetched"
-                                ]
-                              },
-                              "countriesReason": {
-                                "type": "string",
-                                "nullable": true,
-                                "enum": [
-                                  "unsupported_platform",
-                                  "no_data_marker",
-                                  "never_fetched"
-                                ]
-                              },
-                              "usAudiencePercentage": {
-                                "type": "number",
-                                "nullable": true,
-                                "description": "US audience percentage from the monthly country refresh only; null does not mean zero."
-                              },
-                              "countries": {
-                                "type": "array",
-                                "description": "Country distribution from the monthly country refresh when available, or the Instagram account's own country split when no monthly geo row exists.",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "label": {
-                                      "type": "string"
-                                    },
-                                    "percentage": {
-                                      "type": "number"
-                                    }
-                                  }
-                                }
-                              },
-                              "ages": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "label": {
-                                      "type": "string"
-                                    },
-                                    "percentage": {
-                                      "type": "number"
-                                    }
-                                  }
-                                }
-                              },
-                              "genders": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "label": {
-                                      "type": "string"
-                                    },
-                                    "percentage": {
-                                      "type": "number"
-                                    }
-                                  }
-                                }
-                              },
-                              "cities": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "label": {
-                                      "type": "string"
-                                    },
-                                    "percentage": {
-                                      "type": "number"
-                                    }
-                                  }
-                                }
-                              },
-                              "demographicsBasis": {
-                                "type": "string",
-                                "nullable": true,
-                                "enum": [
-                                  "reached",
-                                  "followers"
-                                ]
-                              }
-                            }
-                          }
-                        }
+                        "$ref": "#/components/schemas/CreatorAudienceAccount"
                       }
                     }
                   }
@@ -1063,7 +1103,118 @@
                             "percentage": 12.4
                           }
                         ],
-                        "demographicsBasis": "reached"
+                        "demographicsBasis": "reached",
+                        "sampleSize": 2500,
+                        "instagramAudiences": [
+                          {
+                            "basis": "reached",
+                            "sampleSize": 2500,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 72
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 18
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 48.5
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 61.2
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 12.4
+                              }
+                            ]
+                          },
+                          {
+                            "basis": "engaged",
+                            "sampleSize": 840,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 68
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 22
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 52.1
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 58.7
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 14.1
+                              }
+                            ]
+                          },
+                          {
+                            "basis": "followers",
+                            "sampleSize": 3100,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 70
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 20
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 47.9
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 62.4
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 11.8
+                              }
+                            ]
+                          }
+                        ]
                       }
                     },
                     {
@@ -1079,7 +1230,9 @@
                         "ages": [],
                         "genders": [],
                         "cities": [],
-                        "demographicsBasis": null
+                        "demographicsBasis": null,
+                        "sampleSize": null,
+                        "instagramAudiences": []
                       }
                     }
                   ]
@@ -1685,6 +1838,318 @@
                         "periodDays": {
                           "type": "integer"
                         }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Post ID is invalid"
+          },
+          "404": {
+            "description": "No post was found"
+          }
+        }
+      }
+    },
+    "/posts/{id}/insights": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "View post insights",
+        "description": "Get the latest stored Instagram performance and Reel watch metrics for one post.\n\n`insights.status` and `insights.reason` are paired: `available` with `reason: null` means a post snapshot exists; `no_data` with `reason: never_fetched` means no post snapshot exists; and `no_data` with `reason: unsupported_platform` means the post is not Instagram.\n\n`creatorAudience` is account-level audience data for the account that published the post. Its handle follows the same PII lock as the creator audience endpoint. It is not the geography of people who watched this video: Meta does not expose per-post country data at any access level. Instagram audience entries describe separate populations reported by Meta and should not be added together. Non-Instagram posts return `no_data` with `reason: unsupported_platform` instead of invented metrics.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the post"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post insights returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "platform": {
+                          "type": "string"
+                        },
+                        "insights": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "available",
+                                "no_data"
+                              ]
+                            },
+                            "reason": {
+                              "type": "string",
+                              "nullable": true,
+                              "enum": [
+                                "never_fetched",
+                                "unsupported_platform"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": "integer",
+                              "nullable": true,
+                              "description": "Unix timestamp in milliseconds for the stored post snapshot"
+                            },
+                            "views": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "reach": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "likes": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "comments": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "shares": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "saves": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "totalInteractions": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "profileVisits": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "follows": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "totalWatchTimeMs": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "avgWatchTimeMs": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "skipRate": {
+                              "type": "number",
+                              "nullable": true,
+                              "description": "Percentage from 0 to 100"
+                            },
+                            "engagementRate": {
+                              "type": "number",
+                              "nullable": true,
+                              "description": "Percentage from 0 to 100"
+                            }
+                          }
+                        },
+                        "creatorAudience": {
+                          "$ref": "#/components/schemas/CreatorAudienceAccount"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": "post_demo_4k9",
+                    "platform": "instagram",
+                    "insights": {
+                      "status": "available",
+                      "reason": null,
+                      "updatedAt": 1786089600000,
+                      "views": 128450,
+                      "reach": 102300,
+                      "likes": 8420,
+                      "comments": 312,
+                      "shares": 486,
+                      "saves": 1190,
+                      "totalInteractions": 10408,
+                      "profileVisits": 2180,
+                      "follows": 347,
+                      "totalWatchTimeMs": 184520000,
+                      "avgWatchTimeMs": 14360,
+                      "skipRate": 31.4,
+                      "engagementRate": 8.1
+                    },
+                    "creatorAudience": {
+                      "platform": "instagram",
+                      "handle": "demo_creator",
+                      "lastUpdatedAt": 1786089600000,
+                      "audience": {
+                        "status": "available",
+                        "reason": null,
+                        "countriesReason": null,
+                        "usAudiencePercentage": 72,
+                        "countries": [
+                          {
+                            "label": "US",
+                            "percentage": 72
+                          },
+                          {
+                            "label": "GB",
+                            "percentage": 18
+                          },
+                          {
+                            "label": "CA",
+                            "percentage": 10
+                          }
+                        ],
+                        "ages": [
+                          {
+                            "label": "25-34",
+                            "percentage": 48.5
+                          }
+                        ],
+                        "genders": [
+                          {
+                            "label": "female",
+                            "percentage": 61.2
+                          }
+                        ],
+                        "cities": [
+                          {
+                            "label": "New York",
+                            "percentage": 12.4
+                          }
+                        ],
+                        "demographicsBasis": "reached",
+                        "sampleSize": 2500,
+                        "instagramAudiences": [
+                          {
+                            "basis": "reached",
+                            "sampleSize": 2500,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 72
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 18
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 48.5
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 61.2
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 12.4
+                              }
+                            ]
+                          },
+                          {
+                            "basis": "engaged",
+                            "sampleSize": 840,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 68
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 22
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 52.1
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 58.7
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 14.1
+                              }
+                            ]
+                          },
+                          {
+                            "basis": "followers",
+                            "sampleSize": 3100,
+                            "countries": [
+                              {
+                                "label": "US",
+                                "percentage": 70
+                              },
+                              {
+                                "label": "GB",
+                                "percentage": 20
+                              },
+                              {
+                                "label": "CA",
+                                "percentage": 10
+                              }
+                            ],
+                            "ages": [
+                              {
+                                "label": "25-34",
+                                "percentage": 47.9
+                              }
+                            ],
+                            "genders": [
+                              {
+                                "label": "female",
+                                "percentage": 62.4
+                              }
+                            ],
+                            "cities": [
+                              {
+                                "label": "New York",
+                                "percentage": 11.8
+                              }
+                            ]
+                          }
+                        ]
                       }
                     }
                   }
