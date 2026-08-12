@@ -1006,6 +1006,7 @@
                               },
                               "demographicsBasis": {
                                 "type": "string",
+                                "description": "The single population described by all four demographic arrays (`ages`, `genders`, `cities`, and the Instagram country split). This is `reached` when any reached breakdown exists, otherwise `followers` when follower breakdowns exist. A category missing from the selected basis is returned as an empty array and is never filled from the other population. `null` means neither breakdown has data.",
                                 "nullable": true,
                                 "enum": [
                                   "reached",
