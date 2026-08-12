@@ -70,6 +70,1047 @@
     }
   ],
   "paths": {
+    "/pay-structures": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "summary": "Browse creator pay structures",
+        "description": "Get the pay terms for each visible creator and program.\n\nThis endpoint includes offer-level cash terms and active Canvas payscales. `baseRateCents` contains cash entries only. Manual and Shopify entries are returned separately in `nonCashBaseRateEntries` with their `valueCents`; a product seed is not cash. `platformRatios: null` means there is no platform split. In the Canvas `assigned` block, `assignment: \"explicit\"` means the creator really resolves to that payscale group. `assignment: \"campaign_default\"` covers both a creator who was never assigned and a creator whose assigned group no longer exists; `assignedAt` is epoch milliseconds for an explicit assignment and is null for `campaign_default`.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Pagination page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Items to return per page"
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Narrow results to one opaque creator ID"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Narrow results to one program"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pay structures returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "creatorId": {
+                            "type": "string"
+                          },
+                          "creatorName": {
+                            "type": "string"
+                          },
+                          "programId": {
+                            "type": "string"
+                          },
+                          "programName": {
+                            "type": "string"
+                          },
+                          "contractId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "integer",
+                            "description": "Unix timestamp in milliseconds"
+                          },
+                          "updatedAt": {
+                            "type": "integer",
+                            "description": "Unix timestamp in milliseconds"
+                          },
+                          "money": {
+                            "type": "object",
+                            "properties": {
+                              "payModelKind": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The offer pricing kind, or `canvas_payscale` for a creator on Canvas"
+                              },
+                              "baseRateCents": {
+                                "type": "integer",
+                                "description": "Cash base-rate entries only, in the smallest currency unit"
+                              },
+                              "nonCashBaseRateEntries": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "currency": {
+                                      "type": "string",
+                                      "enum": [
+                                        "manual",
+                                        "shopify"
+                                      ]
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true
+                                    },
+                                    "valueCents": {
+                                      "type": "integer",
+                                      "description": "Declared non-cash value; not included in baseRateCents"
+                                    }
+                                  }
+                                }
+                              },
+                              "cpmCents": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "cpcCents": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "viewCap": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "minViewThreshold": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "maxCpmEarnableCents": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "maxTotalEarnableCents": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "platformRatios": {
+                                "type": "object",
+                                "nullable": true,
+                                "additionalProperties": {
+                                  "type": "number"
+                                },
+                                "description": "Platform split ratios. Null means no split."
+                              }
+                            }
+                          },
+                          "canvas": {
+                            "nullable": true,
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "assigned": {
+                                    "nullable": true,
+                                    "oneOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "label": {
+                                            "type": "string"
+                                          },
+                                          "isDefault": {
+                                            "type": "boolean"
+                                          },
+                                          "isTrial": {
+                                            "type": "boolean"
+                                          },
+                                          "assignment": {
+                                            "type": "string",
+                                            "enum": [
+                                              "explicit",
+                                              "campaign_default"
+                                            ],
+                                            "description": "`explicit` means the creator resolves to this payscale group. `campaign_default` means the creator was never assigned to a group or the assigned group no longer exists."
+                                          },
+                                          "assignedAt": {
+                                            "type": "integer",
+                                            "nullable": true,
+                                            "description": "Unix timestamp in milliseconds for an explicit assignment; null when `assignment` is `campaign_default`."
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "contentRules": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "label": {
+                                          "type": "string"
+                                        },
+                                        "matcher": {
+                                          "type": "object",
+                                          "properties": {
+                                            "kind": {
+                                              "type": "string",
+                                              "enum": [
+                                                "content",
+                                                "lifetime_views"
+                                              ]
+                                            },
+                                            "description": {
+                                              "type": "string"
+                                            },
+                                            "thresholdViews": {
+                                              "type": "integer"
+                                            }
+                                          }
+                                        },
+                                        "pay": {
+                                          "type": "object",
+                                          "properties": {
+                                            "payoutType": {
+                                              "type": "string",
+                                              "enum": [
+                                                "view_bonus",
+                                                "cpm",
+                                                "flat_fee"
+                                              ]
+                                            },
+                                            "platformPayoutMode": {
+                                              "type": "string",
+                                              "enum": [
+                                                "per_post",
+                                                "highest_platform"
+                                              ]
+                                            },
+                                            "viewTrackingDays": {
+                                              "type": "integer"
+                                            },
+                                            "trialCutoff": {
+                                              "type": "object",
+                                              "properties": {
+                                                "views": {
+                                                  "type": "integer"
+                                                },
+                                                "posts": {
+                                                  "type": "integer"
+                                                },
+                                                "days": {
+                                                  "type": "integer"
+                                                },
+                                                "enabled": {
+                                                  "type": "boolean"
+                                                }
+                                              }
+                                            },
+                                            "perCreatorCap": {
+                                              "type": "object",
+                                              "properties": {
+                                                "enabled": {
+                                                  "type": "boolean"
+                                                },
+                                                "capCents": {
+                                                  "type": "integer"
+                                                },
+                                                "periodDays": {
+                                                  "type": "integer"
+                                                }
+                                              }
+                                            },
+                                            "inactivityCutoff": {
+                                              "type": "object",
+                                              "properties": {
+                                                "enabled": {
+                                                  "type": "boolean"
+                                                },
+                                                "days": {
+                                                  "type": "integer"
+                                                }
+                                              }
+                                            },
+                                            "baseRateDisabled": {
+                                              "type": "boolean"
+                                            },
+                                            "tiers": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "viewsThreshold": {
+                                                    "type": "integer"
+                                                  },
+                                                  "bonusCents": {
+                                                    "type": "integer"
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "cpmCents": {
+                                              "type": "integer"
+                                            },
+                                            "minViews": {
+                                              "type": "integer"
+                                            },
+                                            "maxViews": {
+                                              "type": "integer"
+                                            },
+                                            "flatFeeCents": {
+                                              "type": "integer"
+                                            },
+                                            "amountCents": {
+                                              "type": "integer"
+                                            },
+                                            "flatFee": {
+                                              "type": "object",
+                                              "properties": {
+                                                "enabled": {
+                                                  "type": "boolean"
+                                                },
+                                                "flatFeeCents": {
+                                                  "type": "integer"
+                                                },
+                                                "minViews": {
+                                                  "type": "integer"
+                                                }
+                                              }
+                                            },
+                                            "monthlyInput": {
+                                              "type": "object",
+                                              "properties": {
+                                                "budgetCents": {
+                                                  "type": "integer"
+                                                },
+                                                "postsPerMonth": {
+                                                  "type": "integer"
+                                                },
+                                                "videosPerMonth": {
+                                                  "type": "integer"
+                                                }
+                                              }
+                                            },
+                                            "perPlatform": {
+                                              "type": "object",
+                                              "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "payoutType": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "excluded",
+                                                      "view_bonus",
+                                                      "cpm",
+                                                      "flat_fee"
+                                                    ]
+                                                  },
+                                                  "excluded": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "flatFeeCents": {
+                                                    "type": "integer"
+                                                  },
+                                                  "tiers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "viewsThreshold": {
+                                                          "type": "integer"
+                                                        },
+                                                        "bonusCents": {
+                                                          "type": "integer"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "cpmCents": {
+                                                    "type": "integer"
+                                                  },
+                                                  "minViews": {
+                                                    "type": "integer"
+                                                  },
+                                                  "maxViews": {
+                                                    "type": "integer"
+                                                  },
+                                                  "flatFee": {
+                                                    "type": "object"
+                                                  },
+                                                  "amountCents": {
+                                                    "type": "integer"
+                                                  },
+                                                  "monthlyInput": {
+                                                    "type": "object"
+                                                  },
+                                                  "baseRateDisabled": {
+                                                    "type": "boolean"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "fallbackPay": {
+                                    "nullable": true,
+                                    "description": "The pay config used when content matches no rule. This can be null for a non-default payscale group with no fallback configured; null means the creator has no fallback pay yet.",
+                                    "type": "object",
+                                    "properties": {
+                                      "payoutType": {
+                                        "type": "string",
+                                        "enum": [
+                                          "view_bonus",
+                                          "cpm",
+                                          "flat_fee"
+                                        ]
+                                      },
+                                      "platformPayoutMode": {
+                                        "type": "string",
+                                        "enum": [
+                                          "per_post",
+                                          "highest_platform"
+                                        ]
+                                      },
+                                      "viewTrackingDays": {
+                                        "type": "integer"
+                                      },
+                                      "trialCutoff": {
+                                        "type": "object",
+                                        "properties": {
+                                          "views": {
+                                            "type": "integer"
+                                          },
+                                          "posts": {
+                                            "type": "integer"
+                                          },
+                                          "days": {
+                                            "type": "integer"
+                                          },
+                                          "enabled": {
+                                            "type": "boolean"
+                                          }
+                                        }
+                                      },
+                                      "perCreatorCap": {
+                                        "type": "object",
+                                        "properties": {
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "capCents": {
+                                            "type": "integer"
+                                          },
+                                          "periodDays": {
+                                            "type": "integer"
+                                          }
+                                        }
+                                      },
+                                      "inactivityCutoff": {
+                                        "type": "object",
+                                        "properties": {
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "days": {
+                                            "type": "integer"
+                                          }
+                                        }
+                                      },
+                                      "baseRateDisabled": {
+                                        "type": "boolean"
+                                      },
+                                      "tiers": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "viewsThreshold": {
+                                              "type": "integer"
+                                            },
+                                            "bonusCents": {
+                                              "type": "integer"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "cpmCents": {
+                                        "type": "integer"
+                                      },
+                                      "minViews": {
+                                        "type": "integer"
+                                      },
+                                      "maxViews": {
+                                        "type": "integer"
+                                      },
+                                      "flatFeeCents": {
+                                        "type": "integer"
+                                      },
+                                      "amountCents": {
+                                        "type": "integer"
+                                      },
+                                      "flatFee": {
+                                        "type": "object",
+                                        "properties": {
+                                          "enabled": {
+                                            "type": "boolean"
+                                          },
+                                          "flatFeeCents": {
+                                            "type": "integer"
+                                          },
+                                          "minViews": {
+                                            "type": "integer"
+                                          }
+                                        }
+                                      },
+                                      "monthlyInput": {
+                                        "type": "object",
+                                        "properties": {
+                                          "budgetCents": {
+                                            "type": "integer"
+                                          },
+                                          "postsPerMonth": {
+                                            "type": "integer"
+                                          },
+                                          "videosPerMonth": {
+                                            "type": "integer"
+                                          }
+                                        }
+                                      },
+                                      "perPlatform": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "properties": {
+                                            "payoutType": {
+                                              "type": "string",
+                                              "enum": [
+                                                "excluded",
+                                                "view_bonus",
+                                                "cpm",
+                                                "flat_fee"
+                                              ]
+                                            },
+                                            "excluded": {
+                                              "type": "boolean"
+                                            },
+                                            "flatFeeCents": {
+                                              "type": "integer"
+                                            },
+                                            "tiers": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "viewsThreshold": {
+                                                    "type": "integer"
+                                                  },
+                                                  "bonusCents": {
+                                                    "type": "integer"
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "cpmCents": {
+                                              "type": "integer"
+                                            },
+                                            "minViews": {
+                                              "type": "integer"
+                                            },
+                                            "maxViews": {
+                                              "type": "integer"
+                                            },
+                                            "flatFee": {
+                                              "type": "object"
+                                            },
+                                            "amountCents": {
+                                              "type": "integer"
+                                            },
+                                            "monthlyInput": {
+                                              "type": "object"
+                                            },
+                                            "baseRateDisabled": {
+                                              "type": "boolean"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "maxVideosPerWeek": {
+                                    "type": "integer",
+                                    "nullable": true
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "creatorId": "crt_demo_creator_7x2",
+                      "creatorName": "Demo Creator",
+                      "programId": "00000000-0000-4000-8000-000000000101",
+                      "programName": "Spring Launch",
+                      "contractId": "00000000-0000-4000-8000-000000000102",
+                      "createdAt": 1786003200000,
+                      "updatedAt": 1786089600000,
+                      "money": {
+                        "payModelKind": "post",
+                        "baseRateCents": 7500,
+                        "nonCashBaseRateEntries": [
+                          {
+                            "currency": "manual",
+                            "name": "Product sample",
+                            "valueCents": 2500
+                          }
+                        ],
+                        "cpmCents": 400,
+                        "cpcCents": 25,
+                        "viewCap": 100000,
+                        "minViewThreshold": 1000,
+                        "maxCpmEarnableCents": 50000,
+                        "maxTotalEarnableCents": 100000,
+                        "platformRatios": {
+                          "instagram": 0.6,
+                          "tiktok": 0.4
+                        }
+                      },
+                      "canvas": null
+                    },
+                    {
+                      "creatorId": "crt_demo_creator_9k4",
+                      "creatorName": "Sample Creator",
+                      "programId": "00000000-0000-4000-8000-000000000103",
+                      "programName": "Always-On Video Program",
+                      "contractId": null,
+                      "createdAt": 1785916800000,
+                      "updatedAt": 1786089600000,
+                      "money": {
+                        "payModelKind": "canvas_payscale",
+                        "baseRateCents": 0,
+                        "nonCashBaseRateEntries": [],
+                        "cpmCents": null,
+                        "cpcCents": null,
+                        "viewCap": null,
+                        "minViewThreshold": null,
+                        "maxCpmEarnableCents": null,
+                        "maxTotalEarnableCents": null,
+                        "platformRatios": null
+                      },
+                      "canvas": {
+                        "assigned": {
+                          "id": "scale-growth",
+                          "label": "Growth",
+                          "isDefault": false,
+                          "isTrial": false,
+                          "assignment": "explicit",
+                          "assignedAt": 1786003200000
+                        },
+                        "contentRules": [
+                          {
+                            "id": "rule-talking-head",
+                            "label": "Talking head",
+                            "matcher": {
+                              "kind": "content",
+                              "description": "Creator speaks directly to camera"
+                            },
+                            "pay": {
+                              "payoutType": "view_bonus",
+                              "platformPayoutMode": "per_post",
+                              "viewTrackingDays": 30,
+                              "trialCutoff": {
+                                "views": 10000,
+                                "posts": 10,
+                                "days": 14,
+                                "enabled": true
+                              },
+                              "perCreatorCap": {
+                                "enabled": true,
+                                "capCents": 150000,
+                                "periodDays": 30
+                              },
+                              "inactivityCutoff": {
+                                "enabled": true,
+                                "days": 30
+                              },
+                              "baseRateDisabled": false,
+                              "tiers": [
+                                {
+                                  "viewsThreshold": 1000,
+                                  "bonusCents": 2000
+                                },
+                                {
+                                  "viewsThreshold": 10000,
+                                  "bonusCents": 10000
+                                },
+                                {
+                                  "viewsThreshold": 50000,
+                                  "bonusCents": 30000
+                                }
+                              ],
+                              "flatFeeCents": 0
+                            }
+                          }
+                        ],
+                        "fallbackPay": {
+                          "payoutType": "view_bonus",
+                          "platformPayoutMode": "per_post",
+                          "viewTrackingDays": 30,
+                          "trialCutoff": {
+                            "views": 10000,
+                            "posts": 10,
+                            "days": 14,
+                            "enabled": true
+                          },
+                          "perCreatorCap": {
+                            "enabled": true,
+                            "capCents": 150000,
+                            "periodDays": 30
+                          },
+                          "inactivityCutoff": {
+                            "enabled": true,
+                            "days": 30
+                          },
+                          "baseRateDisabled": false,
+                          "tiers": [
+                            {
+                              "viewsThreshold": 1000,
+                              "bonusCents": 2000
+                            },
+                            {
+                              "viewsThreshold": 10000,
+                              "bonusCents": 10000
+                            },
+                            {
+                              "viewsThreshold": 50000,
+                              "bonusCents": 30000
+                            }
+                          ],
+                          "flatFeeCents": 0
+                        },
+                        "maxVideosPerWeek": 5
+                      }
+                    }
+                  ],
+                  "page": 1,
+                  "total": 2,
+                  "totalPages": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid creator ID or query parameter"
+          },
+          "401": {
+            "description": "Unauthorized - API key is invalid"
+          },
+          "402": {
+            "description": "Active subscription is required"
+          },
+          "403": {
+            "description": "The requested scope is not allowed"
+          },
+          "429": {
+            "description": "Request rate limit exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/creators/{id}/audience": {
+      "get": {
+        "tags": [
+          "Creators"
+        ],
+        "summary": "View creator audience demographics",
+        "description": "Get saved audience demographics for each linked social account of a visible creator.\n\nPercentages use a `0` to `100` scale, including `usAudiencePercentage`. Audience data can be up to about 30 days old; `lastUpdatedAt` is a Unix timestamp in milliseconds for the newest data in that account block. `countries` comes from the monthly country refresh when available and falls back to the Instagram account's own country split otherwise. `usAudiencePercentage` is populated only from the monthly country refresh, so null does not mean the US share is zero. `reason` is set only when the entire audience block has no data. When country data is missing but age, gender, or city data exists, `countriesReason` describes the missing country data instead.\n\nThe possible no-data reasons are `unsupported_platform`, `no_data_marker`, and `never_fetched`. A creator the API key cannot see returns `404`.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque creator ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audience demographics returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "platform": {
+                            "type": "string"
+                          },
+                          "handle": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "lastUpdatedAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "Unix timestamp in milliseconds; audience data may be up to about 30 days old"
+                          },
+                          "audience": {
+                            "type": "object",
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "available",
+                                  "no_data"
+                                ]
+                              },
+                              "reason": {
+                                "type": "string",
+                                "nullable": true,
+                                "enum": [
+                                  "unsupported_platform",
+                                  "no_data_marker",
+                                  "never_fetched"
+                                ]
+                              },
+                              "countriesReason": {
+                                "type": "string",
+                                "nullable": true,
+                                "enum": [
+                                  "unsupported_platform",
+                                  "no_data_marker",
+                                  "never_fetched"
+                                ]
+                              },
+                              "usAudiencePercentage": {
+                                "type": "number",
+                                "nullable": true,
+                                "description": "US audience percentage from the monthly country refresh only; null does not mean zero."
+                              },
+                              "countries": {
+                                "type": "array",
+                                "description": "Country distribution from the monthly country refresh when available, or the Instagram account's own country split when no monthly geo row exists.",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "percentage": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "ages": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "percentage": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "genders": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "percentage": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "cities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "percentage": {
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              },
+                              "demographicsBasis": {
+                                "type": "string",
+                                "nullable": true,
+                                "enum": [
+                                  "reached",
+                                  "followers"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "creatorId": "crt_demo_creator_7x2",
+                  "data": [
+                    {
+                      "platform": "instagram",
+                      "handle": "demo_creator",
+                      "lastUpdatedAt": 1786089600000,
+                      "audience": {
+                        "status": "available",
+                        "reason": null,
+                        "countriesReason": null,
+                        "usAudiencePercentage": 72,
+                        "countries": [
+                          {
+                            "label": "US",
+                            "percentage": 72
+                          },
+                          {
+                            "label": "GB",
+                            "percentage": 18
+                          },
+                          {
+                            "label": "CA",
+                            "percentage": 10
+                          }
+                        ],
+                        "ages": [
+                          {
+                            "label": "25-34",
+                            "percentage": 48.5
+                          }
+                        ],
+                        "genders": [
+                          {
+                            "label": "female",
+                            "percentage": 61.2
+                          }
+                        ],
+                        "cities": [
+                          {
+                            "label": "New York",
+                            "percentage": 12.4
+                          }
+                        ],
+                        "demographicsBasis": "reached"
+                      }
+                    },
+                    {
+                      "platform": "tiktok",
+                      "handle": null,
+                      "lastUpdatedAt": 1786003200000,
+                      "audience": {
+                        "status": "no_data",
+                        "reason": "no_data_marker",
+                        "countriesReason": "no_data_marker",
+                        "usAudiencePercentage": null,
+                        "countries": [],
+                        "ages": [],
+                        "genders": [],
+                        "cities": [],
+                        "demographicsBasis": null
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Creator ID is invalid"
+          },
+          "401": {
+            "description": "Unauthorized - API key is invalid"
+          },
+          "402": {
+            "description": "Active subscription is required"
+          },
+          "403": {
+            "description": "The requested scope is not allowed"
+          },
+          "404": {
+            "description": "Creator was not found or is not visible to this API key"
+          },
+          "429": {
+            "description": "Request rate limit exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/programs": {
       "get": {
         "tags": [
@@ -1923,7 +2964,7 @@
           "Payouts"
         ],
         "summary": "View pending payouts",
-        "description": "Get pending payouts for active contracts.\n\nThe response includes payment calculations, pro-rata adjustments, and creator information.\nIt shows payouts that are due, overdue, or upcoming based on contract schedules.\n",
+        "description": "Get money currently held for creators in the payout reserve.\n\nThis is money already held for payment, not every unpaid creator amount or a complete list of pay terms. Use `/pay-structures` for creator and program pay terms.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2375,7 +3416,7 @@
           "Contracts"
         ],
         "summary": "Browse contracts",
-        "description": "Get creator contracts with sensitive payment details hidden.\n\nContracts describe the relationship between your company and creators.\nThe API returns metadata only; it cannot execute payments.\n",
+        "description": "Get offer-level creator contract metadata with sensitive payment details hidden.\n\nContracts describe the relationship between your company and creators, but this endpoint does not include Canvas weekly pay, task-level terms, or every pay term. Use `/pay-structures` for creator and program pay terms.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
