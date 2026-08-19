@@ -1550,7 +1550,7 @@
                           },
                           "deltaFromPrevDay": {
                             "type": "object",
-                            "description": "Nonnegative change from the last snapshot before the current UTC day; zero when no new snapshot was recorded today",
+                            "description": "Nonnegative change from the last snapshot before the current UTC day. This is zero when no new snapshot was recorded today or when no earlier snapshot exists; the first stored total is a baseline, not views proven to have arrived today.",
                             "properties": {
                               "views": {
                                 "type": "integer",
