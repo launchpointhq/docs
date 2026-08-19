@@ -2426,7 +2426,7 @@
           "Analytics"
         ],
         "summary": "View a program leaderboard",
-        "description": "Return an all-time creator leaderboard and program totals without paging through every post.\n\nProvide `program` or its alias `programId`. If both are present, they must match. Every creator in the program is returned in descending order by current total views. Creator sub-profiles are folded into one client-stable root creator ID.\n\n`totalPosts` counts platform post rows, so cross-posted copies count separately. `totalSourceVideos` counts distinct source videos and can be used for de-duplicated totals.\n\nThe normal analytics read model refreshes at :10 and :40 each hour, so its totals can trail a new metric scrape by about 30 minutes. Posts outside that read model fall back to their latest stored metric snapshot.\n\nAgency accounts can pass `scope=agency` to access a program owned by the parent agency or one of its linked brands.\n",
+        "description": "Return an all-time creator leaderboard and program totals without paging through every post.\n\nProvide the program ID in `program`. Every creator in the program is returned in descending order by current total views. Creator sub-profiles are folded into one client-stable root creator ID.\n\n`totalPosts` counts platform post rows, so cross-posted copies count separately. `totalSourceVideos` counts distinct source videos and can be used for de-duplicated totals.\n\nThe normal analytics read model refreshes at :10 and :40 each hour, so its totals can trail a new metric scrape by about 30 minutes. Posts outside that read model fall back to their latest stored metric snapshot.\n\nAgency accounts can pass `scope=agency` to access a program owned by the parent agency or one of its linked brands.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2434,20 +2434,12 @@
           {
             "in": "query",
             "name": "program",
+            "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
             },
-            "description": "Program ID. Required unless `programId` is provided."
-          },
-          {
-            "in": "query",
-            "name": "programId",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "Alias for `program`. Required unless `program` is provided."
+            "description": "Program ID"
           }
         ],
         "responses": {
