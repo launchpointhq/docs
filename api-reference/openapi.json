@@ -63,6 +63,16 @@
       }
     },
     "schemas": {
+      "PostPlatform": {
+        "type": "string",
+        "enum": [
+          "tiktok",
+          "instagram",
+          "youtube",
+          "facebook",
+          "snapchat"
+        ]
+      },
       "AudienceDistribution": {
         "type": "object",
         "properties": {
@@ -1383,7 +1393,7 @@
           "Posts"
         ],
         "summary": "Browse posts",
-        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more.\nResults contain engagement metrics (views, likes, comments, etc.).\n\nAgency accounts can pass `scope=agency` to return posts from the parent\nagency and every subaccount in one request.\n",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -1401,8 +1411,9 @@
             "name": "limit",
             "schema": {
               "type": "integer",
+              "minimum": 1,
               "default": 25,
-              "maximum": 100
+              "maximum": 500
             }
           },
           {
@@ -1426,12 +1437,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string",
-                "enum": [
-                  "tiktok",
-                  "instagram",
-                  "youtube"
-                ]
+                "$ref": "#/components/schemas/PostPlatform"
               }
             },
             "description": "Narrow results by platforms (multiple allowed)"
@@ -1484,11 +1490,37 @@
                           "id": {
                             "type": "string"
                           },
+                          "creatorId": {
+                            "type": "string",
+                            "description": "Client-stable encrypted creator ID"
+                          },
+                          "crossPostGroupId": {
+                            "type": "string",
+                            "description": "Shared by platform copies of the same source video"
+                          },
                           "title": {
                             "type": "string"
                           },
                           "platform": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/PostPlatform"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "Direct URL for this platform post; an empty string means no URL is stored"
+                          },
+                          "thumbnail": {
+                            "type": "string",
+                            "description": "Thumbnail URL; an empty string means no thumbnail is stored"
+                          },
+                          "metricsAvailable": {
+                            "type": "boolean",
+                            "description": "False when the post has no stored metric snapshot; use this to distinguish missing data from a stored zero"
+                          },
+                          "metricsRecordedAt": {
+                            "type": "integer",
+                            "format": "int64",
+                            "nullable": true,
+                            "description": "Unix timestamp in milliseconds for the latest metric snapshot, or null when metrics are unavailable"
                           },
                           "views": {
                             "type": "integer"
@@ -1512,7 +1544,19 @@
                             "type": "string"
                           },
                           "uploadedAt": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "Unix timestamp in milliseconds"
+                          },
+                          "deltaFromPrevDay": {
+                            "type": "object",
+                            "description": "Nonnegative change from the last snapshot before the current UTC day; zero when no new snapshot was recorded today",
+                            "properties": {
+                              "views": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            }
                           }
                         }
                       }
@@ -1521,6 +1565,9 @@
                       "type": "integer"
                     },
                     "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
                       "type": "integer"
                     }
                   }
@@ -2182,7 +2229,43 @@
                 "properties": {
                   "filters": {
                     "type": "object",
-                    "description": "Uses the same filters as GET /posts"
+                    "description": "Uses the same filters as GET /posts",
+                    "properties": {
+                      "program": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "platform": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/PostPlatform"
+                        }
+                      },
+                      "creator": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "fromDate": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "toDate": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": [
+                          "company",
+                          "agency"
+                        ]
+                      }
+                    }
                   },
                   "selectedIds": {
                     "type": "array",
@@ -2338,6 +2421,115 @@
         }
       }
     },
+    "/analytics/leaderboard": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "View a program leaderboard",
+        "description": "Return an all-time creator leaderboard and program totals without paging through every post.\n\nProvide `program` or its alias `programId`. If both are present, they must match. Every creator in the program is returned in descending order by current total views. Creator sub-profiles are folded into one client-stable root creator ID.\n\n`totalPosts` counts platform post rows, so cross-posted copies count separately. `totalSourceVideos` counts distinct source videos and can be used for de-duplicated totals.\n\nThe normal analytics read model refreshes at :10 and :40 each hour, so its totals can trail a new metric scrape by about 30 minutes. Posts outside that read model fall back to their latest stored metric snapshot.\n\nAgency accounts can pass `scope=agency` to access a program owned by the parent agency or one of its linked brands.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "program",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Program ID. Required unless `programId` is provided."
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Alias for `program`. Required unless `program` is provided."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Program leaderboard returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "programId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "uniqueCreators": {
+                              "type": "integer"
+                            },
+                            "totalViews": {
+                              "type": "integer",
+                              "format": "int64"
+                            },
+                            "totalPosts": {
+                              "type": "integer",
+                              "description": "Number of platform post rows; cross-posted copies count separately"
+                            },
+                            "totalSourceVideos": {
+                              "type": "integer",
+                              "description": "Number of distinct source videos after grouping cross-posted copies"
+                            }
+                          }
+                        },
+                        "topCreators": {
+                          "type": "array",
+                          "description": "Every program creator in descending order by total views",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "Client-stable encrypted root creator ID"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "totalViews": {
+                                "type": "integer",
+                                "format": "int64"
+                              },
+                              "totalPosts": {
+                                "type": "integer",
+                                "description": "Number of platform post rows for this creator"
+                              },
+                              "totalSourceVideos": {
+                                "type": "integer",
+                                "description": "Number of distinct source videos for this creator"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Program ID is missing, invalid, or conflicts with the alias"
+          },
+          "404": {
+            "description": "No visible program was found"
+          }
+        }
+      }
+    },
     "/analytics/videos": {
       "get": {
         "tags": [
@@ -2413,12 +2605,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string",
-                "enum": [
-                  "tiktok",
-                  "instagram",
-                  "youtube"
-                ]
+                "$ref": "#/components/schemas/PostPlatform"
               }
             }
           },
@@ -2623,7 +2810,7 @@
             "in": "query",
             "name": "platform",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/PostPlatform"
             },
             "description": "Narrow results to a platform"
           },
@@ -2842,12 +3029,7 @@
             "in": "query",
             "name": "platform",
             "schema": {
-              "type": "string",
-              "enum": [
-                "tiktok",
-                "instagram",
-                "youtube"
-              ]
+              "$ref": "#/components/schemas/PostPlatform"
             },
             "description": "Narrow analytics to a platform"
           },
