@@ -13,9 +13,9 @@ All you need is an enabled Launchpoint account, an API key, and a server that ca
 
 <Steps>
   <Step title="Create an API key">
-    Go to [Dashboard → Settings → API](https://dashboard.launchpointhq.com/settings#api) and generate a key.
+    Go to [Dashboard → Settings → Developer](https://dashboard.launchpointhq.com/campaigns?settings=api) and generate a key.
 
-    Your company needs API access turned on first. While the API stays in private preview, the API section is hidden for most companies and enabled only for trusted partners. If it is not there, email [Launchpoint support](mailto:hi@launchpointhq.com) to ask about access.
+    Your company needs API access turned on first. While the API stays in private preview, the Developer section is hidden for most companies and enabled only for trusted partners. If it is not there, email [Launchpoint support](mailto:hi@launchpointhq.com) to ask about access.
 
     <Warning>
       Copy the key at creation time. Never place it in browser code, mobile apps, logs, or source control.
@@ -83,7 +83,7 @@ A parent agency may send `scope=agency` to cover its own data plus the data of l
 
 Creator email addresses are never present in API responses.
 
-`GET /creators` does return a creator `phone`. That field is `null` when there is no number on file, and `null` across all creators whenever your creator access is locked, which happens once your wallet balance drops below the minimum.
+`GET /creators` can return a creator `phone`. That field is `null` when there is no number on file or your workspace does not have access to creator contact details.
 
 ## Stay within the rate limit
 
@@ -103,7 +103,6 @@ A `code` is included on some errors.
 | --- | --- |
 | `400` | A required value is missing, or a supplied value is invalid. |
 | `401` | No API key was sent, or the key is invalid. |
-| `402` | API access or the company's payment setup is not in place yet. |
 | `403` | The key is not allowed to reach the requested company or agency scope. |
 | `404` | No matching record exists. |
 | `429` | The API key hit its per-minute limit. |
@@ -117,4 +116,6 @@ Most list endpoints take `page` and `limit`, then return `data`, `page`, and `to
 
 ## Pick your next endpoint
 
-Browse the endpoint groups in the sidebar for programs, posts, analytics, payouts, pay structures, creators, audience, and contracts.
+Browse the endpoint groups in the sidebar for programs, posts, analytics, payouts, pay structures, creators, audience, contracts, and creator messages.
+
+Want to use the same data from an AI assistant? Follow the [MCP setup guide](/mcp) for Cursor, Claude Code, Codex, and other MCP clients.

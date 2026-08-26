@@ -3,7 +3,7 @@
   "info": {
     "title": "Launchpoint Public API",
     "version": "1.0.0",
-    "description": "**Private preview.** The Launchpoint Public API is in private preview and available only to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Use an API key in the `x-api-key` header to authenticate.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview, access is limited to trusted partners.\n- The company must have money in its Launchpoint wallet or a saved payment method. Otherwise requests return `402 { \"error\": \"Active subscription required\" }`.\n- Create and manage API keys in Dashboard → Settings → API.\n\n## Creator privacy\n- Responses never include creator phone numbers or email addresses.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
+    "description": "**Private preview.** The Launchpoint Public API is in private preview and available only to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Use an API key in the `x-api-key` header to authenticate.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview, access is limited to trusted partners.\n- Create and manage API keys in Dashboard → Settings → Developer.\n\n## Creator privacy\n- Responses never include creator email addresses. Creator phone numbers are null when no number is stored or the workspace does not have access to creator contact details.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
   },
   "servers": [
     {
@@ -35,6 +35,10 @@
     {
       "name": "Creators",
       "description": "Creator profiles and metrics"
+    },
+    {
+      "name": "Messages",
+      "description": "Read and send creator messages"
     }
   ],
   "components": {
@@ -43,7 +47,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API key created in Dashboard → Settings → API"
+        "description": "API key created in Dashboard → Settings → Developer"
       }
     },
     "parameters": {
@@ -223,6 +227,98 @@
           },
           "audience": {
             "$ref": "#/components/schemas/CreatorAudienceBlock"
+          }
+        }
+      },
+      "CreatorConversation": {
+        "type": "object",
+        "required": [
+          "id",
+          "programId",
+          "creatorId",
+          "creatorName",
+          "unreadCount",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "programId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatorId": {
+            "type": "string",
+            "description": "Opaque creator id returned by the public API"
+          },
+          "creatorName": {
+            "type": "string"
+          },
+          "lastMessageAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "lastMessagePreview": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastMessageDirection": {
+            "type": "string",
+            "enum": [
+              "outbound",
+              "inbound"
+            ],
+            "nullable": true
+          },
+          "unreadCount": {
+            "type": "integer"
+          },
+          "creatorLastReadAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CreatorMessage": {
+        "type": "object",
+        "required": [
+          "id",
+          "conversationId",
+          "direction",
+          "body",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "outbound",
+              "inbound"
+            ],
+            "description": "outbound means sent by the workspace; inbound means sent by the creator"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       }
@@ -1014,9 +1110,6 @@
           "401": {
             "description": "Unauthorized - API key is invalid"
           },
-          "402": {
-            "description": "Active subscription is required"
-          },
           "403": {
             "description": "The requested scope is not allowed"
           },
@@ -1255,9 +1348,6 @@
           },
           "401": {
             "description": "Unauthorized - API key is invalid"
-          },
-          "402": {
-            "description": "Active subscription is required"
           },
           "403": {
             "description": "The requested scope is not allowed"
@@ -3609,9 +3699,6 @@
           "401": {
             "description": "API key is invalid or missing"
           },
-          "402": {
-            "description": "Active subscription is required"
-          },
           "429": {
             "description": "Request rate limit exceeded"
           },
@@ -4076,6 +4163,266 @@
             "$ref": "#/components/parameters/ScopeParam"
           }
         ]
+      }
+    },
+    "/conversations": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "List creator conversations",
+        "description": "List conversations for one visible program. Reading this endpoint does not change message read receipts. Creator ids are the opaque ids returned by `/creators`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional opaque creator id"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversations returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page",
+                    "total",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CreatorConversation"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, creator, or paging value"
+          },
+          "404": {
+            "description": "Program not found"
+          }
+        }
+      }
+    },
+    "/conversations/{id}/messages": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Read conversation messages",
+        "description": "Read a newest-first message page. This does not mark the conversation read or change either side's read receipt.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Conversation id"
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque nextCursor from the previous page"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "nextCursor",
+                    "creatorLastReadAt"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CreatorMessage"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "creatorLastReadAt": {
+                      "type": "integer",
+                      "format": "int64",
+                      "nullable": true,
+                      "description": "When the creator last opened the conversation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid conversation id, cursor, or limit"
+          },
+          "404": {
+            "description": "Conversation not found"
+          }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Send a creator message",
+        "description": "Send a real message from the workspace to a creator and notify them. The program must be writable, the creator must be part of it, and the creator must not be blocked. Pass a stable clientMessageId UUID to make retries idempotent.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "programId",
+                  "creatorId",
+                  "body"
+                ],
+                "properties": {
+                  "programId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "creatorId": {
+                    "type": "string",
+                    "description": "Opaque creator id returned by `/creators`"
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "clientMessageId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional stable idempotency id for safe retries"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message stored and creator notification attempted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "conversationId",
+                    "message"
+                  ],
+                  "properties": {
+                    "conversationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "message": {
+                      "$ref": "#/components/schemas/CreatorMessage"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid creator, program, message, or idempotency id"
+          },
+          "403": {
+            "description": "Program is read-only, creator details are locked, or the creator is blocked"
+          },
+          "404": {
+            "description": "Program or creator relationship not found"
+          },
+          "409": {
+            "description": "clientMessageId was already used for a different message"
+          }
+        }
       }
     },
     "/contracts": {

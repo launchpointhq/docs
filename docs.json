@@ -38,7 +38,8 @@
           {
             "group": "Get started",
             "pages": [
-              "index"
+              "index",
+              "mcp"
             ]
           },
           {
