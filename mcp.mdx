@@ -1,0 +1,174 @@
+---
+title: "Connect Launchpoint to your AI assistant"
+sidebarTitle: "MCP"
+description: "Set up the hosted Launchpoint MCP server in Cursor, Claude Code, Codex, or another MCP client."
+icon: "bot"
+---
+
+<Info>
+  **Documentation index:** fetch [https://docs.launchpointhq.com/llms.txt](https://docs.launchpointhq.com/llms.txt) to discover every Launchpoint API page before exploring further.
+</Info>
+
+Launchpoint MCP gives AI assistants read-only access to your programs, posts, analytics, creators, payouts, pay terms, and contracts.
+
+Use this hosted Streamable HTTP endpoint:
+
+```text
+https://dashboard.launchpointhq.com/api/v1/mcp
+```
+
+It uses the same API keys, workspace access, creator privacy rules, and rate limit as the REST API. MCP cannot create invite links or change Launchpoint data.
+
+## Create an MCP key
+
+Open [Dashboard → Settings → Developer](https://dashboard.launchpointhq.com/campaigns?settings=api), pick your coding tool, then click **Create key & show setup**. The dashboard generates the exact config with a separate key for that connection.
+
+<Warning>
+  Launchpoint shows a new key only once. Keep it out of source control, browser code, mobile apps, prompts, and logs. Delete the key from the Developer page if it is exposed.
+</Warning>
+
+## Install
+
+Set these values in the examples below:
+
+```bash
+export LAUNCHPOINT_API_KEY="lp_pk_..."
+```
+
+<Tabs>
+  <Tab title="Cursor">
+    Add this to `~/.cursor/mcp.json` for all projects, or `.cursor/mcp.json` for one project:
+
+    ```json
+    {
+      "mcpServers": {
+        "launchpoint": {
+          "url": "https://dashboard.launchpointhq.com/api/v1/mcp",
+          "headers": {
+            "Authorization": "Bearer lp_pk_..."
+          }
+        }
+      }
+    }
+    ```
+
+    Restart Cursor. The Launchpoint tools will appear in **Settings → Tools & MCP**.
+  </Tab>
+
+  <Tab title="Claude Code">
+    Run:
+
+    ```bash
+    claude mcp add --transport http --scope user launchpoint \
+      https://dashboard.launchpointhq.com/api/v1/mcp \
+      --header "Authorization: Bearer $LAUNCHPOINT_API_KEY"
+    ```
+
+    Check the connection:
+
+    ```bash
+    claude mcp get launchpoint
+    ```
+  </Tab>
+
+  <Tab title="Codex">
+    Keep the key in `LAUNCHPOINT_API_KEY`, then run:
+
+    ```bash
+    codex mcp add launchpoint \
+      --url https://dashboard.launchpointhq.com/api/v1/mcp \
+      --bearer-token-env-var LAUNCHPOINT_API_KEY
+    ```
+
+    Check the connection:
+
+    ```bash
+    codex mcp get launchpoint
+    ```
+  </Tab>
+
+  <Tab title="Other clients">
+    Most remote MCP clients accept this standard config:
+
+    ```json
+    {
+      "mcpServers": {
+        "launchpoint": {
+          "url": "https://dashboard.launchpointhq.com/api/v1/mcp",
+          "headers": {
+            "Authorization": "Bearer lp_pk_..."
+          }
+        }
+      }
+    }
+    ```
+
+    If your client uses a form instead of JSON, choose **Streamable HTTP**, paste the MCP URL, and add `Authorization: Bearer lp_pk_...` as a request header.
+  </Tab>
+</Tabs>
+
+## Available tools
+
+| Tool | What it reads |
+| --- | --- |
+| `list_programs` | Visible programs, with status and name filters |
+| `list_posts` | Posts, current metrics, earnings, creators, and programs |
+| `get_post` | One post with metrics, earnings, contract, and bonus details |
+| `get_analytics_overview` | Totals, platform breakdowns, top posts, and top creators |
+| `list_creators` | Visible creators and their program and social profile summary |
+| `list_payouts` | Workspace payout ledger entries |
+| `get_payout_stats` | Available money, money owed, deposits, and money paid out |
+| `list_pay_structures` | Creator pay terms, CPM or CPC limits, and Canvas payscales |
+| `list_contracts` | Visible creator contracts |
+
+Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set.
+
+## Try it
+
+After setup, ask your assistant:
+
+```text
+List my active Launchpoint programs, then show the top posts by views.
+```
+
+For an agency key, say that you want agency scope:
+
+```text
+Using agency scope, compare post performance across my linked brands this month.
+```
+
+Agency scope is available only to parent agency keys. Other keys receive a `403`.
+
+## Authentication and limits
+
+MCP sends the API key as a bearer token:
+
+```http
+Authorization: Bearer lp_pk_...
+```
+
+Each MCP request uses one normal v1 rate-limit slot. The default is 100 requests per minute per key; approved partner accounts receive 400. A revoked key stops working at once.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The client says unauthorized or returns 401">
+    Check that the key starts with `lp_pk_`, is still listed in Dashboard → Settings → Developer, and is sent as `Authorization: Bearer <key>`.
+  </Accordion>
+
+  <Accordion title="The server returns 403">
+    API access is not enabled for this workspace, or the key requested agency scope without agency access. Email [Launchpoint support](mailto:hi@launchpointhq.com) if the Developer section is missing.
+  </Accordion>
+
+  <Accordion title="The tools do not appear">
+    Restart the MCP client after changing its config. In Claude Code or Codex, run the matching `mcp get launchpoint` command above and confirm the URL.
+  </Accordion>
+
+  <Accordion title="Codex works in one terminal but not the next">
+    `codex` reads the bearer token from `LAUNCHPOINT_API_KEY`. Save that variable in your shell or secret manager before starting Codex again.
+  </Accordion>
+
+  <Accordion title="The server returns 429">
+    The key reached its per-minute limit. Wait for the reset time before retrying, or use fewer pages per request.
+  </Accordion>
+</AccordionGroup>
