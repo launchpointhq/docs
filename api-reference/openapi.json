@@ -2696,6 +2696,11 @@
                           "earnings": {
                             "type": "number"
                           },
+                          "cpm": {
+                            "type": "number",
+                            "nullable": true,
+                            "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
+                          },
                           "paid": {
                             "type": "boolean"
                           },
@@ -2749,6 +2754,11 @@
                         },
                         "totalEarnings": {
                           "type": "number"
+                        },
+                        "cpm": {
+                          "type": "number",
+                          "nullable": true,
+                          "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
                         },
                         "paidVideos": {
                           "type": "integer"
@@ -2892,6 +2902,11 @@
                           "totalEarnings": {
                             "type": "number"
                           },
+                          "cpm": {
+                            "type": "number",
+                            "nullable": true,
+                            "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
+                          },
                           "paidPosts": {
                             "type": "integer"
                           },
@@ -2969,6 +2984,11 @@
                         },
                         "totalEarnings": {
                           "type": "number"
+                        },
+                        "cpm": {
+                          "type": "number",
+                          "nullable": true,
+                          "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
                         },
                         "platformBreakdown": {
                           "type": "object"
@@ -3076,6 +3096,11 @@
                             "totalEarnings": {
                               "type": "number"
                             },
+                            "cpm": {
+                              "type": "number",
+                              "nullable": true,
+                              "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
+                            },
                             "engagementRate": {
                               "type": "number"
                             },
@@ -3114,6 +3139,11 @@
                             },
                             "totalEarnings": {
                               "type": "number"
+                            },
+                            "cpm": {
+                              "type": "number",
+                              "nullable": true,
+                              "description": "Cost per 1,000 views: creator earnings divided by views, times 1,000, in dollars. Null when there are no views or no money paid yet."
                             },
                             "engagementRate": {
                               "type": "number"
