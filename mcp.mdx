@@ -9,7 +9,7 @@ icon: "bot"
   **Documentation index:** fetch [https://docs.launchpointhq.com/llms.txt](https://docs.launchpointhq.com/llms.txt) to discover every Launchpoint API page before exploring further.
 </Info>
 
-Launchpoint MCP gives AI assistants read-only access to your programs, posts, analytics, creators, payouts, pay terms, and contracts.
+Launchpoint MCP gives AI assistants access to your programs, posts, analytics, creators, payouts, pay terms, contracts, and creator conversations. It can also send creator messages when you ask it to.
 
 Use this hosted Streamable HTTP endpoint:
 
@@ -17,7 +17,11 @@ Use this hosted Streamable HTTP endpoint:
 https://dashboard.launchpointhq.com/api/v1/mcp
 ```
 
-It uses the same API keys, workspace access, creator privacy rules, and rate limit as the REST API. MCP cannot create invite links or change Launchpoint data.
+It uses the same API keys, workspace access, creator privacy rules, messaging rules, and rate limit as the REST API. The only write tool sends creator messages; MCP cannot create invite links or make other changes.
+
+<Warning>
+  An MCP key can read and send creator messages for programs your workspace can manage. Treat it like a person who can speak to creators for your company. Review the recipient and text before asking an assistant to send.
+</Warning>
 
 ## Create an MCP key
 
@@ -109,7 +113,7 @@ export LAUNCHPOINT_API_KEY="lp_pk_..."
 
 ## Available tools
 
-| Tool | What it reads |
+| Tool | What it does |
 | --- | --- |
 | `list_programs` | Visible programs, with status and name filters |
 | `list_posts` | Posts, current metrics, earnings, creators, and programs |
@@ -120,8 +124,13 @@ export LAUNCHPOINT_API_KEY="lp_pk_..."
 | `get_payout_stats` | Available money, money owed, deposits, and money paid out |
 | `list_pay_structures` | Creator pay terms, CPM or CPC limits, and Canvas payscales |
 | `list_contracts` | Visible creator contracts |
+| `list_creator_conversations` | Creator conversations for one visible program |
+| `list_conversation_messages` | A newest-first page of messages without changing read receipts |
+| `send_creator_message` | Sends and stores a real workspace message, then notifies the creator |
 
 Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set.
+
+`send_creator_message` needs a program id, the opaque creator id returned by `list_creators`, and a message. Pass a stable `client_message_id` UUID when retrying so the creator never receives the same message twice.
 
 ## Try it
 
@@ -129,6 +138,18 @@ After setup, ask your assistant:
 
 ```text
 List my active Launchpoint programs, then show the top posts by views.
+```
+
+To read messages without sending anything:
+
+```text
+List my active programs, then show unread creator messages for the first one. Do not send a reply.
+```
+
+To send, name the creator and exact text:
+
+```text
+Send Alex this exact message in the Summer Launch program: "Thanks — we received your draft and will review it today."
 ```
 
 For an agency key, say that you want agency scope:
