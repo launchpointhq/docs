@@ -17,13 +17,36 @@ Use this hosted Streamable HTTP endpoint:
 https://dashboard.launchpointhq.com/api/v1/mcp
 ```
 
-It uses the same API keys, workspace access, creator privacy rules, messaging rules, and rate limit as the REST API. The only write tool sends creator messages; MCP cannot create invite links or make other changes.
+It uses the same workspace access, creator privacy rules, messaging rules, and rate limit as the REST API. Claude can connect with OAuth, so you do not need to copy an API key into Claude. Other clients can use OAuth when supported or a Launchpoint API key. The only write tool sends creator messages; MCP cannot create invite links or make other changes.
 
 <Warning>
-  An MCP key can read and send creator messages for programs your workspace can manage. Treat it like a person who can speak to creators for your company. Review the recipient and text before asking an assistant to send.
+  An MCP connection can read and send creator messages for programs your workspace can manage. Treat it like a person who can speak to creators for your company. Review the recipient and text before asking an assistant to send.
 </Warning>
 
-## Create an MCP key
+## Connect Claude with OAuth
+
+Add a custom connector in Claude and use this remote MCP URL:
+
+```text
+https://dashboard.launchpointhq.com/api/v1/mcp
+```
+
+Claude opens Launchpoint in your browser. Sign in, review the requested access, choose **Allow access**, and return to Claude. The connection uses your current Launchpoint workspace and role. A workspace user with a read-only role cannot send creator messages.
+
+In Claude Code, add the server without a header:
+
+```bash
+claude mcp add --transport http --scope user launchpoint \
+  https://dashboard.launchpointhq.com/api/v1/mcp
+```
+
+Then run `/mcp`, select **launchpoint**, and complete authentication in your browser. Check the saved connection with:
+
+```bash
+claude mcp get launchpoint
+```
+
+## Connect with an API key
 
 Open [Dashboard → Settings → Developer](https://dashboard.launchpointhq.com/campaigns?settings=api), pick your coding tool, then click **Create key & show setup**. The dashboard generates the exact config with a separate key for that connection.
 
@@ -59,8 +82,8 @@ export LAUNCHPOINT_API_KEY="lp_pk_..."
     Restart Cursor. The Launchpoint tools will appear in **Settings → Tools & MCP**.
   </Tab>
 
-  <Tab title="Claude Code">
-    Run:
+  <Tab title="Claude Code with a key">
+    If you prefer a fixed API key instead of OAuth, run:
 
     ```bash
     claude mcp add --transport http --scope user launchpoint \
@@ -162,19 +185,23 @@ Agency scope is available only to parent agency keys. Other keys receive a `403`
 
 ## Authentication and limits
 
-MCP sends the API key as a bearer token:
+OAuth uses the authorization-code flow with S256 PKCE. Launchpoint issues a one-hour access token for this MCP server and a rotating refresh token. Tokens are limited to the `launchpoint:mcp` scope and cannot call Launchpoint REST routes. Disconnecting through a client that supports OAuth revocation invalidates the grant.
+
+API-key clients send the key as a bearer token:
 
 ```http
 Authorization: Bearer lp_pk_...
 ```
 
-Each MCP request uses one normal v1 rate-limit slot. The default is 100 requests per minute per key; approved partner accounts receive 400. A revoked key stops working at once.
+Each MCP request uses one normal v1 rate-limit slot. The default is 100 requests per minute per connection; approved partner accounts receive 400. A revoked OAuth grant or API key stops working at once.
+
+Launchpoint stores OAuth access tokens, refresh tokens, and authorization codes only as one-way hashes. It does not give Claude your Launchpoint password. See the [Launchpoint Privacy Policy](https://www.launchpointhq.com/privacy) for how Launchpoint handles data. For connector or account support, email [hi@launchpointhq.com](mailto:hi@launchpointhq.com).
 
 ## Troubleshooting
 
 <AccordionGroup>
   <Accordion title="The client says unauthorized or returns 401">
-    Check that the key starts with `lp_pk_`, is still listed in Dashboard → Settings → Developer, and is sent as `Authorization: Bearer <key>`.
+    For OAuth, run the client's reconnect or authenticate action and complete the Launchpoint browser flow. For an API key, check that the key starts with `lp_pk_`, is still listed in Dashboard → Settings → Developer, and is sent as `Authorization: Bearer <key>`.
   </Accordion>
 
   <Accordion title="The server returns 403">
@@ -182,7 +209,7 @@ Each MCP request uses one normal v1 rate-limit slot. The default is 100 requests
   </Accordion>
 
   <Accordion title="The tools do not appear">
-    Restart the MCP client after changing its config. In Claude Code or Codex, run the matching `mcp get launchpoint` command above and confirm the URL.
+    Restart the MCP client after changing its config. In Claude Code, run `/mcp` and confirm that launchpoint is authenticated. In Claude Code or Codex, run the matching `mcp get launchpoint` command above and confirm the URL.
   </Accordion>
 
   <Accordion title="Codex works in one terminal but not the next">
