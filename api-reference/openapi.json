@@ -37,6 +37,10 @@
       "description": "Creator profiles and metrics"
     },
     {
+      "name": "Applications",
+      "description": "Creator applications to Canvas programs"
+    },
+    {
       "name": "Messages",
       "description": "Read and send creator messages"
     }
@@ -4163,6 +4167,164 @@
             "$ref": "#/components/parameters/ScopeParam"
           }
         ]
+      }
+    },
+    "/applications": {
+      "get": {
+        "tags": [
+          "Applications"
+        ],
+        "summary": "Browse creator applications",
+        "description": "Get creator applications to your Canvas programs, with each application's approval status.\n\nAn application is a creator's current enrollment in a Canvas program together with the campaign-level approval decision. `status` is `pending` while the application waits for review, `approved` once the creator is accepted, and `rejected` when the creator is turned down. A creator who joined before approvals existed is returned as `approved` with `decidedAt: null`.\n\nBrief-based programs approve creators per brief and are not listed here.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Pagination page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Results to return per page"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Narrow results to applications for this program"
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Narrow results to one creator, using the opaque `id` returned by `/creators`"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            },
+            "description": "Narrow results to one application status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Applications returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Stable application id"
+                          },
+                          "programId": {
+                            "type": "string"
+                          },
+                          "programName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "creatorId": {
+                            "type": "string",
+                            "description": "Opaque creator id, the same value `/creators` returns"
+                          },
+                          "creatorName": {
+                            "type": "string"
+                          },
+                          "creatorProfileImageUrl": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "handles": {
+                            "type": "array",
+                            "description": "Social handles linked to the creator",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "platform": {
+                                  "type": "string"
+                                },
+                                "handle": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "approved",
+                              "rejected"
+                            ]
+                          },
+                          "submittedAt": {
+                            "type": "integer",
+                            "description": "When the creator applied, in Unix milliseconds. Uses the application media time, or the enrollment time when no media was sent."
+                          },
+                          "decidedAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "When the application was approved or rejected, in Unix milliseconds. `null` while pending."
+                          },
+                          "applicationVideoUrl": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Video the creator sent with the application, if any"
+                          },
+                          "applicationThumbnailUrl": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/conversations": {
