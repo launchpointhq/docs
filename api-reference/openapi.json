@@ -3717,6 +3717,239 @@
         ]
       }
     },
+    "/payouts/spend": {
+      "get": {
+        "tags": [
+          "Payouts"
+        ],
+        "summary": "Report creator spend per program",
+        "description": "Creator money for each visible program, using the same definition as the campaign pages in the dashboard.\n\n`spend` is money sent to creators through Launchpoint (`paid`), money the brand paid creators directly (`paidOffPlatform`), and money still held for creators (`awaiting` is past its pay date, `tracking` is still inside its view window). Every field is returned in dollars and in cents.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet. For an agency, a linked brand's wallet can fund the same creators, so summing the wallet ledger by program understates what creators earned. Use this endpoint for per-program spend reports.\n\n`fromDate` and `toDate` pick posts by their publish day, the same rule as the dashboard date picker, not the day money moved. Rows are sorted by spend, and `summary` sums every program in the report, not only the current page.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Pagination page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Programs to return per page"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Narrow the report to one program"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Count posts published on or after this day (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Count posts published on or before this day (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Program spend returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "programId": {
+                            "type": "string"
+                          },
+                          "programName": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "active",
+                              "paused",
+                              "completed",
+                              "archived"
+                            ]
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "usd"
+                            ]
+                          },
+                          "spend": {
+                            "type": "number",
+                            "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
+                          },
+                          "spendCents": {
+                            "type": "integer",
+                            "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
+                          },
+                          "paid": {
+                            "type": "number",
+                            "description": "Money sent to creators through Launchpoint, in dollars"
+                          },
+                          "paidCents": {
+                            "type": "integer",
+                            "description": "Money sent to creators through Launchpoint, in cents"
+                          },
+                          "paidOffPlatform": {
+                            "type": "number",
+                            "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
+                          },
+                          "paidOffPlatformCents": {
+                            "type": "integer",
+                            "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
+                          },
+                          "awaiting": {
+                            "type": "number",
+                            "description": "Money held for creators that is past its pay date, in dollars"
+                          },
+                          "awaitingCents": {
+                            "type": "integer",
+                            "description": "Money held for creators that is past its pay date, in cents"
+                          },
+                          "tracking": {
+                            "type": "number",
+                            "description": "Money held for creators that is still inside its view-tracking window, in dollars"
+                          },
+                          "trackingCents": {
+                            "type": "integer",
+                            "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "fromDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "toDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "programCount": {
+                          "type": "integer",
+                          "description": "Programs in the whole report, not only this page"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "usd"
+                          ]
+                        },
+                        "spend": {
+                          "type": "number",
+                          "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
+                        },
+                        "spendCents": {
+                          "type": "integer",
+                          "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
+                        },
+                        "paid": {
+                          "type": "number",
+                          "description": "Money sent to creators through Launchpoint, in dollars"
+                        },
+                        "paidCents": {
+                          "type": "integer",
+                          "description": "Money sent to creators through Launchpoint, in cents"
+                        },
+                        "paidOffPlatform": {
+                          "type": "number",
+                          "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
+                        },
+                        "paidOffPlatformCents": {
+                          "type": "integer",
+                          "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
+                        },
+                        "awaiting": {
+                          "type": "number",
+                          "description": "Money held for creators that is past its pay date, in dollars"
+                        },
+                        "awaitingCents": {
+                          "type": "integer",
+                          "description": "Money held for creators that is past its pay date, in cents"
+                        },
+                        "tracking": {
+                          "type": "number",
+                          "description": "Money held for creators that is still inside its view-tracking window, in dollars"
+                        },
+                        "trackingCents": {
+                          "type": "integer",
+                          "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters, such as fromDate after toDate"
+          },
+          "401": {
+            "description": "API key is invalid or missing"
+          },
+          "429": {
+            "description": "Request rate limit exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/payouts/pending": {
       "get": {
         "tags": [
