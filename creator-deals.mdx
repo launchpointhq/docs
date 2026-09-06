@@ -1,0 +1,70 @@
+---
+title: "List Launchpoint deals in your app"
+sidebarTitle: "Creator deals"
+description: "Build a creator jobs feed with public deal links that work before signup."
+icon: "briefcase"
+---
+
+Use `GET /api/v1/deals` to list public Launchpoint opportunities in your creator app. Each deal includes a public `url` for your **View deal** button.
+
+## Fetch the catalog
+
+Call the API from your server with the same `x-api-key` used by other endpoints. API access must be enabled for your workspace. Keep the key out of your browser and mobile app.
+
+```bash
+curl "https://dashboard.launchpointhq.com/api/v1/deals?page=1&limit=100" \
+  --header "x-api-key: $LAUNCHPOINT_API_KEY"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "Daily routine videos",
+      "description": "Create videos about your daily routine.",
+      "brandName": "Example brand",
+      "brandIconUrl": null,
+      "url": "https://dashboard.launchpointhq.com/creator-deals/11111111-1111-4111-8111-111111111111",
+      "createdAt": 1788220800000,
+      "updatedAt": null
+    }
+  ],
+  "page": 1,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+Fetch pages from `1` through `totalPages` to read every matching deal. The default limit is `25`; the maximum is `100`. Results use stable deal ID order. There is no cap on the full catalog.
+
+This feed covers public deals across Launchpoint. It does not accept `scope`, creator IDs, or other filters. Unsupported parameters return `400`.
+
+Only public, active deals that accept submissions are listed. Deleted, private, unlisted, paused, and closed deals are excluded. Refresh your local catalog on a regular schedule and remove deals that disappear after a complete refresh. The feed reads live state, so concurrent changes can move records between pages. Deduplicate by `id`.
+
+## Link each card to Launchpoint
+
+Use the returned `url` as the card's details link. Show `name`, `brandName`, and `description` as text. `brandIconUrl`, the description, brand name, and timestamps can be `null`.
+
+The URL opens a public page with the deal name and description. The creator does not need to sign in to see it. The page offers three actions:
+
+- **Open deal in app** opens the selected deal in an installed Launchpoint app.
+- **Download for iPhone** opens the Launchpoint App Store listing.
+- **Continue on web** opens the selected deal in the creator web app.
+
+<Note>
+  Installation does not retain the selected deal automatically. After installing
+  and creating an account, the creator returns to the public page and taps
+  **Open deal in app**. A new web user also returns to this page after signup
+  and selects **Continue on web**. Keep the original link available in your app.
+</Note>
+
+Open the public page in the system browser when your app's embedded browser blocks app links. The download link is for iPhone; other devices can use the web option.
+
+The landing page checks current visibility on every visit. If the deal has closed or become private, it returns an unavailable page without showing its details.
+
+## Application and pay terms
+
+Listing a deal does not mean a creator qualifies for it. Launchpoint checks eligibility and shows current briefs and pay terms inside the creator app. The feed does not expose creator identities, private budgets, or sourcing rewards. Following the link does not enroll a creator or create an invitation.
+
+The endpoint uses the existing API key permissions, rate limits, and error format described in the [quickstart](/index).

@@ -39,7 +39,8 @@
             "group": "Get started",
             "pages": [
               "index",
-              "mcp"
+              "mcp",
+              "creator-deals"
             ]
           },
           {
