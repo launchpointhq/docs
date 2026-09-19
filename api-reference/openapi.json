@@ -2662,6 +2662,271 @@
         }
       }
     },
+    "/posts/{id}/analysis": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "View post analysis",
+        "description": "Get the media analysis for one post: the storyboard scenes the analyzer wrote plus retention data.\n\n`analysisStatus` is the state of the post's latest non-fingerprint analysis: `none` when the post has never been analyzed, `pending`, `failed`, or `complete`. `storyboard` is `null` until a complete analysis with scenes exists.\n\n`retention.organic` follows the post insights contract: `status` and `reason` are paired \u2014 `available` with `reason: null` means an Instagram snapshot exists; `no_data` with `never_fetched` means none was stored; `no_data` with `unsupported_platform` means the post is not Instagram.\n\n`retention.paid` sums the post's video paid metrics across all of its boosts: `impressions`, three-second views, and watch-through quartile counters (`videoP25Views` \u2026 `videoP100Views`), plus `hookRatePct` (three-second views \u00f7 impressions) and `completionRatePct` (completes \u00f7 impressions), both as percentages from 0 to 100. Paid metrics are video-level, so every crossposted sibling post of one video reports the same paid block. `no_data` with reason `no_paid_metrics` means the video has no reported paid metrics.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the post"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post analysis returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "analysisStatus": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "pending",
+                            "failed",
+                            "complete"
+                          ]
+                        },
+                        "analyzedAt": {
+                          "type": "integer",
+                          "nullable": true,
+                          "description": "Unix timestamp in milliseconds of the latest analysis update"
+                        },
+                        "durationSeconds": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "storyboard": {
+                          "type": "array",
+                          "nullable": true,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "startMs": {
+                                "type": "number"
+                              },
+                              "endMs": {
+                                "type": "number"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "transcript": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "textOnScreen": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "sellsProduct": {
+                                "type": "boolean",
+                                "nullable": true,
+                                "description": "Present on newer analyses; null on older artifacts"
+                              }
+                            }
+                          }
+                        },
+                        "retention": {
+                          "type": "object",
+                          "properties": {
+                            "organic": {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "available",
+                                    "no_data"
+                                  ]
+                                },
+                                "reason": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "enum": [
+                                    "never_fetched",
+                                    "unsupported_platform"
+                                  ]
+                                },
+                                "durationSeconds": {
+                                  "type": "number",
+                                  "nullable": true
+                                },
+                                "hookRatePct": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Share still watching at 3s, percentage from 0 to 100 (1 \u2212 reels skip rate)"
+                                },
+                                "skipRatePct": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Percentage from 0 to 100"
+                                },
+                                "avgWatchTimeMs": {
+                                  "type": "number",
+                                  "nullable": true
+                                },
+                                "totalWatchTimeMs": {
+                                  "type": "number",
+                                  "nullable": true
+                                },
+                                "updatedAt": {
+                                  "type": "integer",
+                                  "nullable": true,
+                                  "description": "Unix timestamp in milliseconds for the stored post snapshot"
+                                }
+                              }
+                            },
+                            "paid": {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "available",
+                                    "no_data"
+                                  ]
+                                },
+                                "reason": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "enum": [
+                                    "no_paid_metrics"
+                                  ]
+                                },
+                                "daysLive": {
+                                  "type": "integer",
+                                  "nullable": true,
+                                  "description": "Distinct days with a reported paid row"
+                                },
+                                "throughDate": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "Most recent reported day, YYYY-MM-DD"
+                                },
+                                "impressions": {
+                                  "type": "number",
+                                  "nullable": true
+                                },
+                                "video3sViews": {
+                                  "type": "number",
+                                  "nullable": true
+                                },
+                                "videoP25Views": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Views that reached 25% of the video"
+                                },
+                                "videoP50Views": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Views that reached 50% of the video"
+                                },
+                                "videoP75Views": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Views that reached 75% of the video"
+                                },
+                                "videoP100Views": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Views that reached 100% of the video"
+                                },
+                                "hookRatePct": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Three-second views \u00f7 impressions, percentage from 0 to 100"
+                                },
+                                "completionRatePct": {
+                                  "type": "number",
+                                  "nullable": true,
+                                  "description": "Completes \u00f7 impressions, percentage from 0 to 100"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "id": "post_demo_4k9",
+                    "analysisStatus": "complete",
+                    "analyzedAt": 1786183200000,
+                    "durationSeconds": 14.2,
+                    "storyboard": [
+                      {
+                        "startMs": 0,
+                        "endMs": 6400,
+                        "description": "A person reacts in surprise to the product on a kitchen counter.",
+                        "transcript": "Wait, this actually works?",
+                        "textOnScreen": null,
+                        "sellsProduct": true
+                      },
+                      {
+                        "startMs": 6400,
+                        "endMs": 14200,
+                        "description": "Close-up demo of the product with a price overlay.",
+                        "transcript": null,
+                        "textOnScreen": "Only $19",
+                        "sellsProduct": true
+                      }
+                    ],
+                    "retention": {
+                      "organic": {
+                        "status": "available",
+                        "reason": null,
+                        "durationSeconds": 14.2,
+                        "hookRatePct": 68.6,
+                        "skipRatePct": 31.4,
+                        "avgWatchTimeMs": 14360,
+                        "totalWatchTimeMs": 184520000,
+                        "updatedAt": 1786089600000
+                      },
+                      "paid": {
+                        "status": "available",
+                        "reason": null,
+                        "daysLive": 12,
+                        "throughDate": "2026-09-18",
+                        "impressions": 245000,
+                        "video3sViews": 121000,
+                        "videoP25Views": 88000,
+                        "videoP50Views": 54000,
+                        "videoP75Views": 31000,
+                        "videoP100Views": 19000,
+                        "hookRatePct": 49.4,
+                        "completionRatePct": 7.8
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found or not visible to the API key's scope"
+          }
+        }
+      }
+    },
     "/posts/export": {
       "post": {
         "tags": [
