@@ -50,7 +50,7 @@
     },
     {
       "name": "Onboarding",
-      "description": "Review creators' onboarding proofs"
+      "description": "Creator onboarding: status, feedback, and proof review"
     }
   ],
   "components": {
@@ -5668,6 +5668,513 @@
         }
       }
     },
+    "/onboarding": {
+      "get": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "List creators in onboarding",
+        "description": "List the creators in one program who still have onboarding work, the same list as the dashboard's Onboarding tasks: creators with a proof waiting for review first, then creators still getting ready.\n\nThe list includes approved creators who still have an open slot. A creator with no linked account is listed only when the program requires specific platforms; check other creators with `GET /onboarding/{creatorId}`.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional opaque creator id"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Creators returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page",
+                    "total",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "programId",
+                          "creatorId",
+                          "status",
+                          "pendingProofCount",
+                          "lastActivityAt"
+                        ],
+                        "properties": {
+                          "programId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "creatorId": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "waiting_for_review",
+                              "getting_ready"
+                            ],
+                            "description": "`waiting_for_review`: a proof waits for your decision. `getting_ready`: the creator still has to do something. `ready`: nothing is left (detail only)."
+                          },
+                          "pendingProofCount": {
+                            "type": "integer",
+                            "description": "Proofs waiting for your decision"
+                          },
+                          "lastActivityAt": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "Newest proof submission or account link"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, creator, or paging value"
+          },
+          "403": {
+            "description": "Onboarding is not turned on for the workspace"
+          },
+          "404": {
+            "description": "Program not found"
+          }
+        }
+      }
+    },
+    "/onboarding/{creatorId}": {
+      "get": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Get a creator's onboarding",
+        "description": "Everything one approved creator still needs in a program, as the dashboard's Onboarding task shows it. It also answers for a creator with no linked account or no proof.\n\nApproving a proof meets one requirement. Onboarding is finished when nothing is left: `status` is `ready`. `status` matches the dashboard: a creator in the Onboarding list has its status there; any other creator is `ready`, or `getting_ready` while they still cannot post (for example, no linked account).\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque creator id returned by `/creators`"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Creator onboarding returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "programId",
+                    "creatorId",
+                    "status",
+                    "canPost",
+                    "pendingProofCount",
+                    "requiredPlatforms",
+                    "missingPlatforms",
+                    "warmUp",
+                    "accounts",
+                    "requirementsWithoutAccount",
+                    "checklist"
+                  ],
+                  "properties": {
+                    "programId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "waiting_for_review",
+                        "getting_ready",
+                        "ready"
+                      ],
+                      "description": "`waiting_for_review`: a proof waits for your decision. `getting_ready`: the creator still has to do something. `ready`: nothing is left (detail only)."
+                    },
+                    "canPost": {
+                      "type": "boolean",
+                      "description": "The creator may post in the program now"
+                    },
+                    "pendingProofCount": {
+                      "type": "integer"
+                    },
+                    "requiredPlatforms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Platforms the program requires an account on"
+                    },
+                    "missingPlatforms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Required platforms without a ready account"
+                    },
+                    "warmUp": {
+                      "type": "object",
+                      "required": [
+                        "required",
+                        "status"
+                      ],
+                      "properties": {
+                        "required": {
+                          "type": "boolean"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "unavailable",
+                            "not_required",
+                            "waiting_for_account",
+                            "not_started",
+                            "in_progress",
+                            "pending_review",
+                            "rejected",
+                            "complete"
+                          ]
+                        }
+                      }
+                    },
+                    "accounts": {
+                      "type": "array",
+                      "description": "The creator's accounts linked to the program",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "platform",
+                          "username",
+                          "met",
+                          "requirements"
+                        ],
+                        "properties": {
+                          "platform": {
+                            "type": "string"
+                          },
+                          "username": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Null while creator details are locked for the workspace"
+                          },
+                          "met": {
+                            "type": "boolean",
+                            "description": "Every requirement on this account is met"
+                          },
+                          "requirements": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "type",
+                                "label",
+                                "instructions",
+                                "status",
+                                "unmetReason",
+                                "rejectionComments",
+                                "pendingProofId"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "account_requirement",
+                                    "warm_up"
+                                  ]
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "instructions": {
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "met",
+                                    "not_applicable",
+                                    "unmet",
+                                    "checking",
+                                    "pending_review",
+                                    "rejected"
+                                  ]
+                                },
+                                "unmetReason": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "Why an automatic check is unmet, for example `bio_link_missing`"
+                                },
+                                "rejectionComments": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "Your message on the latest rejected proof"
+                                },
+                                "pendingProofId": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "description": "Set while a proof waits. Approve or reject it with the onboarding proof endpoints."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "requirementsWithoutAccount": {
+                      "type": "array",
+                      "description": "Custom requirements the creator cannot meet yet because no linked account is on their platforms",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label",
+                          "instructions",
+                          "platforms"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "instructions": {
+                            "type": "string"
+                          },
+                          "platforms": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "checklist": {
+                      "type": "array",
+                      "description": "The program's onboarding checklist items for the creator",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "label",
+                          "platform",
+                          "result",
+                          "manual"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "platform": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "result": {
+                            "type": "string",
+                            "enum": [
+                              "met",
+                              "unmet",
+                              "unknown"
+                            ]
+                          },
+                          "manual": {
+                            "type": "boolean",
+                            "description": "Your team ticks it in the dashboard"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program or creator id"
+          },
+          "403": {
+            "description": "Onboarding is not turned on for the workspace, or the program is read-only"
+          },
+          "404": {
+            "description": "Program not found, or the creator is not approved in the program"
+          }
+        }
+      }
+    },
+    "/onboarding/{creatorId}/feedback": {
+      "post": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Send onboarding feedback",
+        "description": "Send the creator a message about their onboarding, the same as Reject on the dashboard's Onboarding task. If proofs are waiting, each one is rejected with your message and the creator can send a new one. If no proof is waiting (for example, the creator has not linked Instagram yet), the creator gets your message as onboarding feedback in the app, by push, and in Discord.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque creator id returned by `/creators`"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "programId",
+                  "message"
+                ],
+                "properties": {
+                  "programId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Shown to the creator. Say what to do next."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "programId",
+                    "creatorId",
+                    "sent",
+                    "rejectedProofCount"
+                  ],
+                  "properties": {
+                    "programId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "sent": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "rejectedProofCount": {
+                      "type": "integer",
+                      "description": "Proofs rejected with the message. Zero means it was sent as onboarding feedback."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, creator, or message"
+          },
+          "403": {
+            "description": "Onboarding is not turned on for the workspace, or the program is read-only"
+          },
+          "404": {
+            "description": "Program not found, or the creator is not approved in the program"
+          },
+          "502": {
+            "description": "The message reached no channel. The body includes a `code`; try again."
+          }
+        }
+      }
+    },
     "/onboarding-proofs": {
       "get": {
         "tags": [
@@ -5793,7 +6300,7 @@
           "Onboarding"
         ],
         "summary": "Approve an onboarding proof",
-        "description": "Approve one pending proof in a writable program. For an account requirement, the requirement counts as met for that creator account. For a warm-up proof, the account counts as warmed up. The proof id selects the type. No request body.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Approve one pending proof in a writable program. For an account requirement, the requirement counts as met for that creator account. For a warm-up proof, the account counts as warmed up. Approving meets one requirement; check `GET /onboarding/{creatorId}` for the creator's overall status. The proof id selects the type. No request body.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
