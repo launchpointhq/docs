@@ -47,6 +47,10 @@
     {
       "name": "Messages",
       "description": "Read and send creator messages"
+    },
+    {
+      "name": "Onboarding",
+      "description": "Review creators' onboarding proofs"
     }
   ],
   "components": {
@@ -381,6 +385,142 @@
             "format": "int64",
             "nullable": true,
             "description": "Unix timestamp in milliseconds, or null when unavailable."
+          }
+        }
+      },
+      "OnboardingProof": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "programId",
+          "creatorId",
+          "account",
+          "requirement",
+          "media",
+          "status",
+          "rejectionComments",
+          "submittedAt",
+          "reviewedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "account_requirement",
+              "warm_up"
+            ],
+            "description": "`account_requirement`: a screenshot or screen recording for a custom account requirement of the program. `warm_up`: a screen recording of the creator's warmed-up feed."
+          },
+          "programId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatorId": {
+            "type": "string",
+            "description": "Opaque creator id, the same as in `/creators`"
+          },
+          "account": {
+            "type": "object",
+            "required": [
+              "platform",
+              "username"
+            ],
+            "properties": {
+              "platform": {
+                "type": "string",
+                "description": "Platform of the creator account the proof is for"
+              },
+              "username": {
+                "type": "string",
+                "nullable": true,
+                "description": "Null while creator details are locked for the workspace"
+              }
+            }
+          },
+          "requirement": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "instructions",
+              "searchTerms"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Custom requirement id. Null for a warm-up proof."
+              },
+              "label": {
+                "type": "string",
+                "nullable": true,
+                "description": "Requirement name. `Account warm-up` for a warm-up proof."
+              },
+              "instructions": {
+                "type": "string",
+                "nullable": true,
+                "description": "What the creator was asked to show. For a warm-up proof, the program's warm-up instructions for the platform."
+              },
+              "searchTerms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Warm-up niches the feed should show. Empty for an account requirement."
+              }
+            }
+          },
+          "media": {
+            "type": "object",
+            "required": [
+              "kind",
+              "mediaUrl",
+              "thumbnailUrl"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "image",
+                  "video"
+                ]
+              },
+              "mediaUrl": {
+                "type": "string",
+                "description": "Link that downloads the proof file. The link does not expire; do not share it."
+              },
+              "thumbnailUrl": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          },
+          "rejectionComments": {
+            "type": "string",
+            "nullable": true,
+            "description": "The message the creator saw when the proof was rejected"
+          },
+          "submittedAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reviewedAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
           }
         }
       }
@@ -2927,6 +3067,93 @@
         }
       }
     },
+    "/posts/{id}/exclude": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Exclude a post from earnings",
+        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `reason`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the post"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Optional. Shown to the creator."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post excluded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "excluded",
+                    "creatorNotified"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "excluded": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "creatorNotified": {
+                      "type": "boolean",
+                      "description": "True when a reason was sent to the creator"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid post id or reason, or the post is not in a canvas program"
+          },
+          "403": {
+            "description": "Post exclusion is not turned on for the workspace, or the program is read-only"
+          },
+          "404": {
+            "description": "Post not found or already excluded"
+          },
+          "409": {
+            "description": "Refused to protect money already paid. `code` is one of `already_paid`, `payout_processing`, `paid_off_platform`, `has_paid_ads`, `has_platform_fee`, `manual_payout_in_progress`, `removal_in_progress`."
+          }
+        }
+      }
+    },
     "/posts/export": {
       "post": {
         "tags": [
@@ -5437,6 +5664,312 @@
           },
           "409": {
             "description": "clientMessageId was already used for a different message"
+          }
+        }
+      }
+    },
+    "/onboarding-proofs": {
+      "get": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "List onboarding proofs",
+        "description": "List the onboarding proofs creators sent in one visible program, newest first. A creator sends a proof for each custom account requirement of the program (for example, a screenshot of their audience countries) and, when the program requires it, a screen recording of their warmed-up feed. `pending` lists only proofs that approve or reject can act on.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ],
+              "default": "pending"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "account_requirement",
+                "warm_up"
+              ]
+            },
+            "description": "Optional. Both types when absent."
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional opaque creator id"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proofs returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page",
+                    "total",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OnboardingProof"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, status, type, creator, or paging value"
+          },
+          "403": {
+            "description": "Onboarding proofs are not turned on for the workspace"
+          },
+          "404": {
+            "description": "Program not found"
+          }
+        }
+      }
+    },
+    "/onboarding-proofs/{id}/approve": {
+      "post": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Approve an onboarding proof",
+        "description": "Approve one pending proof in a writable program. For an account requirement, the requirement counts as met for that creator account. For a warm-up proof, the account counts as warmed up. The proof id selects the type. No request body.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the onboarding proof"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proof approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "status",
+                    "rejectionComments",
+                    "reviewedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "account_requirement",
+                        "warm_up"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "rejectionComments": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "reviewedAt": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid proof id or message"
+          },
+          "403": {
+            "description": "Onboarding proofs are not turned on for the workspace, or the program is read-only"
+          },
+          "404": {
+            "description": "Proof not found, or no longer reviewable because its account left the program"
+          },
+          "409": {
+            "description": "The proof was already reviewed. The body includes a `code`."
+          }
+        }
+      }
+    },
+    "/onboarding-proofs/{id}/reject": {
+      "post": {
+        "tags": [
+          "Onboarding"
+        ],
+        "summary": "Reject an onboarding proof",
+        "description": "Reject one pending proof in a writable program. The creator gets a notification, sees your message, and can send a new proof.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the onboarding proof"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message"
+                ],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Shown to the creator. Say what to fix."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proof rejected and creator notified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "status",
+                    "rejectionComments",
+                    "reviewedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "account_requirement",
+                        "warm_up"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "rejectionComments": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "reviewedAt": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid proof id or message"
+          },
+          "403": {
+            "description": "Onboarding proofs are not turned on for the workspace, or the program is read-only"
+          },
+          "404": {
+            "description": "Proof not found, or no longer reviewable because its account left the program"
+          },
+          "409": {
+            "description": "The proof was already reviewed. The body includes a `code`."
           }
         }
       }
