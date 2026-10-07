@@ -492,11 +492,13 @@
               },
               "mediaUrl": {
                 "type": "string",
-                "description": "Link that downloads the proof file. The link does not expire; do not share it."
+                "nullable": true,
+                "description": "Link that downloads the proof file. Null unless media links are turned on for your workspace (email hi@launchpointhq.com). The link does not expire; do not share it."
               },
               "thumbnailUrl": {
                 "type": "string",
-                "nullable": true
+                "nullable": true,
+                "description": "Preview image link. Null unless media links are turned on for your workspace."
               }
             }
           },
@@ -3073,7 +3075,7 @@
           "Posts"
         ],
         "summary": "Exclude a post from earnings",
-        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -3150,7 +3152,7 @@
             "description": "Invalid post id or message, both `message` and `reason` sent, or the post is not in a canvas program"
           },
           "403": {
-            "description": "Post exclusion is not turned on for the workspace, or the program is read-only"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Post not found or already excluded"
@@ -5681,7 +5683,7 @@
           "Onboarding"
         ],
         "summary": "List creators in onboarding",
-        "description": "List the creators in one program who still have onboarding work, the same list as the dashboard's Onboarding tasks: creators with a proof waiting for review first, then creators still getting ready.\n\nThe list includes approved creators who still have an open slot. A creator with no linked account is listed only when the program requires specific platforms; check other creators with `GET /onboarding/{creatorId}`.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "List the creators in one program who still have onboarding work, the same list as the dashboard's Onboarding tasks: creators with a proof waiting for review first, then creators still getting ready.\n\nThe list includes approved creators who still have an open slot. A creator with no linked account is listed only when the program requires specific platforms; check other creators with `GET /onboarding/{creatorId}`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -5793,9 +5795,6 @@
           "400": {
             "description": "Invalid program, creator, or paging value"
           },
-          "403": {
-            "description": "Onboarding is not turned on for the workspace"
-          },
           "404": {
             "description": "Program not found"
           }
@@ -5808,7 +5807,7 @@
           "Onboarding"
         ],
         "summary": "Get a creator's onboarding",
-        "description": "Everything one approved creator still needs in a program, as the dashboard's Onboarding task shows it. It also answers for a creator with no linked account or no proof.\n\nApproving a proof meets one requirement. Onboarding is finished when nothing is left: `status` is `ready`. `status` matches the dashboard: a creator in the Onboarding list has its status there; any other creator is `ready`, or `getting_ready` while they still cannot post (for example, no linked account).\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Everything one approved creator still needs in a program, as the dashboard's Onboarding task shows it. It also answers for a creator with no linked account or no proof.\n\nApproving a proof meets one requirement. Onboarding is finished when nothing is left: `status` is `ready`. `status` matches the dashboard: a creator in the Onboarding list has its status there; any other creator is `ready`, or `getting_ready` while they still cannot post (for example, no linked account).",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6076,7 +6075,7 @@
             "description": "Invalid program or creator id"
           },
           "403": {
-            "description": "Onboarding is not turned on for the workspace, or the program is read-only"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Program not found, or the creator is not approved in the program"
@@ -6090,7 +6089,7 @@
           "Onboarding"
         ],
         "summary": "Send an onboarding message",
-        "description": "Send the creator a message about their onboarding, for example to ask them to link Instagram and send a proof. The creator gets it as onboarding feedback in the app, by push, and in Discord. Nothing else changes.\n\nWhile a proof from the creator waits for review, the message is not sent and the request returns `409` with `code: proofs_waiting`. Approve or reject the proof instead; a rejection carries its own message to the creator.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Send the creator a message about their onboarding, for example to ask them to link Instagram and send a proof. The creator gets it as onboarding feedback in the app, by push, and in Discord. Nothing else changes.\n\nWhile a proof from the creator waits for review, the message is not sent and the request returns `409` with `code: proofs_waiting`. Approve or reject the proof instead; a rejection carries its own message to the creator.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6166,7 +6165,7 @@
             "description": "Invalid program, creator, or message"
           },
           "403": {
-            "description": "Onboarding is not turned on for the workspace, or the program is read-only"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Program not found, or the creator is not approved in the program"
@@ -6186,7 +6185,7 @@
           "Onboarding"
         ],
         "summary": "List onboarding proofs",
-        "description": "List the onboarding proofs creators sent in one visible program, newest first. A creator sends a proof for each custom account requirement of the program (for example, a screenshot of their audience countries) and, when the program requires it, a screen recording of their warmed-up feed. `pending_review` lists only proofs that approve or reject can act on.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "List the onboarding proofs creators sent in one visible program, newest first. A creator sends a proof for each custom account requirement of the program (for example, a screenshot of their audience countries) and, when the program requires it, a screen recording of their warmed-up feed. `pending_review` lists only proofs that approve or reject can act on.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6290,9 +6289,6 @@
           "400": {
             "description": "Invalid program, status, type, creator, or paging value"
           },
-          "403": {
-            "description": "Onboarding proofs are not turned on for the workspace"
-          },
           "404": {
             "description": "Program not found"
           }
@@ -6305,7 +6301,7 @@
           "Onboarding"
         ],
         "summary": "Approve an onboarding proof",
-        "description": "Approve one pending proof in a writable program. For an account requirement, the requirement counts as met for that creator account. For a warm-up proof, the account counts as warmed up. Approving meets one requirement; check `GET /onboarding/{creatorId}` for the creator's overall status. The proof id selects the type. No request body.\n\nRepeating the decision a proof already has returns the proof as it stands, so retries are safe. The opposite decision, or a decision another reviewer made first, returns `409` with `code: proof_already_reviewed`.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Approve one pending proof in a writable program. For an account requirement, the requirement counts as met for that creator account. For a warm-up proof, the account counts as warmed up. Approving meets one requirement; check `GET /onboarding/{creatorId}` for the creator's overall status. The proof id selects the type. No request body.\n\nRepeating the decision a proof already has returns the proof as it stands, so retries are safe. The opposite decision, or a decision another reviewer made first, returns `409` with `code: proof_already_reviewed`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6371,7 +6367,7 @@
             "description": "Invalid proof id or message"
           },
           "403": {
-            "description": "Onboarding proofs are not turned on for the workspace, or the program is read-only"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Proof not found, or no longer reviewable because its account left the program"
@@ -6388,7 +6384,7 @@
           "Onboarding"
         ],
         "summary": "Reject an onboarding proof",
-        "description": "Reject one pending proof in a writable program. The creator gets a notification, sees your message, and can send a new proof.\n\nRepeating the decision a proof already has returns the proof as it stands, so retries are safe. The opposite decision, or a decision another reviewer made first, returns `409` with `code: proof_already_reviewed`. A repeated reject keeps the first message.\n\nThis endpoint must be turned on for your workspace. Email hi@launchpointhq.com to ask; until then it returns `403`.",
+        "description": "Reject one pending proof in a writable program. The creator gets a notification, sees your message, and can send a new proof.\n\nRepeating the decision a proof already has returns the proof as it stands, so retries are safe. The opposite decision, or a decision another reviewer made first, returns `409` with `code: proof_already_reviewed`. A repeated reject keeps the first message.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6475,7 +6471,7 @@
             "description": "Invalid proof id or message"
           },
           "403": {
-            "description": "Onboarding proofs are not turned on for the workspace, or the program is read-only"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Proof not found, or no longer reviewable because its account left the program"
