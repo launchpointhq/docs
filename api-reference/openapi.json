@@ -4232,6 +4232,292 @@
         }
       }
     },
+    "/analytics/comment-dms": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Report the comment-to-DM funnel",
+        "description": "Comment-to-DM attribution for each visible program: how many leads opted in, how many got the first DM, and how many tapped the DM link.\n\nEvery row has the same fields. A field the chosen grouping does not use is `null`. Group the report with `groupBy`:\n\n- `program` (default): one row per program.\n- `account`: one row per program and creator account that sent the DMs.\n- `post`: one row per program, creator account, and the post the lead commented on. `postId` is the id used by `GET /posts` when the post is tracked; otherwise it is `null`. A lead who DMed the keyword directly has no post, so that row has a `null` `platformPostId`.\n- `day`: one row per day.\n\nEach event counts on its own day in America/New_York, the same rule as the dashboard DMs sent and DM clicks tiles: an opt-in on the day the conversation opened, a DM on the day it was sent, a tap on the day of the tap. `fromDate` and `toDate` apply to those days, so a tap can fall in a range that does not include its DM.\n\nTaps on links sent by Launchpoint's earlier comment automations (before 2026-09-27) are included and belong to their post. Opt-ins and sends from that period were not stored.\n\nSort with `sortBy` and `sortOrder` (default `desc`). `sortBy` defaults to `date` for `groupBy=day` and to `linkClicks` otherwise; `sortBy=date` works only with `groupBy=day`. Ties keep a stable order, so pages do not shift between reads. `summary` sums every row in the report, not only the current page.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Pagination page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "description": "Rows to return per page"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Narrow the report to one program"
+          },
+          {
+            "in": "query",
+            "name": "groupBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "program",
+                "account",
+                "post",
+                "day"
+              ],
+              "default": "program"
+            },
+            "description": "How to group the rows"
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "linkClicks",
+                "uniqueClickers",
+                "dmsSent",
+                "optIns",
+                "date"
+              ]
+            },
+            "description": "Field to sort rows by. Defaults to `date` for groupBy=day and `linkClicks` otherwise. `date` needs groupBy=day"
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "Sort direction"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Count events on or after this day (YYYY-MM-DD, America/New_York)"
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Count events on or before this day (YYYY-MM-DD, America/New_York)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comment-to-DM funnel returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "Every row has every field. Grouping keys the chosen `groupBy` does not use are null.",
+                        "properties": {
+                          "programId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Program id (groupBy=program, account, or post)"
+                          },
+                          "programName": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Program name (groupBy=program, account, or post)"
+                          },
+                          "handle": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Creator account handle (groupBy=account or post). For Facebook this is the numeric profile id"
+                          },
+                          "platform": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "instagram or facebook (groupBy=account or post)"
+                          },
+                          "creatorId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Opaque creator id, the same as GET /creators (groupBy=account or post)"
+                          },
+                          "platformPostId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The platform's id for the post the lead commented on (groupBy=post)"
+                          },
+                          "postId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The GET /posts id when the post is tracked, else null (groupBy=post)"
+                          },
+                          "postUrl": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The tracked post's link, else null (groupBy=post)"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "nullable": true,
+                            "description": "America/New_York day (groupBy=day)"
+                          },
+                          "optIns": {
+                            "type": "integer",
+                            "description": "Leads who opted in: a keyword comment or a keyword DM that opened a conversation"
+                          },
+                          "dmsSent": {
+                            "type": "integer",
+                            "description": "Conversations whose first DM went out. Follow-up DMs are not counted"
+                          },
+                          "linkClicks": {
+                            "type": "integer",
+                            "description": "Taps on the DM link by a person; link previews and prefetches are not counted"
+                          },
+                          "uniqueClickers": {
+                            "type": "integer",
+                            "description": "Conversations (people) with at least one link tap"
+                          }
+                        },
+                        "required": [
+                          "programId",
+                          "programName",
+                          "handle",
+                          "platform",
+                          "creatorId",
+                          "platformPostId",
+                          "postId",
+                          "postUrl",
+                          "date",
+                          "optIns",
+                          "dmsSent",
+                          "linkClicks",
+                          "uniqueClickers"
+                        ]
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "groupBy": {
+                      "type": "string",
+                      "enum": [
+                        "program",
+                        "account",
+                        "post",
+                        "day"
+                      ]
+                    },
+                    "fromDate": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "toDate": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "optIns": {
+                          "type": "integer",
+                          "description": "Leads who opted in: a keyword comment or a keyword DM that opened a conversation"
+                        },
+                        "dmsSent": {
+                          "type": "integer",
+                          "description": "Conversations whose first DM went out. Follow-up DMs are not counted"
+                        },
+                        "linkClicks": {
+                          "type": "integer",
+                          "description": "Taps on the DM link by a person; link previews and prefetches are not counted"
+                        },
+                        "uniqueClickers": {
+                          "type": "integer",
+                          "description": "Conversations (people) with at least one link tap"
+                        }
+                      }
+                    },
+                    "sortBy": {
+                      "type": "string",
+                      "enum": [
+                        "linkClicks",
+                        "uniqueClickers",
+                        "dmsSent",
+                        "optIns",
+                        "date"
+                      ]
+                    },
+                    "sortOrder": {
+                      "type": "string",
+                      "enum": [
+                        "asc",
+                        "desc"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters, such as fromDate after toDate, an unknown groupBy or sortBy, or sortBy=date without groupBy=day"
+          },
+          "401": {
+            "description": "API key is invalid or missing"
+          },
+          "429": {
+            "description": "Request rate limit exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/programs/{id}/invite": {
       "post": {
         "tags": [
