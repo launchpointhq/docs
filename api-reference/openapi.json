@@ -4238,7 +4238,7 @@
           "Analytics"
         ],
         "summary": "Report the comment-to-DM funnel",
-        "description": "Comment-to-DM attribution for each visible program: how many leads opted in, how many got the first DM, and how many tapped the DM link.\n\nGroup the report with `groupBy`:\n\n- `program` (default): one row per program.\n- `account`: one row per program and creator account that sent the DMs.\n- `post`: one row per program, creator account, and the post the lead commented on. `postId` is the id used by `GET /posts` when the post is tracked; otherwise it is `null`. A lead who DMed the keyword directly has no post, so that row has a `null` `platformPostId`.\n- `day`: one row per day.\n\nEach event counts on its own day in America/New_York, the same rule as the dashboard DMs sent and DM clicks tiles: an opt-in on the day the conversation opened, a DM on the day it was sent, a tap on the day of the tap. `fromDate` and `toDate` apply to those days, so a tap can fall in a range that does not include its DM.\n\nTaps on links sent by Launchpoint's earlier comment automations (before 2026-09-27) are included and belong to their post. Opt-ins and sends from that period were not stored.\n\nRows sort by link clicks (newest day first for `groupBy=day`). `summary` sums every row in the report, not only the current page.\n",
+        "description": "Comment-to-DM attribution for each visible program: how many leads opted in, how many got the first DM, and how many tapped the DM link.\n\nEvery row has the same fields. A field the chosen grouping does not use is `null`. Group the report with `groupBy`:\n\n- `program` (default): one row per program.\n- `account`: one row per program and creator account that sent the DMs.\n- `post`: one row per program, creator account, and the post the lead commented on. `postId` is the id used by `GET /posts` when the post is tracked; otherwise it is `null`. A lead who DMed the keyword directly has no post, so that row has a `null` `platformPostId`.\n- `day`: one row per day.\n\nEach event counts on its own day in America/New_York, the same rule as the dashboard DMs sent and DM clicks tiles: an opt-in on the day the conversation opened, a DM on the day it was sent, a tap on the day of the tap. `fromDate` and `toDate` apply to those days, so a tap can fall in a range that does not include its DM.\n\nTaps on links sent by Launchpoint's earlier comment automations (before 2026-09-27) are included and belong to their post. Opt-ins and sends from that period were not stored.\n\nSort with `sortBy` and `sortOrder` (default `desc`). `sortBy` defaults to `date` for `groupBy=day` and to `linkClicks` otherwise; `sortBy=date` works only with `groupBy=day`. Ties keep a stable order, so pages do not shift between reads. `summary` sums every row in the report, not only the current page.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4290,6 +4290,34 @@
           },
           {
             "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "linkClicks",
+                "uniqueClickers",
+                "dmsSent",
+                "optIns",
+                "date"
+              ]
+            },
+            "description": "Field to sort rows by. Defaults to `date` for groupBy=day and `linkClicks` otherwise. `date` needs groupBy=day"
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "Sort direction"
+          },
+          {
+            "in": "query",
             "name": "fromDate",
             "schema": {
               "type": "string",
@@ -4319,15 +4347,17 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "description": "Grouping keys depend on `groupBy`; the four funnel counts are always present.",
+                        "description": "Every row has every field. Grouping keys the chosen `groupBy` does not use are null.",
                         "properties": {
                           "programId": {
                             "type": "string",
-                            "description": "Present unless groupBy=day"
+                            "nullable": true,
+                            "description": "Program id (groupBy=program, account, or post)"
                           },
                           "programName": {
                             "type": "string",
-                            "description": "Present unless groupBy=day"
+                            "nullable": true,
+                            "description": "Program name (groupBy=program, account, or post)"
                           },
                           "handle": {
                             "type": "string",
@@ -4362,6 +4392,7 @@
                           "date": {
                             "type": "string",
                             "format": "date",
+                            "nullable": true,
                             "description": "America/New_York day (groupBy=day)"
                           },
                           "optIns": {
@@ -4380,7 +4411,22 @@
                             "type": "integer",
                             "description": "Conversations (people) with at least one link tap"
                           }
-                        }
+                        },
+                        "required": [
+                          "programId",
+                          "programName",
+                          "handle",
+                          "platform",
+                          "creatorId",
+                          "platformPostId",
+                          "postId",
+                          "postUrl",
+                          "date",
+                          "optIns",
+                          "dmsSent",
+                          "linkClicks",
+                          "uniqueClickers"
+                        ]
                       }
                     },
                     "page": {
@@ -4434,6 +4480,23 @@
                           "description": "Conversations (people) with at least one link tap"
                         }
                       }
+                    },
+                    "sortBy": {
+                      "type": "string",
+                      "enum": [
+                        "linkClicks",
+                        "uniqueClickers",
+                        "dmsSent",
+                        "optIns",
+                        "date"
+                      ]
+                    },
+                    "sortOrder": {
+                      "type": "string",
+                      "enum": [
+                        "asc",
+                        "desc"
+                      ]
                     }
                   }
                 }
@@ -4441,7 +4504,7 @@
             }
           },
           "400": {
-            "description": "Invalid filters, such as fromDate after toDate or an unknown groupBy"
+            "description": "Invalid filters, such as fromDate after toDate, an unknown groupBy or sortBy, or sortBy=date without groupBy=day"
           },
           "401": {
             "description": "API key is invalid or missing"
