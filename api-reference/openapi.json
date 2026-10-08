@@ -51,6 +51,10 @@
     {
       "name": "Onboarding",
       "description": "Creator onboarding: status, messages, and proof review"
+    },
+    {
+      "name": "Media review",
+      "description": "Review the media creators send before they post: queue, status, approve, and reject"
     }
   ],
   "components": {
@@ -523,6 +527,102 @@
             "type": "integer",
             "format": "int64",
             "nullable": true
+          }
+        }
+      },
+      "MediaReviewItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "programId",
+          "creatorId",
+          "revisionId",
+          "media",
+          "status",
+          "rejectionComments",
+          "submittedAt",
+          "reviewedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "programId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatorId": {
+            "type": "string",
+            "description": "Opaque creator id, the same as in `/creators`"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The newest revision of the media. Send it back with a decision so that the decision fails if the creator sent a newer revision after you read this one."
+          },
+          "media": {
+            "type": "object",
+            "required": [
+              "kind",
+              "mediaUrl",
+              "thumbnailUrl",
+              "carouselMediaUrls"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "video",
+                  "carousel"
+                ]
+              },
+              "mediaUrl": {
+                "type": "string",
+                "nullable": true,
+                "description": "Link that downloads the video file. Null unless media links are turned on for your workspace (email hi@launchpointhq.com). The link does not expire; do not share it."
+              },
+              "thumbnailUrl": {
+                "type": "string",
+                "nullable": true,
+                "description": "Link to the preview image. Null under the same rule as `mediaUrl`."
+              },
+              "carouselMediaUrls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Links to the images of a carousel. Empty for a video, and empty under the same rule as `mediaUrl`."
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "approved",
+              "rejected",
+              "not_reviewable"
+            ],
+            "description": "`pending_review`: the media is in your review queue, so approve and reject can act on it. `not_reviewable`: the media has no decision and is not in your queue, for example while the managing agency has not passed it. Only a read of one item returns it."
+          },
+          "rejectionComments": {
+            "type": "string",
+            "nullable": true,
+            "description": "The message the creator got. Null unless the status is `rejected`."
+          },
+          "submittedAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "When the creator sent the newest revision, in Unix milliseconds"
+          },
+          "reviewedAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "When the media was approved or rejected, in Unix milliseconds"
           }
         }
       }
@@ -2175,7 +2275,7 @@
           "Posts"
         ],
         "summary": "View post details",
-        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
         "parameters": [
           {
             "in": "path",
@@ -2205,7 +2305,14 @@
                           "type": "string"
                         },
                         "description": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "The post's caption"
+                        },
+                        "descriptionFetchedAt": {
+                          "type": "integer",
+                          "format": "int64",
+                          "nullable": true,
+                          "description": "When the caption in `description` was read from the platform, in Unix milliseconds. Null when no read has stored it yet."
                         },
                         "platform": {
                           "type": "string"
@@ -2216,9 +2323,37 @@
                         "thumbnail": {
                           "type": "string"
                         },
+                        "mediaUrl": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Link that downloads the post's video or image file. Null unless media links are turned on for your workspace (email hi@launchpointhq.com). The link does not expire; do not share it. Also null when Launchpoint has no stored copy of the file."
+                        },
                         "creator": {
                           "type": "string",
                           "description": "Social handle"
+                        },
+                        "account": {
+                          "type": "object",
+                          "description": "The social account that published the post",
+                          "properties": {
+                            "handle": {
+                              "type": "string"
+                            },
+                            "bio": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "avatarUrl": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "profileFetchedAt": {
+                              "type": "integer",
+                              "format": "int64",
+                              "nullable": true,
+                              "description": "When the account's profile, including `bio` and `avatarUrl`, was last read from the platform, in Unix milliseconds"
+                            }
+                          }
                         },
                         "uploadedAt": {
                           "type": "integer"
@@ -2257,7 +2392,8 @@
                         },
                         "lastSyncedAt": {
                           "type": "integer",
-                          "nullable": true
+                          "nullable": true,
+                          "description": "When the post's metrics were last read. This is not the caption read time; see `descriptionFetchedAt`."
                         },
                         "contract": {
                           "type": "object",
@@ -6764,6 +6900,321 @@
           },
           "409": {
             "description": "`code: proof_already_reviewed`: the proof already has the other decision"
+          }
+        }
+      }
+    },
+    "/media": {
+      "get": {
+        "tags": [
+          "Media review"
+        ],
+        "summary": "List media for review",
+        "description": "List the media creators sent for review in one visible program, before they post it. This is the Media queue of the dashboard's Tasks page. `pending_review` lists only media that approve or reject can act on, in the dashboard's order.\n\nA post that is already live is not in this list. To stop pay on a live post, use `POST /posts/{id}/exclude`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending_review",
+                "approved",
+                "rejected"
+              ],
+              "default": "pending_review"
+            }
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional opaque creator id"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page",
+                    "total",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MediaReviewItem"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, status, creator, or paging value"
+          },
+          "404": {
+            "description": "Program not found"
+          }
+        }
+      }
+    },
+    "/media/{id}": {
+      "get": {
+        "tags": [
+          "Media review"
+        ],
+        "summary": "Get one media item",
+        "description": "Get one media item and its current review status.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the media"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MediaReviewItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid media id"
+          },
+          "404": {
+            "description": "Media not found"
+          }
+        }
+      }
+    },
+    "/media/{id}/approve": {
+      "post": {
+        "tags": [
+          "Media review"
+        ],
+        "summary": "Approve media",
+        "description": "Approve one media item in your review queue. This is the brand's decision, the same as Approve in the dashboard: the creator is told and can post.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the media"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "revisionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional. The `revisionId` you reviewed. The decision fails with `409` and `code: media_newer_revision` when the creator has sent a newer revision."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Media approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MediaReviewItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid media id or revision id"
+          },
+          "402": {
+            "description": "`code: budget_exceeded`: the approval would exceed the program budget"
+          },
+          "403": {
+            "description": "The program is read-only for this API key, or `code: agency_key_not_supported`"
+          },
+          "404": {
+            "description": "Media not found"
+          },
+          "409": {
+            "description": "`code: media_already_reviewed`, `media_not_reviewable`, or `media_newer_revision`"
+          },
+          "422": {
+            "description": "`code: missing_task_compensation` or `payout_prerequisite_failed`: the program's pay setup blocks the approval"
+          }
+        }
+      }
+    },
+    "/media/{id}/reject": {
+      "post": {
+        "tags": [
+          "Media review"
+        ],
+        "summary": "Reject media",
+        "description": "Reject one media item in your review queue. The creator gets a notification, sees your message, and can send a new revision.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the media"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message"
+                ],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Shown to the creator. Say what to fix."
+                  },
+                  "revisionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional. The `revisionId` you reviewed. The decision fails with `409` and `code: media_newer_revision` when the creator has sent a newer revision."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Media rejected and creator notified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MediaReviewItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid media id, message, or revision id"
+          },
+          "403": {
+            "description": "The program is read-only for this API key, or `code: agency_key_not_supported`"
+          },
+          "404": {
+            "description": "Media not found"
+          },
+          "409": {
+            "description": "`code: media_already_reviewed`, `media_not_reviewable`, or `media_newer_revision`"
           }
         }
       }
