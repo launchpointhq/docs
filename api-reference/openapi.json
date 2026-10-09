@@ -5504,7 +5504,7 @@
           "Creators"
         ],
         "summary": "Browse creators",
-        "description": "Get creators associated with your company, along with a contract status map for each campaign.\nUse this to see which creators are active across your campaigns. Each creator has a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nThe `campaigns` array lists every program a creator is or was contracted under,\nalong with its contract status. A creator's top-level `status` is `\"active\"` when they\nhave at least one active contract; otherwise, it is `\"inactive\"`.\n\nGhost-handle contracts are excluded.\n",
+        "description": "Get creators associated with your company, along with a contract status map for each campaign.\nUse this to see which creators are active across your campaigns. Each creator has a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nThe `campaigns` array lists every program a creator is or was contracted under,\nalong with its contract status. A creator's top-level `status` is `\"active\"` when they\nhave at least one active contract; otherwise, it is `\"inactive\"`.\n\nEach campaign lists `enhancementOptIns`: the creator's accounts opted into that\nprogram's enhancements, trial reels (`trialReels`) or comment-to-DM (`commentDm`).\nA brand turns an enhancement on for a program; the creator then opts in per account.\nAn account opted into both has two entries. An opt-out removes the entry.\n\nGhost-handle contracts are excluded.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -5621,6 +5621,34 @@
                                       },
                                       "handle": {
                                         "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "enhancementOptIns": {
+                                  "type": "array",
+                                  "description": "The creator's accounts opted into an enhancement on this program, oldest first",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "enhancement": {
+                                        "type": "string",
+                                        "enum": [
+                                          "trialReels",
+                                          "commentDm"
+                                        ]
+                                      },
+                                      "platform": {
+                                        "type": "string",
+                                        "description": "Platform of the opted-in account, such as `instagram` or `facebook`"
+                                      },
+                                      "handle": {
+                                        "type": "string",
+                                        "description": "Handle of the opted-in account. Facebook Pages return the Page id."
+                                      },
+                                      "optedInAt": {
+                                        "type": "integer",
+                                        "description": "When the creator opted in, in Unix milliseconds"
                                       }
                                     }
                                   }
