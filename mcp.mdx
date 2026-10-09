@@ -133,6 +133,8 @@ export LAUNCHPOINT_API_KEY="lp_pk_..."
 
 Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set.
 
+To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. The tools that filter by `creator_id` (`list_posts`, `get_analytics_overview`, `list_applications`, `list_payouts`, `list_pay_structures`, `list_contracts`, and `list_creator_conversations`) also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
+
 `send_creator_message` needs a program id, the opaque creator id returned by `list_creators`, and a message. Pass a stable `client_message_id` UUID when retrying so the creator never receives the same message twice.
 
 ## Try it
@@ -153,6 +155,12 @@ To send, name the creator and exact text:
 
 ```text
 Send Alex this exact message in the Summer Launch program: "Thanks — we received your draft and will review it today."
+```
+
+To look up a creator by handle:
+
+```text
+Find the creator @alexcreates and show their application status and posts.
 ```
 
 For an agency key, say that you want agency scope:
