@@ -80,6 +80,15 @@
           "default": "company"
         },
         "description": "Choose the data scope. `company` (default) limits results to the API key company's data. `agency` includes the parent agency and its linked brands. `scope=agency` requires a parent agency key; other keys receive `403`."
+      },
+      "CreatorHandleParam": {
+        "in": "query",
+        "name": "creatorHandle",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Limit results to creators who have a linked social account with exactly this handle, in any letter case. A leading `@` is ignored. A handle that no visible creator linked returns an empty result. Use it when you know the handle but not the `creatorId`."
       }
     },
     "schemas": {
@@ -971,6 +980,9 @@
               "type": "string"
             },
             "description": "Narrow results to one opaque creator ID"
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -2146,6 +2158,9 @@
               }
             },
             "description": "Narrow results by creator IDs (multiple allowed)"
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -3336,6 +3351,10 @@
                           "type": "string"
                         }
                       },
+                      "creatorHandle": {
+                        "type": "string",
+                        "description": "A creator's exact social handle, with or without a leading `@`."
+                      },
                       "fromDate": {
                         "type": "string",
                         "format": "date"
@@ -3698,6 +3717,9 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -4122,6 +4144,9 @@
               "type": "string"
             },
             "description": "Narrow analytics to a creator"
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -4781,6 +4806,9 @@
             "description": "Narrow results to a creator"
           },
           {
+            "$ref": "#/components/parameters/CreatorHandleParam"
+          },
+          {
             "in": "query",
             "name": "contractId",
             "schema": {
@@ -5274,6 +5302,9 @@
             "description": "Narrow results to a creator"
           },
           {
+            "$ref": "#/components/parameters/CreatorHandleParam"
+          },
+          {
             "in": "query",
             "name": "minAmount",
             "schema": {
@@ -5513,7 +5544,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Find creators by name or social handle"
+            "description": "Find approved creators by part of their name or of a social handle assigned to a visible program. A leading `@` is ignored. To find a creator who is not approved yet, use `search` on `GET /applications`."
           }
         ],
         "responses": {
@@ -6101,6 +6132,17 @@
             "description": "Narrow results to one creator, using the opaque `id` returned by `/creators`"
           },
           {
+            "$ref": "#/components/parameters/CreatorHandleParam"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Find applications by part of the creator's name or of a handle on a social account the creator linked. A leading `@` is ignored. This also finds applicants who are not approved yet, which `GET /creators` does not list."
+          },
+          {
             "in": "query",
             "name": "status",
             "schema": {
@@ -6237,6 +6279,9 @@
               "type": "string"
             },
             "description": "Optional opaque creator id"
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -7026,6 +7071,9 @@
             "description": "Optional opaque creator id"
           },
           {
+            "$ref": "#/components/parameters/CreatorHandleParam"
+          },
+          {
             "in": "query",
             "name": "page",
             "schema": {
@@ -7315,6 +7363,9 @@
               "type": "string"
             },
             "description": "Optional opaque creator id"
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
             "in": "query",
@@ -7638,6 +7689,9 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/CreatorHandleParam"
           }
         ],
         "responses": {
