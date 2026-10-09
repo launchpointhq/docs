@@ -4778,7 +4778,7 @@
           "Creators"
         ],
         "summary": "Link a Discord channel to a creator",
-        "description": "Make a Discord channel or thread that you created the creator's space on this program's Discord server. Launchpoint then sends that creator's drafts and notices there.\n\nUse this when your own flow creates each creator's channel and creator channel creation is turned off in the program's Discord settings. It replaces the creator's earlier space for this program; it does not delete that space.\n\nThe channel must be a text channel, an announcement channel, or a thread in the program's server, and the Launchpoint bot must be able to see it and post in it. This route does not give the creator access to the channel.",
+        "description": "Make a Discord text channel that you created the creator's space on this program's Discord server. Launchpoint then sends that creator's drafts and notices there.\n\nUse this when your own flow creates each creator's channel and creator channel creation is turned off in the program's Discord settings. It replaces the creator's earlier space for this program; it does not delete that space.\n\nThe channel must be a text or announcement channel in the program's server, and the Launchpoint bot must be able to see it and post in it. A thread is not accepted. This route does not give the creator access to the channel.",
         "parameters": [
           {
             "in": "path",
@@ -4815,7 +4815,7 @@
                 "properties": {
                   "channelId": {
                     "type": "string",
-                    "description": "The Discord channel or thread id",
+                    "description": "The Discord text channel id",
                     "example": "1200000000000000002"
                   }
                 }
@@ -4860,7 +4860,7 @@
             "description": "The program is read-only for this API key"
           },
           "404": {
-            "description": "Program not found, the creator is not an approved creator in this program, or the channel was not found in the program's server"
+            "description": "Program not found, the creator is not an approved creator in this program, or the channel was not found as a text or announcement channel in the program's server"
           },
           "409": {
             "description": "The program has no connected Discord server, the channel is linked to another creator, or the Launchpoint bot cannot post in the channel"
