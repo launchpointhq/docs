@@ -9,7 +9,7 @@ icon: "bot"
   **Documentation index:** fetch [https://docs.launchpointhq.com/llms.txt](https://docs.launchpointhq.com/llms.txt) to discover every Launchpoint API page before exploring further.
 </Info>
 
-Launchpoint MCP gives AI assistants access to your programs, posts, analytics, creators, creator applications, payouts, pay terms, contracts, and creator conversations. It can also send creator messages when you ask it to.
+Launchpoint MCP gives AI assistants access to your programs, posts, analytics, creators, creator applications, onboarding, media review, payouts, pay terms, contracts, and creator conversations. When you ask it to, it can also message creators, decide onboarding proofs and media, and exclude posts from earnings.
 
 Use this hosted Streamable HTTP endpoint:
 
@@ -17,10 +17,10 @@ Use this hosted Streamable HTTP endpoint:
 https://dashboard.launchpointhq.com/api/v1/mcp
 ```
 
-It uses the same API keys, workspace access, creator privacy rules, messaging rules, and rate limit as the REST API. The only write tool sends creator messages; MCP cannot create invite links or make other changes.
+It uses the same API keys, workspace access, creator privacy rules, review rules, money guards, and rate limit as the REST API. Each tool does what its REST route does. MCP cannot create invite links, change creator collections, or link Discord channels.
 
 <Warning>
-  An MCP key can read and send creator messages for programs your workspace can manage. Treat it like a person who can speak to creators for your company. Review the recipient and text before asking an assistant to send.
+  An MCP key can message creators, approve or reject their onboarding proofs and media, and exclude posts from earnings for programs your workspace can manage. Treat it like a person on your team with those permissions. Review the creator, the decision, and any message text before asking an assistant to act.
 </Warning>
 
 ## Create an MCP key
@@ -113,27 +113,59 @@ export LAUNCHPOINT_API_KEY="lp_pk_..."
 
 ## Available tools
 
+Tool inputs use snake_case names for the REST parameters, such as `program_id` for `programId`. Ids are the same as in the REST API.
+
+### Read
+
 | Tool | What it does |
 | --- | --- |
 | `list_programs` | Visible programs, with status and name filters |
-| `list_posts` | Posts, current metrics, earnings, creators, and programs |
+| `search_creatives` | Creative library search across titles, hooks, transcripts, and storyboards |
+| `list_posts` | Posts with metrics, earnings, creator, and program. Newest first by `uploadedAt`, with stable pages |
 | `get_post` | One post with metrics, earnings, contract, and bonus details |
+| `get_post_metrics_history` | One post's daily metrics, oldest first, with the change from the day before |
+| `get_post_insights` | One post's Instagram performance and Reel watch metrics, plus the account's audience |
+| `get_post_analysis` | One post's storyboard scenes and organic and paid retention |
 | `get_analytics_overview` | Totals, platform breakdowns, top posts, and top creators |
-| `list_creators` | Visible creators and their program, social profile, and enhancement opt-in summary |
-| `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status |
-| `list_payouts` | Workspace payout ledger entries |
-| `get_payout_stats` | Available money, money owed, deposits, and money paid out |
-| `get_program_spend` | Creator spend per program, the same definition as the dashboard campaign pages, with optional program and publish-date filters |
 | `get_comment_dm_analytics` | Comment-to-DM funnel (opt-ins, first DMs sent, link clicks, unique clickers) by program, creator account, post, or day |
+| `list_creators` | Visible creators with each program's join date (`joinedAt`), social profiles, and enhancement opt-ins |
+| `get_creator_audience` | The audience of each account a creator uses on your programs |
+| `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status |
+| `list_onboarding_creators` | A program's Onboarding queue, as the dashboard shows it |
+| `get_creator_onboarding` | Everything one creator still needs before posting, with the ids of waiting proofs |
+| `list_onboarding_proofs` | Onboarding proofs on a program; pending review by default |
+| `list_media` | Media creators sent for review before posting; pending review by default |
+| `get_media` | One media item with its newest revision and status |
+| `list_payouts` | Workspace payout ledger entries |
+| `list_pending_payouts` | Money owed to creators that is not paid yet |
+| `get_payout_stats` | Available money, money owed, deposits, and money paid out |
+| `get_program_spend` | Creator spend per program, the same definition as the dashboard campaign pages |
 | `list_pay_structures` | Creator pay terms, CPM or CPC limits, and Canvas payscales |
 | `list_contracts` | Visible creator contracts |
 | `list_creator_conversations` | Creator conversations for one visible program |
 | `list_conversation_messages` | A newest-first page of messages without changing read receipts |
-| `send_creator_message` | Sends and stores a real workspace message, then notifies the creator |
 
-Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set.
+### Write
 
-To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. The tools that filter by `creator_id` (`list_posts`, `get_analytics_overview`, `list_applications`, `list_payouts`, `list_pay_structures`, `list_contracts`, and `list_creator_conversations`) also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
+Each write is a real action. Repeating a decision that a proof or media item already has is safe and returns it as it stands.
+
+| Tool | What it does |
+| --- | --- |
+| `send_creator_message` | Sends and stores a workspace message, then notifies the creator |
+| `send_onboarding_feedback` | Sends a creator onboarding feedback in the app, by push, and in Discord. Returns `409 proofs_waiting` while a proof waits |
+| `approve_onboarding_proof` | Marks the requirement met, or the account warmed up |
+| `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
+| `approve_media` | Approves media for posting. Brand keys only |
+| `reject_media` | Rejects media with a message; the creator can send a new revision. Brand keys only |
+| `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told |
+
+A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
+
+Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reject_media`. The decision then fails with `media_newer_revision` if the creator sent a newer revision after you looked.
+
+Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set. Read every page before you exclude posts: excluded posts leave `list_posts`, so later pages move.
+
+To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. Most tools that filter by `creator_id` also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
 
 `send_creator_message` needs a program id, the opaque creator id returned by `list_creators`, and a message. Pass a stable `client_message_id` UUID when retrying so the creator never receives the same message twice.
 
@@ -155,6 +187,18 @@ To send, name the creator and exact text:
 
 ```text
 Send Alex this exact message in the Summer Launch program: "Thanks — we received your draft and will review it today."
+```
+
+To review onboarding proofs:
+
+```text
+List pending onboarding proofs in the Summer Launch program and show me each one. Do not approve or reject anything until I say so.
+```
+
+To find posts published before a creator joined:
+
+```text
+In the Summer Launch program, list every creator's joinedAt and every post's uploadedAt, then show the posts published before their creator joined. Do not exclude anything yet.
 ```
 
 To look up a creator by handle:

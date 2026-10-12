@@ -5699,6 +5699,11 @@
                                 "contractId": {
                                   "type": "string"
                                 },
+                                "joinedAt": {
+                                  "type": "integer",
+                                  "nullable": true,
+                                  "description": "When the creator joined this program: their first approval on it, the date the dashboard shows as \"Joined\". Unix milliseconds, an absolute UTC instant, so compare it directly with a post's `uploadedAt`. `null` when the creator has no approval record."
+                                },
                                 "contractStatus": {
                                   "type": "string",
                                   "enum": [
