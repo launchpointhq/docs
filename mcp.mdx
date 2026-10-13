@@ -160,7 +160,7 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 | `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
 | `approve_media` | Approves media for posting. Brand keys only |
 | `reject_media` | Rejects media with a message; the creator can send a new revision. Brand keys only |
-| `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told |
+| `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told. Run `preview_post_exclusion` first to see what would change |
 
 A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
 
@@ -168,7 +168,7 @@ Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reje
 
 `payment.state` is `paid` (the money reached the creator's Launchpoint balance, not withdrawn), `pending`, `excluded`, `credit_missing` (brand money was spent but the creator credit is missing; contact Launchpoint), `clawed_back`, `paid_off_platform`, or `unknown`. Amounts are whole cents.
 
-Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set. Read every page before you exclude posts: excluded posts leave `list_posts`, so later pages move.
+Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set. Read every page before you exclude posts: excluded posts leave `list_posts`, so later pages move. `get_posts` still returns an excluded post with its exclusion record.
 
 To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. Most tools that filter by `creator_id` also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
 
