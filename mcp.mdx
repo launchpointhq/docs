@@ -121,8 +121,11 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | --- | --- |
 | `list_programs` | Visible programs, with status and name filters |
 | `search_creatives` | Creative library search across titles, hooks, transcripts, and storyboards |
-| `list_posts` | Posts with metrics, earnings, creator, and program. Newest first by `uploadedAt`, with stable pages |
-| `get_post` | One post with metrics, earnings, contract, and bonus details |
+| `list_posts` | Posts with metrics, `payment`, creator, and program. Newest first by `uploadedAt`, with stable pages |
+| `get_post` | One post with metrics, `payment`, contract, and bonus details |
+| `get_posts` | Up to 1,000 posts by id, one answer each. Removed posts return their exclusion record; ids the key cannot see return `payment.state: unknown` |
+| `list_post_payments` | One post's money events, oldest first: earned, billed, charged, refunded, credited, and excluded |
+| `preview_post_exclusion` | Runs the exclusion checks for one post and changes nothing: whether it can be excluded, the refusal code, the cross-posts, and the pending pay it would remove |
 | `get_post_metrics_history` | One post's daily metrics, oldest first, with the change from the day before |
 | `get_post_insights` | One post's Instagram performance and Reel watch metrics, plus the account's audience |
 | `get_post_analysis` | One post's storyboard scenes and organic and paid retention |
@@ -163,6 +166,8 @@ A refused write returns the REST status and `code`, for example `409 proof_alrea
 
 Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reject_media`. The decision then fails with `media_newer_revision` if the creator sent a newer revision after you looked.
 
+`payment.state` is `paid` (the money reached the creator's Launchpoint balance, not withdrawn), `pending`, `excluded`, `credit_missing` (brand money was spent but the creator credit is missing; contact Launchpoint), `clawed_back`, `paid_off_platform`, or `unknown`. Amounts are whole cents.
+
 Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set. Read every page before you exclude posts: excluded posts leave `list_posts`, so later pages move.
 
 To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. Most tools that filter by `creator_id` also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
@@ -193,6 +198,12 @@ To review onboarding proofs:
 
 ```text
 List pending onboarding proofs in the Summer Launch program and show me each one. Do not approve or reject anything until I say so.
+```
+
+To check what happened to the pay for a list of posts:
+
+```text
+Look up these post ids with get_posts and group them by payment.state. For each credit_missing or clawed_back post, list its payment events. Do not exclude anything.
 ```
 
 To find posts published before a creator joined:
