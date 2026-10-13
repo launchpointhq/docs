@@ -634,6 +634,113 @@
             "description": "When the media was approved or rejected, in Unix milliseconds"
           }
         }
+      },
+      "PostPayment": {
+        "type": "object",
+        "description": "Where the post's pay stands. `paid` means the money reached the creator's Launchpoint balance, not that the creator withdrew it. Amounts are whole cents.",
+        "required": [
+          "state"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "pending",
+              "excluded",
+              "credit_missing",
+              "clawed_back",
+              "paid_off_platform",
+              "unknown"
+            ],
+            "description": "`paid`: credits cover the pay owed. `pending`: pay is owed (or zero so far) and has not reached the creator. `excluded`: the post was removed from the program; see `exclusion`. `credit_missing`: brand money was spent for the post but the creator credit is missing; contact Launchpoint. `clawed_back`: the creator was credited, then the credit was taken back. `paid_off_platform`: the brand marked the pay as sent outside Launchpoint. `unknown`: the post is not visible to this API key or does not exist (lookup only)."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "earnedCents": {
+            "type": "integer",
+            "description": "Pay owed now on the post's own pay lines"
+          },
+          "billedCents": {
+            "type": "integer",
+            "description": "Pay billed on an invoice that is not void"
+          },
+          "creditedCents": {
+            "type": "integer",
+            "description": "Money added to the creator's Launchpoint balance for this post, after any clawback"
+          },
+          "invoiceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Invoices that bill this post"
+          },
+          "lastCreditedAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Time of the latest credit, in Unix milliseconds"
+          }
+        }
+      },
+      "PostExclusion": {
+        "type": "object",
+        "description": "The record kept when a post is removed from a program. It stays after the post itself is deleted.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "excludedAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix milliseconds"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "excluded",
+              "unlinked"
+            ],
+            "description": "`excluded`: removed from pay for good. `unlinked`: removed from the program; the platform post can be imported again under a new id."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "api",
+              "creator_removal",
+              "trial_reel_variant",
+              "relink",
+              "import_cleanup",
+              "script",
+              "backfill"
+            ],
+            "description": "Where the removal was made. `backfill`: recorded later by Launchpoint; the original surface is not known."
+          },
+          "actorWorkspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The workspace that removed the post; null for Launchpoint jobs"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true,
+            "description": "The text sent to the creator; null when the creator was not told"
+          },
+          "pendingCentsRemoved": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Pay owed and not credited when the post was removed; null when not recorded"
+          }
+        }
       }
     }
   },
@@ -2242,10 +2349,12 @@
                             "type": "integer"
                           },
                           "earnings": {
-                            "type": "number"
+                            "type": "number",
+                            "description": "Dollars credited to the creator for this post (`payment.creditedCents / 100`)"
                           },
                           "paid": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "description": "True when any credit exists for this post. Use `payment.state` instead."
                           },
                           "contractorName": {
                             "type": "string"
@@ -2263,6 +2372,9 @@
                                 "type": "integer"
                               }
                             }
+                          },
+                          "payment": {
+                            "$ref": "#/components/schemas/PostPayment"
                           }
                         }
                       }
@@ -2396,14 +2508,18 @@
                           "description": "Percentage represented as a string"
                         },
                         "earnings": {
-                          "type": "number"
+                          "type": "number",
+                          "description": "Dollars credited to the creator for this post (`payment.creditedCents / 100`)"
                         },
                         "paid": {
-                          "type": "boolean"
+                          "type": "boolean",
+                          "description": "True when any credit exists for this post. Use `payment.state` instead."
                         },
                         "lastPaidAt": {
                           "type": "integer",
-                          "nullable": true
+                          "format": "int64",
+                          "nullable": true,
+                          "description": "Same as `payment.lastCreditedAt`"
                         },
                         "lastSyncedAt": {
                           "type": "integer",
@@ -2473,6 +2589,9 @@
                         },
                         "bonusAmount": {
                           "type": "number"
+                        },
+                        "payment": {
+                          "$ref": "#/components/schemas/PostPayment"
                         }
                       }
                     }
@@ -2486,6 +2605,113 @@
           },
           "404": {
             "description": "No post was found"
+          }
+        }
+      }
+    },
+    "/posts/{id}/payments": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "List a post's money events",
+        "description": "Get the money events behind the post's `payment.state`, oldest first. Works for a post that was removed after its rows were deleted.\n\nEvent kinds:\n- `earned`: the pay owed now on one pay line.\n- `billed`: the pay line on an invoice.\n- `charged` and `refunded`: brand money spent from, or given back to, the creator's reserve. Shown only when your workspace funded the reserve.\n- `credited`: money added to the creator's Launchpoint balance. A clawback is a negative credit.\n- `excluded`: the post was removed; `amountCents` is the pending pay removed.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the post"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment state and events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "postId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "payment": {
+                          "$ref": "#/components/schemas/PostPayment"
+                        },
+                        "events": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "Stable: `<kind>:<source row id>`"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "earned",
+                                  "billed",
+                                  "charged",
+                                  "refunded",
+                                  "credited",
+                                  "excluded"
+                                ]
+                              },
+                              "occurredAt": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Unix milliseconds"
+                              },
+                              "amountCents": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "currency": {
+                                "type": "string",
+                                "enum": [
+                                  "USD"
+                                ]
+                              },
+                              "invoiceId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              },
+                              "releaseId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true,
+                                "description": "The payout run that made a credit"
+                              },
+                              "fundingWorkspaceId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found, or not visible to this API key"
           }
         }
       }
@@ -3226,7 +3452,7 @@
           "Posts"
         ],
         "summary": "Exclude a post from earnings",
-        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.",
+        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nWith `?dryRun=true`, the request runs the same checks and changes nothing. It answers `200` with `{ id, excluded: false, dryRun: true, canExclude, blockedBy, crossPostIds, pendingCentsToRemove }`. A refusal is `canExclude: false` with its code in `blockedBy`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -3240,6 +3466,15 @@
               "format": "uuid"
             },
             "description": "ID of the post"
+          },
+          {
+            "in": "query",
+            "name": "dryRun",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "With `true`, run every check and roll back. Nothing is excluded, recorded, or sent."
           }
         ],
         "requestBody": {
@@ -3269,32 +3504,83 @@
         },
         "responses": {
           "200": {
-            "description": "Post excluded",
+            "description": "Post excluded, or the dry-run result",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "id",
-                    "excluded",
-                    "creatorNotified"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "excluded",
+                        "creatorNotified"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "excluded": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "creatorNotified": {
+                          "type": "boolean",
+                          "description": "True when a reason was sent to the creator"
+                        }
+                      }
                     },
-                    "excluded": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "creatorNotified": {
-                      "type": "boolean",
-                      "description": "True when a reason was sent to the creator"
+                    {
+                      "type": "object",
+                      "title": "Dry run",
+                      "required": [
+                        "id",
+                        "excluded",
+                        "dryRun",
+                        "canExclude"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "excluded": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "dryRun": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        },
+                        "canExclude": {
+                          "type": "boolean"
+                        },
+                        "blockedBy": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "The refusal code, for example `already_paid`, `payout_processing`, or `has_paid_ads`"
+                        },
+                        "crossPostIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "description": "Every post the exclusion would remove"
+                        },
+                        "pendingCentsToRemove": {
+                          "type": "integer"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -3310,6 +3596,116 @@
           },
           "409": {
             "description": "Refused to protect money already paid. `code` is one of `already_paid`, `payout_processing`, `paid_off_platform`, `has_paid_ads`, `has_platform_fee`, `manual_payout_in_progress`, `removal_in_progress`."
+          }
+        }
+      }
+    },
+    "/posts/lookup": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Look up posts by id",
+        "description": "Get one answer for each of up to 1,000 post ids, in request order. Duplicate ids are answered once.\n\n- A post in a visible program has the `GET /posts` item shape, `payment`, and `exclusion: null`.\n- A post that was removed from a visible program has a short shape with `payment.state: \"excluded\"` and its `exclusion` record, even after the post was deleted.\n- Any other id returns `{ \"id\", \"payment\": { \"state\": \"unknown\" } }`. Unknown means the post is not visible to this API key or does not exist; the two cases are not told apart.\n\nOne request uses one rate-limit slot.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "postIds"
+                ],
+                "properties": {
+                  "postIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One entry for each distinct id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "payment"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "program": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "description": "Removed posts only"
+                          },
+                          "creatorId": {
+                            "type": "string"
+                          },
+                          "crossPostGroupId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "platform": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "uploadedAt": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "payment": {
+                            "$ref": "#/components/schemas/PostPayment"
+                          },
+                          "exclusion": {
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PostExclusion"
+                              }
+                            ],
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing `postIds`, more than 1,000 ids, or an id that is not a UUID"
           }
         }
       }
