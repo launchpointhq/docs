@@ -2085,6 +2085,296 @@
         }
       }
     },
+    "/creators/{id}/feed": {
+      "get": {
+        "tags": [
+          "Creators"
+        ],
+        "summary": "List a creator's feed",
+        "description": "List one visible creator's public posts, newest first, on the social accounts the creator uses on your programs. The list combines the creator's feed, as Launchpoint last read it, with the Launchpoint campaign posts on your programs. A post that is both appears once, as the campaign post.\n\nThis endpoint returns stored data only and never starts a new read. Each read keeps the account's most recent posts, so how far back the feed goes depends on how often the account was read. `accounts[].feedReadAt` is when each account's feed was last read; `null` means it was not read yet. Stories are not included.\n\nThe counts of each post are one reading, taken at `metricsRecordedAt`. `paidPartnershipLabel` is the platform's own label and nothing more: a sponsored post that the creator did not label reads as `false`.\n\n`fromDate` and `toDate` filter by posting day in America/New_York, as `GET /posts` does. A creator the API key cannot see returns `404`.\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque creator ID"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "in": "query",
+            "name": "platform",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "tiktok",
+                "instagram",
+                "youtube",
+                "facebook",
+                "snapchat"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "First posting day, `YYYY-MM-DD`."
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Last posting day, `YYYY-MM-DD`."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feed returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "accounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "platform": {
+                            "type": "string"
+                          },
+                          "handle": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "feedReadAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "When this account's feed was last read, Unix time in milliseconds."
+                          }
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "platform": {
+                            "type": "string",
+                            "enum": [
+                              "tiktok",
+                              "instagram",
+                              "youtube",
+                              "facebook",
+                              "snapchat"
+                            ]
+                          },
+                          "handle": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Account handle. `null` while creator access is locked (wallet balance under the minimum)."
+                          },
+                          "platformPostId": {
+                            "type": "string",
+                            "description": "The platform's own id for the post. It does not change; use it to match the same post across calls."
+                          },
+                          "url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "uploadedAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "When the post went live, Unix time in milliseconds."
+                          },
+                          "caption": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "mediaType": {
+                            "type": "string",
+                            "enum": [
+                              "video",
+                              "image"
+                            ],
+                            "nullable": true,
+                            "description": "`null` when the read did not report it."
+                          },
+                          "durationSeconds": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "views": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "`null` when the read did not report the count. A missing count is never returned as `0`."
+                          },
+                          "likes": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "comments": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "shares": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "bookmarks": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "metricsRecordedAt": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "When these counts were read, Unix time in milliseconds. The counts are one reading, not a history."
+                          },
+                          "paidPartnershipLabel": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "description": "The platform's own paid-partnership (ad) label. `true`: the post shows the label. `false`: the read reported no label. `null`: no read has reported the field yet. A sponsored post that the creator did not label reads as `false`."
+                          },
+                          "launchpointCampaign": {
+                            "type": "object",
+                            "nullable": true,
+                            "description": "Set when the post is a Launchpoint campaign post on one of your programs; otherwise `null`.",
+                            "properties": {
+                              "programId": {
+                                "type": "string"
+                              },
+                              "postId": {
+                                "type": "string",
+                                "description": "Use with `GET /posts/{id}` for payment and contract details."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "creatorId": "crt_demo_creator_7x2",
+                  "accounts": [
+                    {
+                      "platform": "tiktok",
+                      "handle": "demo_creator",
+                      "feedReadAt": 1792407806006
+                    }
+                  ],
+                  "data": [
+                    {
+                      "platform": "tiktok",
+                      "handle": "demo_creator",
+                      "platformPostId": "7698835017320959246",
+                      "url": "https://www.tiktok.com/@demo_creator/video/7698835017320959246",
+                      "uploadedAt": 1792544400000,
+                      "caption": "The best side hustle yet",
+                      "mediaType": "video",
+                      "durationSeconds": 50,
+                      "views": 17800,
+                      "likes": 612,
+                      "comments": 24,
+                      "shares": 11,
+                      "bookmarks": 40,
+                      "metricsRecordedAt": 1792548698699,
+                      "paidPartnershipLabel": true,
+                      "launchpointCampaign": {
+                        "programId": "32ea539c-a42e-4158-b68a-11649446e80f",
+                        "postId": "157cc1c1-75e1-40ed-86cb-6083165b2a9c"
+                      }
+                    },
+                    {
+                      "platform": "tiktok",
+                      "handle": "demo_creator",
+                      "platformPostId": "7697012345678901234",
+                      "url": "https://www.tiktok.com/@demo_creator/video/7697012345678901234",
+                      "uploadedAt": 1792200000000,
+                      "caption": "Morning routine",
+                      "mediaType": "video",
+                      "durationSeconds": 31,
+                      "views": 9400,
+                      "likes": 380,
+                      "comments": 12,
+                      "shares": 4,
+                      "bookmarks": null,
+                      "metricsRecordedAt": 1792407806006,
+                      "paidPartnershipLabel": false,
+                      "launchpointCampaign": null
+                    }
+                  ],
+                  "page": 1,
+                  "total": 2,
+                  "totalPages": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Creator ID or a query parameter is invalid, or fromDate is after toDate"
+          },
+          "401": {
+            "description": "Unauthorized - API key is invalid"
+          },
+          "403": {
+            "description": "The requested scope is not allowed"
+          },
+          "404": {
+            "description": "Creator was not found or is not visible to this API key"
+          },
+          "429": {
+            "description": "Request rate limit exceeded"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/programs": {
       "get": {
         "tags": [
@@ -6078,6 +6368,58 @@
                               "inactive"
                             ],
                             "description": "`\"active\"` when the creator has at least one active contract"
+                          },
+                          "niches": {
+                            "type": "array",
+                            "description": "Niches the creator picked in the Launchpoint app, oldest pick first. Self-reported, not inferred from content. Empty when the creator picked none.",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "code",
+                                "name"
+                              ],
+                              "properties": {
+                                "code": {
+                                  "type": "string",
+                                  "enum": [
+                                    "sports",
+                                    "health_fitness",
+                                    "beauty",
+                                    "collectibles",
+                                    "education_learning",
+                                    "entertainment_media",
+                                    "family",
+                                    "fashion",
+                                    "finance_commerce",
+                                    "food_drink",
+                                    "gaming",
+                                    "lifestyle_utilities",
+                                    "music",
+                                    "photo_video",
+                                    "side_hustle_business",
+                                    "social_communication",
+                                    "technology",
+                                    "travel_local",
+                                    "other"
+                                  ],
+                                  "description": "Stable niche key to match on. New codes can be added; existing codes do not change. A niche the creator typed in is `other`."
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "description": "English display name, such as `Health & Fitness`. For a typed-in niche, the creator's own text."
+                                }
+                              }
+                            },
+                            "example": [
+                              {
+                                "code": "health_fitness",
+                                "name": "Health & Fitness"
+                              },
+                              {
+                                "code": "gaming",
+                                "name": "Gaming"
+                              }
+                            ]
                           },
                           "campaigns": {
                             "type": "array",
