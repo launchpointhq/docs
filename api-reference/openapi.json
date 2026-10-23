@@ -5085,7 +5085,7 @@
           "Analytics"
         ],
         "summary": "Report the comment-to-DM funnel",
-        "description": "Comment-to-DM attribution for each visible program: how many leads opted in, how many got the first DM, and how many tapped the DM link.\n\nEvery row has the same fields. A field the chosen grouping does not use is `null`. Group the report with `groupBy`:\n\n- `program` (default): one row per program.\n- `account`: one row per program and creator account that sent the DMs.\n- `post`: one row per program, creator account, and the post the lead commented on. `postId` is the id used by `GET /posts` when the post is tracked; otherwise it is `null`. A lead who DMed the keyword directly has no post, so that row has a `null` `platformPostId`.\n- `day`: one row per day.\n\nEach event counts on its own day in America/New_York, the same rule as the dashboard DMs sent and DM clicks tiles: an opt-in on the day the conversation opened, a DM on the day it was sent, a tap on the day of the tap. `fromDate` and `toDate` apply to those days, so a tap can fall in a range that does not include its DM.\n\nTaps on links sent by Launchpoint's earlier comment automations (before 2026-09-27) are included and belong to their post. Opt-ins and sends from that period were not stored.\n\nSort with `sortBy` and `sortOrder` (default `desc`). `sortBy` defaults to `date` for `groupBy=day` and to `linkClicks` otherwise; `sortBy=date` works only with `groupBy=day`. Ties keep a stable order, so pages do not shift between reads. `summary` sums every row in the report, not only the current page.\n",
+        "description": "Comment-to-DM attribution for each visible program: how many leads opted in, how many got the first DM, and how many tapped the DM link.\n\nEvery row has the same fields. A field the chosen grouping does not use is `null`. Group the report with `groupBy`:\n\n- `program` (default): one row per program.\n- `account`: one row per program and creator account that sent the DMs.\n- `post`: one row per program, creator account, and the post the lead commented on. `postId` is the id used by `GET /posts` when the post is tracked; otherwise it is `null`. A lead who DMed the keyword directly has no post, so that row has a `null` `platformPostId`.\n- `day`: one row per day.\n\nEach event counts on its own day in America/New_York, the same rule as the dashboard DMs sent and DM clicks tiles: an opt-in on the day the conversation opened, a DM on the day it was sent, a tap on the day of the tap. `fromDate` and `toDate` apply to those days, so a tap can fall in a range that does not include its DM.\n\nTaps on links sent by Launchpoint's earlier comment automations (before 2026-09-27) are included and belong to their post. Opt-ins and sends from that period were not stored.\n\nSort with `sortBy` and `sortOrder` (default `desc`). `sortBy` defaults to `date` for `groupBy=day` and to `linkClicks` otherwise; `sortBy=date` works only with `groupBy=day`. Ties keep a stable order, so pages do not shift between reads. `summary` sums every row in the report, not only the current page.\n\nEach row and `summary` have `linkClicksByCountry`: the link taps per country, most taps first. Launchpoint finds the country from the IP address of the tap. With `groupBy=post` this gives the taps per video per country. `country` is `null` when it is not known, which is true for every tap made before this field was added. The API does not return IP addresses.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -5257,6 +5257,28 @@
                           "uniqueClickers": {
                             "type": "integer",
                             "description": "Conversations (people) with at least one link tap"
+                          },
+                          "linkClicksByCountry": {
+                            "type": "array",
+                            "description": "Link taps per country, most taps first; ties in country code order with null last. The linkClicks values add up to linkClicks",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "country": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "Two-letter ISO 3166-1 country code from the IP address of the tap, or null when it is not known"
+                                },
+                                "linkClicks": {
+                                  "type": "integer",
+                                  "description": "Taps from this country"
+                                }
+                              },
+                              "required": [
+                                "country",
+                                "linkClicks"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -5272,7 +5294,8 @@
                           "optIns",
                           "dmsSent",
                           "linkClicks",
-                          "uniqueClickers"
+                          "uniqueClickers",
+                          "linkClicksByCountry"
                         ]
                       }
                     },
@@ -5325,6 +5348,28 @@
                         "uniqueClickers": {
                           "type": "integer",
                           "description": "Conversations (people) with at least one link tap"
+                        },
+                        "linkClicksByCountry": {
+                          "type": "array",
+                          "description": "Link taps per country, most taps first; ties in country code order with null last. The linkClicks values add up to linkClicks",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "country": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Two-letter ISO 3166-1 country code from the IP address of the tap, or null when it is not known"
+                              },
+                              "linkClicks": {
+                                "type": "integer",
+                                "description": "Taps from this country"
+                              }
+                            },
+                            "required": [
+                              "country",
+                              "linkClicks"
+                            ]
+                          }
                         }
                       }
                     },
