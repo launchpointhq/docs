@@ -2494,7 +2494,7 @@
           "Posts"
         ],
         "summary": "Browse posts",
-        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified ad code, or `null` when no verified, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2601,8 +2601,17 @@
                           "adCode": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Saved, verified ad code in plain text, or null when no verified, unexpired code is stored. Codes without an expiry remain available. Fetching the post does not request a new code.",
+                            "description": "Saved, verified or submitted ad code in plain text, or null when no verified or submitted, unexpired code is stored. Codes without an expiry remain available. Fetching the post does not request a new code.",
                             "example": "example-ad-code"
+                          },
+                          "adCodeStatus": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "submitted"
+                            ],
+                            "nullable": true,
+                            "description": "Stored status of the code: verified, or submitted when the campaign collects codes without checking them. Null when no code is returned."
                           },
                           "crossPostGroupId": {
                             "type": "string",
@@ -2698,7 +2707,7 @@
           "Posts"
         ],
         "summary": "View post details",
-        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified ad code, or `null` when no verified, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. The field uses the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified or submitted code in plain text, and `adCodeStatus` is its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. The fields use the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
         "parameters": [
           {
             "in": "path",
@@ -2734,8 +2743,17 @@
                         "adCode": {
                           "type": "string",
                           "nullable": true,
-                          "description": "Saved, verified ad code in plain text, or null when no verified, unexpired code is stored. Codes without an expiry remain available. Fetching the post does not request a new code.",
+                          "description": "Saved, verified or submitted ad code in plain text, or null when no verified or submitted, unexpired code is stored. Codes without an expiry remain available. Fetching the post does not request a new code.",
                           "example": "example-ad-code"
+                        },
+                        "adCodeStatus": {
+                          "type": "string",
+                          "enum": [
+                            "verified",
+                            "submitted"
+                          ],
+                          "nullable": true,
+                          "description": "Stored status of the code: verified, or submitted when the campaign collects codes without checking them. Null when no code is returned."
                         },
                         "descriptionFetchedAt": {
                           "type": "integer",
