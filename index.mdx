@@ -85,15 +85,15 @@ curl --get "https://dashboard.launchpointhq.com/api/v1/posts" \
   --data-urlencode "limit=500"
 ```
 
-Each post includes `adCode`, the saved, verified ad code in plain text. It is `null` when no verified, unexpired code is stored. A code without an expiry remains available. Fetching posts does not request a new code from the creator or platform, and posts without a code remain in the response.
+Each post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. Fetching posts does not request a new code from the creator or platform, and posts without a code remain in the response.
 
 An abbreviated response:
 
 ```json
 {
   "data": [
-    { "id": "post-with-code", "adCode": "example-ad-code" },
-    { "id": "post-without-code", "adCode": null }
+    { "id": "post-with-code", "adCode": "example-ad-code", "adCodeStatus": "verified" },
+    { "id": "post-without-code", "adCode": null, "adCodeStatus": null }
   ],
   "page": 1,
   "total": 2,
@@ -101,7 +101,7 @@ An abbreviated response:
 }
 ```
 
-Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` with the same behavior. The field follows the post's existing campaign visibility and API-key access rules.
+Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` and `data.adCodeStatus` with the same behavior. These fields follow the post's existing campaign visibility and API-key access rules.
 
 ## Use company or agency scope
 
