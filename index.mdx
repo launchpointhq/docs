@@ -73,6 +73,36 @@ A list request that succeeds comes back with `data`, `page`, and `total`:
 
 The `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers are attached to every response.
 
+## Fetch campaign posts and ad codes
+
+Use a program ID from `GET /programs` to fetch that campaign's posts. Set `PROGRAM_ID` to the chosen ID, then run:
+
+```bash
+curl --get "https://dashboard.launchpointhq.com/api/v1/posts" \
+  --header "x-api-key: $LAUNCHPOINT_API_KEY" \
+  --data-urlencode "program=$PROGRAM_ID" \
+  --data-urlencode "page=1" \
+  --data-urlencode "limit=500"
+```
+
+Each post includes `adCode`, the saved, verified ad code in plain text. It is `null` when no verified, unexpired code is stored. A code without an expiry remains available. Fetching posts does not request a new code from the creator or platform, and posts without a code remain in the response.
+
+An abbreviated response:
+
+```json
+{
+  "data": [
+    { "id": "post-with-code", "adCode": "example-ad-code" },
+    { "id": "post-without-code", "adCode": null }
+  ],
+  "page": 1,
+  "total": 2,
+  "totalPages": 1
+}
+```
+
+Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` with the same behavior. The field follows the post's existing campaign visibility and API-key access rules.
+
 ## Use company or agency scope
 
 Any route that supports `scope` defaults to `scope=company`, which returns data belonging to the API key's company only.
