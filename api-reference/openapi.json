@@ -4349,7 +4349,7 @@
           "Analytics"
         ],
         "summary": "Browse tracked videos and analytics",
-        "description": "Get tracked videos/posts with analytics and filters.\n\nEach video includes engagement metrics, sorting, and detailed statistics.\n\nAgency accounts can pass `scope=agency` to combine tracked videos from the\nparent agency and every subaccount.\n",
+        "description": "Get tracked videos/posts with analytics and filters.\n\nEach video includes engagement metrics, sorting, and detailed statistics.\n\nAgency accounts can pass `scope=agency` to combine tracked videos from the\nparent agency and every subaccount.\n\nUse `attribution=gained` to get what each post gained in the dates. Posts with no activity are left out, so a day's rows sum to the day's total on `GET /analytics/overview`. `minViews` and `paid` use lifetime totals and return `400` with `attribution=gained`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4473,6 +4473,20 @@
               ],
               "default": "all"
             }
+          },
+          {
+            "name": "attribution",
+            "in": "query",
+            "required": false,
+            "description": "Decides what the dates select and what `views` means. `published` selects posts by New York publish day and returns their current lifetime totals. `gained` selects New York days and returns views gained on those days across every tracked post, as on the dashboard Performance chart. With `gained`, `fromDate` and `toDate` are required, a range covers at most 366 days, and money fields are left out.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "published",
+                "gained"
+              ],
+              "default": "published"
+            }
           }
         ],
         "responses": {
@@ -4483,6 +4497,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "attribution": {
+                      "type": "string",
+                      "enum": [
+                        "published",
+                        "gained"
+                      ],
+                      "description": "The attribution of this response."
+                    },
                     "data": {
                       "type": "array",
                       "items": {
@@ -4534,6 +4556,26 @@
                           },
                           "uploadedAt": {
                             "type": "integer"
+                          },
+                          "crossPostGroupId": {
+                            "type": "string",
+                            "description": "Only with `attribution=gained`. Platform copies of one source video share it."
+                          },
+                          "programId": {
+                            "type": "string",
+                            "description": "Only with `attribution=gained`."
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "Only with `attribution=gained`."
+                          },
+                          "creatorId": {
+                            "type": "string",
+                            "description": "Only with `attribution=gained`."
+                          },
+                          "totalViews": {
+                            "type": "integer",
+                            "description": "Only with `attribution=gained`. The post's total at the end of the dates."
                           }
                         }
                       }
@@ -4840,7 +4882,7 @@
           "Analytics"
         ],
         "summary": "View analytics overview",
-        "description": "Get analytics with filtering support.\n\nLike the /overall page in the web app, this endpoint returns:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` follows the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nstay as upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to calculate the overview across\nthe parent agency and every subaccount.\n",
+        "description": "Get analytics with filtering support.\n\nLike the /overall page in the web app, this endpoint returns:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` follows the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nstay as upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to calculate the overview across\nthe parent agency and every subaccount.\n\nUse `attribution=gained` to get the numbers on the dashboard Performance chart. A day is a New York calendar day. The current day is partial, and a late first read of a post changes an earlier day. Metrics history uses UTC days, so its `viewsDelta` sum can differ.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4887,6 +4929,32 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "attribution",
+            "in": "query",
+            "required": false,
+            "description": "Decides what the dates select and what `views` means. `published` selects posts by New York publish day and returns their current lifetime totals. `gained` selects New York days and returns views gained on those days across every tracked post, as on the dashboard Performance chart. With `gained`, `fromDate` and `toDate` are required, a range covers at most 366 days, and money fields are left out. On this route `gained` also leaves out `topPosts`; use `GET /analytics/videos` with `attribution=gained&sortBy=views`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "published",
+                "gained"
+              ],
+              "default": "published"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "required": false,
+            "description": "With `attribution=gained`, adds `data.daily`: one row per New York day.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day"
+              ]
+            }
           }
         ],
         "responses": {
@@ -4897,6 +4965,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "attribution": {
+                      "type": "string",
+                      "enum": [
+                        "published",
+                        "gained"
+                      ],
+                      "description": "The attribution of this response."
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -4998,6 +5074,37 @@
                         "platformBreakdown": {
                           "type": "object",
                           "description": "Snapshot metrics by platform for posts uploaded in the selected range"
+                        },
+                        "daily": {
+                          "type": "array",
+                          "description": "Only with `attribution=gained` and `groupBy=day`. Each row has the views gained on that day and the posts published that day.",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "views": {
+                                "type": "integer"
+                              },
+                              "likes": {
+                                "type": "integer"
+                              },
+                              "comments": {
+                                "type": "integer"
+                              },
+                              "shares": {
+                                "type": "integer"
+                              },
+                              "bookmarks": {
+                                "type": "integer"
+                              },
+                              "posts": {
+                                "type": "integer"
+                              }
+                            }
+                          }
                         }
                       }
                     }
