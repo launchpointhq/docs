@@ -174,13 +174,13 @@ Every list tool uses bounded pages. Ask the assistant to keep paging when you ne
 
 To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. Most tools that filter by `creator_id` also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
 
-`list_applications` defaults to `folder: "recommended"` for pending applicants.
-Explicitly request `folder: "all"` to include both Recommended and additional
+`list_applications` defaults to `pool: "recommended"` for pending applicants.
+Explicitly request `pool: "all"` to include both Recommended and additional
 eligible applicants when your workspace has permission. This is a combined
-population, not an additional-only folder. Quality, safety and campaign
+population, not an additional-only pool. Quality, safety and campaign
 eligibility checks still apply to pending applicants; scope, search, status and
 pagination work as before. Approved and rejected applications are unchanged.
-Any `folder: "all"` request without permission returns `403`, rather than
+Any `pool: "all"` request without permission returns `403`, rather than
 silently returning Recommended.
 
 `list_creators` includes linked Discord accounts in `campaigns[].handles[]` with
