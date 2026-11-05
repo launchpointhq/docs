@@ -132,7 +132,7 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | `get_analytics_overview` | Totals, platform breakdowns, top posts, and top creators. `attribution: gained` returns the dashboard Performance chart's views gained without top posts, and `group_by: day` adds daily totals |
 | `list_analytics_videos` | One row per post with metrics. `attribution: gained` returns what each post gained in the dates |
 | `get_comment_dm_analytics` | Comment-to-DM funnel (opt-ins, first DMs sent, link clicks, unique clickers, link clicks per country) by program, creator account, post, or day |
-| `list_creators` | Visible creators with each program's join date (`joinedAt`), social profiles, enhancement opt-ins, and niches |
+| `list_creators` | Visible creators with each program's join date (`joinedAt`), social profiles, linked Discord user IDs and usernames, enhancement opt-ins, and niches |
 | `get_creator_audience` | The audience of each account a creator uses on your programs |
 | `list_creator_feed` | A creator's public posts, newest first: stored feed reads plus campaign posts, with counts, the platform's paid-partnership label, and the campaign program |
 | `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status |
@@ -173,6 +173,14 @@ Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reje
 Every list tool uses bounded pages. Ask the assistant to keep paging when you need the full matching set. Read every page before you exclude posts: excluded posts leave `list_posts`, so later pages move. `get_posts` still returns an excluded post with its exclusion record.
 
 To find a creator by social handle, use `search` on `list_creators` for approved creators or on `list_applications` for applicants. Most tools that filter by `creator_id` also accept `creator_handle`, the creator's exact handle with or without a leading `@`.
+
+`list_creators` includes linked Discord accounts in `campaigns[].handles[]` with
+`platform: "discord"`, `userId` (the Discord user ID as a string), and `handle`
+(the username, or `null` if unavailable). Match Discord server members by `userId`,
+not the username, which can change. Discord entries are omitted for unlinked
+creators and while creator access is locked. A linked account does not prove
+membership in a program's Discord server. The `search` filter does not search
+Discord usernames or IDs.
 
 `send_creator_message` needs a program id, the opaque creator id returned by `list_creators`, and a message. Pass a stable `client_message_id` UUID when retrying so the creator never receives the same message twice.
 
