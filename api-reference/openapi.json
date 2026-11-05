@@ -6636,15 +6636,42 @@
                                 },
                                 "handles": {
                                   "type": "array",
-                                  "description": "Social handles linked to this contract",
+                                  "description": "Social handles associated with the creator, plus their creator-wide linked Discord identity. A Discord entry is omitted when no account is linked or creator access is locked. A linked identity does not prove membership in this program's Discord server. Match server members by the Discord userId, not the username. Discord usernames and IDs are not included in the search filter.",
+                                  "example": [
+                                    {
+                                      "platform": "discord",
+                                      "handle": "ada.discord",
+                                      "userId": "123456789012345678",
+                                      "followers": null,
+                                      "followersRecordedAt": null
+                                    }
+                                  ],
                                   "items": {
                                     "type": "object",
                                     "properties": {
                                       "platform": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "Social platform, including discord for a linked Discord identity."
                                       },
                                       "handle": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "Account username. Discord usernames are cached for up to five minutes and are null if the lookup fails; userId is still returned."
+                                      },
+                                      "userId": {
+                                        "type": "string",
+                                        "description": "Present only for Discord: the Discord user ID (snowflake) as a string. Keep it as a string to avoid numeric precision loss. This is not the Launchpoint creator id.",
+                                        "example": "123456789012345678"
+                                      },
+                                      "followers": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "Newest stored follower count, or null when unavailable. Always null for Discord."
+                                      },
+                                      "followersRecordedAt": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "When the follower count was recorded, in Unix milliseconds. Always null for Discord."
                                       }
                                     }
                                   }
