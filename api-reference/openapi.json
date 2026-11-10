@@ -401,7 +401,7 @@
           }
         }
       },
-      "ReviewActor": {
+      "Actor": {
         "type": "object",
         "nullable": true,
         "required": [
@@ -412,7 +412,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Opaque stable id scoped to the requesting workspace; never a raw user or API-key id"
+            "description": "Opaque id, stable within your workspace"
           },
           "type": {
             "type": "string",
@@ -420,19 +420,21 @@
               "person",
               "api_key",
               "system"
-            ]
+            ],
+            "description": "`person`: a member of a workspace. `api_key`: a request made with an API key. `system`: a Launchpoint job."
           },
           "name": {
             "type": "string",
             "nullable": true,
-            "description": "For people, the name from the requesting workspace's client_users.name, or null when unavailable. API-key and system names are null; no email fallback."
+            "description": "The person's name in your workspace; null for API keys, Launchpoint jobs, and people outside your workspace"
           }
-        }
+        },
+        "description": "Who reviewed, decided, confirmed, or excluded something. Null when no actor was stored."
       },
       "OnboardingDecision": {
         "type": "object",
         "nullable": true,
-        "description": "The matching campaign_onboarding_status row. Account requirements match on exact social account and requirement ids; creator checklist items match the creator-wide requirement id. The field is null when no matching row exists.",
+        "description": "How the requirement was met. Null while it is not met.",
         "required": [
           "source",
           "decidedAt",
@@ -441,27 +443,31 @@
         "properties": {
           "source": {
             "type": "string",
-            "nullable": true
+            "enum": [
+              "profile_check",
+              "reviewer",
+              "proof"
+            ],
+            "description": "`profile_check`: Launchpoint read the account profile. `reviewer`: a reviewer marked it met. `proof`: a reviewer approved the creator's proof."
           },
           "decidedAt": {
             "type": "integer",
             "format": "int64",
             "nullable": true,
-            "description": "Unix timestamp in milliseconds"
+            "description": "Unix timestamp in milliseconds; null on older records"
           },
           "decidedBy": {
-            "$ref": "#/components/schemas/ReviewActor"
+            "$ref": "#/components/schemas/Actor"
           }
         }
       },
       "PostConfirmation": {
         "type": "object",
         "nullable": true,
-        "description": "The latest stored confirmation stamp. This is not review history and does not establish payout or 10,000-view eligibility.",
+        "description": "The video's latest confirmation. Null when the video was not confirmed.",
         "required": [
           "confirmedAt",
           "confirmedViews",
-          "source",
           "confirmedBy"
         ],
         "properties": {
@@ -473,19 +479,10 @@
           "confirmedViews": {
             "type": "integer",
             "nullable": true,
-            "description": "The video’s highest-platform view count at confirmation"
-          },
-          "source": {
-            "type": "string",
-            "enum": [
-              "person",
-              "backlog",
-              "unknown"
-            ],
-            "description": "`backlog` stamps use a system actor; they do not credit a person"
+            "description": "The video's highest views on one platform when it was confirmed"
           },
           "confirmedBy": {
-            "$ref": "#/components/schemas/ReviewActor"
+            "$ref": "#/components/schemas/Actor"
           }
         }
       },
@@ -627,7 +624,7 @@
             "nullable": true
           },
           "reviewedBy": {
-            "$ref": "#/components/schemas/ReviewActor"
+            "$ref": "#/components/schemas/Actor"
           }
         }
       },
@@ -783,7 +780,7 @@
       },
       "PostExclusion": {
         "type": "object",
-        "description": "The record kept when a post is removed from a program. It stays after the post itself is deleted. Historical records can have null actor and view snapshot.",
+        "description": "The record kept when a post is removed from a program. It stays after the post itself is deleted.",
         "properties": {
           "id": {
             "type": "string",
@@ -822,14 +819,14 @@
             "nullable": true,
             "description": "The workspace that removed the post; null for Launchpoint jobs"
           },
-          "actor": {
-            "$ref": "#/components/schemas/ReviewActor"
+          "excludedBy": {
+            "$ref": "#/components/schemas/Actor"
           },
           "viewsAtExclusion": {
             "type": "integer",
             "format": "int64",
             "nullable": true,
-            "description": "Latest stored views for this individual post before teardown; not the video’s highest-platform count"
+            "description": "This post's views when it was removed; null on older records"
           },
           "message": {
             "type": "string",
@@ -840,6 +837,74 @@
             "type": "integer",
             "nullable": true,
             "description": "Pay owed and not credited when the post was removed; null when not recorded"
+          }
+        }
+      },
+      "ExcludedPost": {
+        "type": "object",
+        "description": "A post removed from a program. `POST /posts/lookup` returns the same shape for a removed id.",
+        "required": [
+          "id",
+          "program",
+          "creatorId",
+          "crossPostGroupId",
+          "platform",
+          "url",
+          "uploadedAt",
+          "earnings",
+          "paid",
+          "payment",
+          "exclusion"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "program": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "creatorId": {
+            "type": "string",
+            "description": "Opaque creator id, the same as in `/creators`"
+          },
+          "crossPostGroupId": {
+            "type": "string",
+            "nullable": true
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp in milliseconds; 0 when no publish time was recorded"
+          },
+          "earnings": {
+            "type": "number",
+            "description": "Dollars credited to the creator"
+          },
+          "paid": {
+            "type": "boolean"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/PostPayment"
+          },
+          "exclusion": {
+            "$ref": "#/components/schemas/PostExclusion"
           }
         }
       }
@@ -4027,13 +4092,13 @@
         }
       }
     },
-    "/posts/exclusions": {
+    "/posts/excluded": {
       "get": {
         "tags": [
           "Posts"
         ],
         "summary": "List excluded posts",
-        "description": "List removed posts in one visible program, newest first. Records remain available after post teardown. The exclusion includes an opaque actor when known and the latest per-post views observed before teardown when recorded.",
+        "description": "List posts removed from earnings on visible programs, newest removal first. The record stays after the post is deleted. Filter by program, creator, and the New York day of the removal.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4041,7 +4106,6 @@
           {
             "in": "query",
             "name": "programId",
-            "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -4053,7 +4117,25 @@
             "schema": {
               "type": "string"
             },
-            "description": "Optional opaque creator id"
+            "description": "Opaque creator id, the same as in `/creators`"
+          },
+          {
+            "in": "query",
+            "name": "fromDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "First removal day (New York), YYYY-MM-DD"
+          },
+          {
+            "in": "query",
+            "name": "toDate",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Last removal day (New York), YYYY-MM-DD"
           },
           {
             "in": "query",
@@ -4092,59 +4174,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "program",
-                          "creatorId",
-                          "crossPostGroupId",
-                          "platform",
-                          "url",
-                          "uploadedAt",
-                          "exclusion"
-                        ],
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "The removed social post id"
-                          },
-                          "program": {
-                            "type": "object",
-                            "required": [
-                              "id"
-                            ],
-                            "properties": {
-                              "id": {
-                                "type": "string",
-                                "format": "uuid"
-                              }
-                            }
-                          },
-                          "creatorId": {
-                            "type": "string",
-                            "description": "Opaque creator id, scoped to this API key's workspace"
-                          },
-                          "crossPostGroupId": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "platform": {
-                            "type": "string",
-                            "nullable": true
-                          },
-                          "url": {
-                            "type": "string"
-                          },
-                          "uploadedAt": {
-                            "type": "integer",
-                            "format": "int64",
-                            "description": "Unix timestamp in milliseconds; zero when no publish time was recorded"
-                          },
-                          "exclusion": {
-                            "$ref": "#/components/schemas/PostExclusion"
-                          }
-                        }
+                        "$ref": "#/components/schemas/ExcludedPost"
                       }
                     },
                     "page": {
@@ -4162,10 +4192,7 @@
             }
           },
           "400": {
-            "description": "Invalid program, creator id, or paging value"
-          },
-          "404": {
-            "description": "Program not found or not visible to this API key"
+            "description": "Invalid creator id, date, or paging value"
           }
         }
       }
@@ -4264,7 +4291,7 @@
                                 "$ref": "#/components/schemas/PostConfirmation"
                               }
                             ],
-                            "description": "Present on counted posts; null when no stamp exists"
+                            "description": "Present on counted posts; null when the video was not confirmed"
                           },
                           "exclusion": {
                             "allOf": [
