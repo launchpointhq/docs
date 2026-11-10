@@ -103,6 +103,8 @@ An abbreviated response:
 
 Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` and `data.adCodeStatus` with the same behavior. These fields follow the post's existing campaign visibility and API-key access rules.
 
+Posts also include `confirmation`: when the video was confirmed, its views then, and `confirmedBy`, or `null` when it was not confirmed. To list removed posts, use `GET /posts/excluded`.
+
 ## Use company or agency scope
 
 Any route that supports `scope` defaults to `scope=company`, which returns data belonging to the API key's company only.

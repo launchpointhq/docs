@@ -121,8 +121,9 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | --- | --- |
 | `list_programs` | Visible programs, with status and name filters |
 | `search_creatives` | Creative library search across titles, hooks, transcripts, and storyboards |
-| `list_posts` | Posts with metrics, `payment`, creator, and program. Newest first by `uploadedAt`, with stable pages |
-| `get_post` | One post with metrics, `payment`, contract, and bonus details |
+| `list_posts` | Posts with metrics, `payment`, `confirmation`, creator, and program. Newest first by `uploadedAt`, with stable pages |
+| `list_excluded_posts` | Removed posts on visible programs, newest removal first, with who removed each one and its views then |
+| `get_post` | One post with metrics, `payment`, `confirmation`, contract, and bonus details |
 | `get_posts` | Up to 1,000 posts by id, one answer each. Removed posts return their exclusion record; ids the key cannot see return `payment.state: unknown` |
 | `list_post_payments` | One post's money events, oldest first: earned, billed, charged, refunded, credited, and excluded |
 | `preview_post_exclusion` | Runs the exclusion checks for one post and changes nothing: whether it can be excluded, the refusal code, the cross-posts, and the pending pay it would remove |
@@ -137,8 +138,8 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | `list_creator_feed` | A creator's public posts, newest first: stored feed reads plus campaign posts, with counts, the platform's paid-partnership label, and the campaign program |
 | `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status |
 | `list_onboarding_creators` | A program's Onboarding queue, as the dashboard shows it |
-| `get_creator_onboarding` | Everything one creator still needs before posting, with the ids of waiting proofs |
-| `list_onboarding_proofs` | Onboarding proofs on a program; pending review by default |
+| `get_creator_onboarding` | Everything one creator still needs before posting, with the ids of waiting proofs and how each met requirement was met (`decision`) |
+| `list_onboarding_proofs` | Onboarding proofs on a program; pending review by default, with `reviewedBy` on decided proofs |
 | `list_media` | Media creators sent for review before posting; pending review by default |
 | `get_media` | One media item with its newest revision and status |
 | `list_payouts` | Workspace payout ledger entries |
@@ -149,6 +150,8 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | `list_contracts` | Visible creator contracts |
 | `list_creator_conversations` | Creator conversations for one visible program |
 | `list_conversation_messages` | A newest-first page of messages without changing read receipts |
+
+Every `*By` field (`reviewedBy`, `decidedBy`, `confirmedBy`, `excludedBy`) is an actor `{ id, type, name }`, or `null` when none was stored. `id` is opaque and stable within your workspace. `type` is `person`, `api_key`, or `system`. `name` is set only for people in your workspace.
 
 ### Write
 
