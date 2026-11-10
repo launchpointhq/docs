@@ -403,6 +403,7 @@
       },
       "ReviewActor": {
         "type": "object",
+        "nullable": true,
         "required": [
           "id",
           "type",
@@ -424,12 +425,13 @@
           "name": {
             "type": "string",
             "nullable": true,
-            "description": "For people, the name from the requesting workspace's client_users.name, or null when unavailable. API-key and system names are null; this is never an email address."
+            "description": "For people, the name from the requesting workspace's client_users.name, or null when unavailable. API-key and system names are null; no email fallback."
           }
         }
       },
       "OnboardingDecision": {
         "type": "object",
+        "nullable": true,
         "description": "The matching campaign_onboarding_status row. Account requirements match on exact social account and requirement ids; creator checklist items match the creator-wide requirement id. The field is null when no matching row exists.",
         "required": [
           "source",
@@ -448,13 +450,13 @@
             "description": "Unix timestamp in milliseconds"
           },
           "decidedBy": {
-            "$ref": "#/components/schemas/ReviewActor",
-            "nullable": true
+            "$ref": "#/components/schemas/ReviewActor"
           }
         }
       },
       "PostConfirmation": {
         "type": "object",
+        "nullable": true,
         "description": "The latest stored confirmation stamp. This is not review history and does not establish payout or 10,000-view eligibility.",
         "required": [
           "confirmedAt",
@@ -483,8 +485,7 @@
             "description": "`backlog` stamps use a system actor; they do not credit a person"
           },
           "confirmedBy": {
-            "$ref": "#/components/schemas/ReviewActor",
-            "nullable": true
+            "$ref": "#/components/schemas/ReviewActor"
           }
         }
       },
@@ -626,8 +627,7 @@
             "nullable": true
           },
           "reviewedBy": {
-            "$ref": "#/components/schemas/ReviewActor",
-            "nullable": true
+            "$ref": "#/components/schemas/ReviewActor"
           }
         }
       },
@@ -823,8 +823,7 @@
             "description": "The workspace that removed the post; null for Launchpoint jobs"
           },
           "actor": {
-            "$ref": "#/components/schemas/ReviewActor",
-            "nullable": true
+            "$ref": "#/components/schemas/ReviewActor"
           },
           "viewsAtExclusion": {
             "type": "integer",
@@ -2784,8 +2783,7 @@
                             "$ref": "#/components/schemas/PostPayment"
                           },
                           "confirmation": {
-                            "$ref": "#/components/schemas/PostConfirmation",
-                            "nullable": true
+                            "$ref": "#/components/schemas/PostConfirmation"
                           }
                         }
                       }
@@ -3020,8 +3018,7 @@
                           "$ref": "#/components/schemas/PostPayment"
                         },
                         "confirmation": {
-                          "$ref": "#/components/schemas/PostConfirmation",
-                          "nullable": true
+                          "$ref": "#/components/schemas/PostConfirmation"
                         }
                       }
                     }
@@ -4262,8 +4259,11 @@
                             "$ref": "#/components/schemas/PostPayment"
                           },
                           "confirmation": {
-                            "$ref": "#/components/schemas/PostConfirmation",
-                            "nullable": true,
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PostConfirmation"
+                              }
+                            ],
                             "description": "Present on counted posts; null when no stamp exists"
                           },
                           "exclusion": {
@@ -8176,8 +8176,7 @@
                                   "description": "Set while a proof waits. Approve or reject it with the onboarding proof endpoints."
                                 },
                                 "decision": {
-                                  "$ref": "#/components/schemas/OnboardingDecision",
-                                  "nullable": true
+                                  "$ref": "#/components/schemas/OnboardingDecision"
                                 }
                               }
                             }
@@ -8248,8 +8247,7 @@
                             "description": "Your team ticks it in the dashboard"
                           },
                           "decision": {
-                            "$ref": "#/components/schemas/OnboardingDecision",
-                            "nullable": true
+                            "$ref": "#/components/schemas/OnboardingDecision"
                           }
                         }
                       }
