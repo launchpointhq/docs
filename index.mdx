@@ -103,6 +103,8 @@ An abbreviated response:
 
 Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` and `data.adCodeStatus` with the same behavior. These fields follow the post's existing campaign visibility and API-key access rules.
 
+Posts also include `confirmation`, the latest stored video confirmation stamp, or `null` when no stamp exists. It reports the highest-platform view count at confirmation; it is not review history and does not establish payout or 10,000-view eligibility. To find removed posts after teardown, use `GET /posts/exclusions` with a visible `programId`. Its `exclusion.viewsAtExclusion` is the latest observed count for that individual post, not the video's highest-platform count. These tracking fields require the backend release and its database migration.
+
 ## Use company or agency scope
 
 Any route that supports `scope` defaults to `scope=company`, which returns data belonging to the API key's company only.

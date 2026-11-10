@@ -401,6 +401,93 @@
           }
         }
       },
+      "ReviewActor": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque stable id scoped to the requesting workspace; never a raw user or API-key id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "person",
+              "api_key",
+              "system"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "For people, the name from the requesting workspace's client_users.name, or null when unavailable. API-key and system names are null; this is never an email address."
+          }
+        }
+      },
+      "OnboardingDecision": {
+        "type": "object",
+        "description": "The matching campaign_onboarding_status row. Account requirements match on exact social account and requirement ids; creator checklist items match the creator-wide requirement id. The field is null when no matching row exists.",
+        "required": [
+          "source",
+          "decidedAt",
+          "decidedBy"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Unix timestamp in milliseconds"
+          },
+          "decidedBy": {
+            "$ref": "#/components/schemas/ReviewActor",
+            "nullable": true
+          }
+        }
+      },
+      "PostConfirmation": {
+        "type": "object",
+        "description": "The latest stored confirmation stamp. This is not review history and does not establish payout or 10,000-view eligibility.",
+        "required": [
+          "confirmedAt",
+          "confirmedViews",
+          "source",
+          "confirmedBy"
+        ],
+        "properties": {
+          "confirmedAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp in milliseconds"
+          },
+          "confirmedViews": {
+            "type": "integer",
+            "nullable": true,
+            "description": "The video’s highest-platform view count at confirmation"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "person",
+              "backlog",
+              "unknown"
+            ],
+            "description": "`backlog` stamps use a system actor; they do not credit a person"
+          },
+          "confirmedBy": {
+            "$ref": "#/components/schemas/ReviewActor",
+            "nullable": true
+          }
+        }
+      },
       "OnboardingProof": {
         "type": "object",
         "required": [
@@ -414,7 +501,8 @@
           "status",
           "rejectionComments",
           "submittedAt",
-          "reviewedAt"
+          "reviewedAt",
+          "reviewedBy"
         ],
         "properties": {
           "id": {
@@ -535,6 +623,10 @@
           "reviewedAt": {
             "type": "integer",
             "format": "int64",
+            "nullable": true
+          },
+          "reviewedBy": {
+            "$ref": "#/components/schemas/ReviewActor",
             "nullable": true
           }
         }
@@ -691,7 +783,7 @@
       },
       "PostExclusion": {
         "type": "object",
-        "description": "The record kept when a post is removed from a program. It stays after the post itself is deleted.",
+        "description": "The record kept when a post is removed from a program. It stays after the post itself is deleted. Historical records can have null actor and view snapshot.",
         "properties": {
           "id": {
             "type": "string",
@@ -729,6 +821,16 @@
             "format": "uuid",
             "nullable": true,
             "description": "The workspace that removed the post; null for Launchpoint jobs"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/ReviewActor",
+            "nullable": true
+          },
+          "viewsAtExclusion": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Latest stored views for this individual post before teardown; not the video’s highest-platform count"
           },
           "message": {
             "type": "string",
@@ -2680,6 +2782,10 @@
                           },
                           "payment": {
                             "$ref": "#/components/schemas/PostPayment"
+                          },
+                          "confirmation": {
+                            "$ref": "#/components/schemas/PostConfirmation",
+                            "nullable": true
                           }
                         }
                       }
@@ -2912,6 +3018,10 @@
                         },
                         "payment": {
                           "$ref": "#/components/schemas/PostPayment"
+                        },
+                        "confirmation": {
+                          "$ref": "#/components/schemas/PostConfirmation",
+                          "nullable": true
                         }
                       }
                     }
@@ -3920,6 +4030,149 @@
         }
       }
     },
+    "/posts/exclusions": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "List excluded posts",
+        "description": "List removed posts in one visible program, newest first. Records remain available after post teardown. The exclusion includes an opaque actor when known and the latest per-post views observed before teardown when recorded.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "query",
+            "name": "programId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "creatorId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional opaque creator id"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Excluded posts returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page",
+                    "total",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "program",
+                          "creatorId",
+                          "crossPostGroupId",
+                          "platform",
+                          "url",
+                          "uploadedAt",
+                          "exclusion"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "The removed social post id"
+                          },
+                          "program": {
+                            "type": "object",
+                            "required": [
+                              "id"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            }
+                          },
+                          "creatorId": {
+                            "type": "string",
+                            "description": "Opaque creator id, scoped to this API key's workspace"
+                          },
+                          "crossPostGroupId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "platform": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "uploadedAt": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "Unix timestamp in milliseconds; zero when no publish time was recorded"
+                          },
+                          "exclusion": {
+                            "$ref": "#/components/schemas/PostExclusion"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid program, creator id, or paging value"
+          },
+          "404": {
+            "description": "Program not found or not visible to this API key"
+          }
+        }
+      }
+    },
     "/posts/lookup": {
       "post": {
         "tags": [
@@ -4007,6 +4260,11 @@
                           },
                           "payment": {
                             "$ref": "#/components/schemas/PostPayment"
+                          },
+                          "confirmation": {
+                            "$ref": "#/components/schemas/PostConfirmation",
+                            "nullable": true,
+                            "description": "Present on counted posts; null when no stamp exists"
                           },
                           "exclusion": {
                             "allOf": [
@@ -7870,7 +8128,8 @@
                                 "status",
                                 "unmetReason",
                                 "rejectionComments",
-                                "pendingProofId"
+                                "pendingProofId",
+                                "decision"
                               ],
                               "properties": {
                                 "id": {
@@ -7915,6 +8174,10 @@
                                   "format": "uuid",
                                   "nullable": true,
                                   "description": "Set while a proof waits. Approve or reject it with the onboarding proof endpoints."
+                                },
+                                "decision": {
+                                  "$ref": "#/components/schemas/OnboardingDecision",
+                                  "nullable": true
                                 }
                               }
                             }
@@ -7961,7 +8224,8 @@
                           "label",
                           "platform",
                           "result",
-                          "manual"
+                          "manual",
+                          "decision"
                         ],
                         "properties": {
                           "label": {
@@ -7982,6 +8246,10 @@
                           "manual": {
                             "type": "boolean",
                             "description": "Your team ticks it in the dashboard"
+                          },
+                          "decision": {
+                            "$ref": "#/components/schemas/OnboardingDecision",
+                            "nullable": true
                           }
                         }
                       }
