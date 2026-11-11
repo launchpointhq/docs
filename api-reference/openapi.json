@@ -6909,6 +6909,25 @@
                                   "nullable": true,
                                   "description": "When the creator joined this program: their first approval on it, the date the dashboard shows as \"Joined\". Unix milliseconds, an absolute UTC instant, so compare it directly with a post's `uploadedAt`. `null` when the creator has no approval record."
                                 },
+                                "coach": {
+                                  "type": "object",
+                                  "nullable": true,
+                                  "description": "The creator's coach on this program now, set by round robin or by hand. `null` when the creator has no coach on this program.",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "description": "The coach's creator id, the same id that `GET /creators` returns for the coach."
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "description": "The coach's name."
+                                    }
+                                  },
+                                  "example": {
+                                    "id": "creator_demo_7h2",
+                                    "name": "Grace Hopper"
+                                  }
+                                },
                                 "contractStatus": {
                                   "type": "string",
                                   "enum": [
