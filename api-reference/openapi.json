@@ -907,6 +907,410 @@
             "$ref": "#/components/schemas/PostExclusion"
           }
         }
+      },
+      "CanvasPay": {
+        "type": "object",
+        "properties": {
+          "payoutType": {
+            "type": "string",
+            "enum": [
+              "view_bonus",
+              "cpm",
+              "flat_fee"
+            ]
+          },
+          "platformPayoutMode": {
+            "type": "string",
+            "enum": [
+              "per_post",
+              "highest_platform"
+            ]
+          },
+          "viewTrackingDays": {
+            "type": "integer"
+          },
+          "trialCutoff": {
+            "type": "object",
+            "properties": {
+              "views": {
+                "type": "integer"
+              },
+              "posts": {
+                "type": "integer"
+              },
+              "days": {
+                "type": "integer"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "perCreatorCap": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "capCents": {
+                "type": "integer"
+              },
+              "periodDays": {
+                "type": "integer"
+              }
+            }
+          },
+          "inactivityCutoff": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "days": {
+                "type": "integer"
+              }
+            }
+          },
+          "baseRateDisabled": {
+            "type": "boolean"
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "viewsThreshold": {
+                  "type": "integer"
+                },
+                "bonusCents": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "cpmCents": {
+            "type": "integer"
+          },
+          "minViews": {
+            "type": "integer"
+          },
+          "maxViews": {
+            "type": "integer"
+          },
+          "flatFeeCents": {
+            "type": "integer"
+          },
+          "amountCents": {
+            "type": "integer"
+          },
+          "flatFee": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "flatFeeCents": {
+                "type": "integer"
+              },
+              "minViews": {
+                "type": "integer"
+              }
+            }
+          },
+          "monthlyInput": {
+            "type": "object",
+            "properties": {
+              "budgetCents": {
+                "type": "integer"
+              },
+              "postsPerMonth": {
+                "type": "integer"
+              },
+              "videosPerMonth": {
+                "type": "integer"
+              }
+            }
+          },
+          "perPlatform": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "payoutType": {
+                  "type": "string",
+                  "enum": [
+                    "excluded",
+                    "view_bonus",
+                    "cpm",
+                    "flat_fee"
+                  ]
+                },
+                "excluded": {
+                  "type": "boolean"
+                },
+                "flatFeeCents": {
+                  "type": "integer"
+                },
+                "tiers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "viewsThreshold": {
+                        "type": "integer"
+                      },
+                      "bonusCents": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "cpmCents": {
+                  "type": "integer"
+                },
+                "minViews": {
+                  "type": "integer"
+                },
+                "maxViews": {
+                  "type": "integer"
+                },
+                "flatFee": {
+                  "type": "object"
+                },
+                "amountCents": {
+                  "type": "integer"
+                },
+                "monthlyInput": {
+                  "type": "object"
+                },
+                "baseRateDisabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CanvasContentRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "matcher": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "content",
+                  "lifetime_views"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "thresholdViews": {
+                "type": "integer"
+              }
+            }
+          },
+          "pay": {
+            "$ref": "#/components/schemas/CanvasPay"
+          }
+        }
+      },
+      "TrialRule": {
+        "type": "object",
+        "description": "How a trial is decided.",
+        "properties": {
+          "limit": {
+            "type": "object",
+            "description": "How long the trial runs: a number of days from its start, or a number of videos.",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "days",
+                  "posts"
+                ]
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          },
+          "goal": {
+            "description": "What the creator must reach to pass.",
+            "oneOf": [
+              {
+                "type": "object",
+                "title": "Views",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "views"
+                    ]
+                  },
+                  "targetViews": {
+                    "type": "integer",
+                    "description": "Views each passing video must reach."
+                  },
+                  "passingVideoCount": {
+                    "type": "integer",
+                    "description": "Distinct videos that must reach `targetViews`."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "title": "Custom field",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "creator_field"
+                    ]
+                  },
+                  "fieldId": {
+                    "type": "string",
+                    "description": "The brand custom field id, as in `customFields[].id` on `GET /creators`."
+                  },
+                  "fieldName": {
+                    "type": "string"
+                  },
+                  "minValue": {
+                    "type": "number",
+                    "description": "Value the field must reach."
+                  }
+                }
+              }
+            ]
+          },
+          "failureAction": {
+            "type": "string",
+            "enum": [
+              "remove",
+              "keep"
+            ],
+            "description": "When the goal is missed: `remove` takes the creator off the program; `keep` keeps them on trial pay, and later posts can still pass."
+          },
+          "nextPayscaleId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The payscale the creator moves to on passing, from `GET /programs/{id}/pay-structures`. `null` is the program Default."
+          }
+        }
+      },
+      "CreatorTrial": {
+        "type": "object",
+        "description": "The creator's trial on this program, as the dashboard creators table shows it.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TrialRule"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": "string",
+                "enum": [
+                  "waiting",
+                  "running",
+                  "qualified",
+                  "checking",
+                  "kept",
+                  "promoted",
+                  "removed",
+                  "cancelled"
+                ],
+                "description": "`waiting`: not started. `running`: in progress. `qualified`: goal reached, the trial has not ended. `checking`: ended, final views are being read. `kept`: missed, kept on trial pay. `promoted`: passed. `removed`: missed and removed. `cancelled`: a person changed the pay by hand."
+              },
+              "startedAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "When the trial started. It can be later than `joinedAt`. Unix milliseconds, an absolute UTC instant."
+              },
+              "endsAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "When the trial ends: the \"ends\" date in the dashboard creators table. For a `posts` limit, the publish time of the last trial video. `null` until the trial check sets it. Unix milliseconds, an absolute UTC instant."
+              },
+              "progress": {
+                "type": "object",
+                "properties": {
+                  "postCount": {
+                    "type": "integer",
+                    "description": "Videos posted in the trial."
+                  },
+                  "bestPostViews": {
+                    "type": "integer",
+                    "description": "Views on the best trial video."
+                  },
+                  "passedVideoCount": {
+                    "type": "integer",
+                    "description": "Videos that reached `goal.targetViews`."
+                  },
+                  "goalValue": {
+                    "type": "number",
+                    "nullable": true,
+                    "description": "The custom field value at the last check, for a `creator_field` goal; else `null`."
+                  }
+                }
+              },
+              "qualifiedAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "When the goal was reached. Unix milliseconds, an absolute UTC instant."
+              },
+              "promotedAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "When the creator passed. Unix milliseconds, an absolute UTC instant."
+              },
+              "checkedAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "The last trial check. Unix milliseconds, an absolute UTC instant."
+              },
+              "cancelledAt": {
+                "type": "integer",
+                "nullable": true,
+                "description": "When a person changed the pay by hand. Unix milliseconds, an absolute UTC instant."
+              }
+            }
+          }
+        ],
+        "example": {
+          "state": "running",
+          "startedAt": 1794571463429,
+          "endsAt": 1796385863429,
+          "limit": {
+            "kind": "days",
+            "count": 21
+          },
+          "goal": {
+            "kind": "views",
+            "targetViews": 10000,
+            "passingVideoCount": 1
+          },
+          "failureAction": "remove",
+          "nextPayscaleId": null,
+          "progress": {
+            "postCount": 3,
+            "bestPostViews": 4200,
+            "passedVideoCount": 0,
+            "goalValue": null
+          },
+          "qualifiedAt": null,
+          "promotedAt": null,
+          "checkedAt": 1794573418873,
+          "cancelledAt": null
+        }
       }
     }
   },
@@ -1417,402 +1821,17 @@
                                   "contentRules": {
                                     "type": "array",
                                     "items": {
-                                      "type": "object",
-                                      "properties": {
-                                        "id": {
-                                          "type": "string"
-                                        },
-                                        "label": {
-                                          "type": "string"
-                                        },
-                                        "matcher": {
-                                          "type": "object",
-                                          "properties": {
-                                            "kind": {
-                                              "type": "string",
-                                              "enum": [
-                                                "content",
-                                                "lifetime_views"
-                                              ]
-                                            },
-                                            "description": {
-                                              "type": "string"
-                                            },
-                                            "thresholdViews": {
-                                              "type": "integer"
-                                            }
-                                          }
-                                        },
-                                        "pay": {
-                                          "type": "object",
-                                          "properties": {
-                                            "payoutType": {
-                                              "type": "string",
-                                              "enum": [
-                                                "view_bonus",
-                                                "cpm",
-                                                "flat_fee"
-                                              ]
-                                            },
-                                            "platformPayoutMode": {
-                                              "type": "string",
-                                              "enum": [
-                                                "per_post",
-                                                "highest_platform"
-                                              ]
-                                            },
-                                            "viewTrackingDays": {
-                                              "type": "integer"
-                                            },
-                                            "trialCutoff": {
-                                              "type": "object",
-                                              "properties": {
-                                                "views": {
-                                                  "type": "integer"
-                                                },
-                                                "posts": {
-                                                  "type": "integer"
-                                                },
-                                                "days": {
-                                                  "type": "integer"
-                                                },
-                                                "enabled": {
-                                                  "type": "boolean"
-                                                }
-                                              }
-                                            },
-                                            "perCreatorCap": {
-                                              "type": "object",
-                                              "properties": {
-                                                "enabled": {
-                                                  "type": "boolean"
-                                                },
-                                                "capCents": {
-                                                  "type": "integer"
-                                                },
-                                                "periodDays": {
-                                                  "type": "integer"
-                                                }
-                                              }
-                                            },
-                                            "inactivityCutoff": {
-                                              "type": "object",
-                                              "properties": {
-                                                "enabled": {
-                                                  "type": "boolean"
-                                                },
-                                                "days": {
-                                                  "type": "integer"
-                                                }
-                                              }
-                                            },
-                                            "baseRateDisabled": {
-                                              "type": "boolean"
-                                            },
-                                            "tiers": {
-                                              "type": "array",
-                                              "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "viewsThreshold": {
-                                                    "type": "integer"
-                                                  },
-                                                  "bonusCents": {
-                                                    "type": "integer"
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            "cpmCents": {
-                                              "type": "integer"
-                                            },
-                                            "minViews": {
-                                              "type": "integer"
-                                            },
-                                            "maxViews": {
-                                              "type": "integer"
-                                            },
-                                            "flatFeeCents": {
-                                              "type": "integer"
-                                            },
-                                            "amountCents": {
-                                              "type": "integer"
-                                            },
-                                            "flatFee": {
-                                              "type": "object",
-                                              "properties": {
-                                                "enabled": {
-                                                  "type": "boolean"
-                                                },
-                                                "flatFeeCents": {
-                                                  "type": "integer"
-                                                },
-                                                "minViews": {
-                                                  "type": "integer"
-                                                }
-                                              }
-                                            },
-                                            "monthlyInput": {
-                                              "type": "object",
-                                              "properties": {
-                                                "budgetCents": {
-                                                  "type": "integer"
-                                                },
-                                                "postsPerMonth": {
-                                                  "type": "integer"
-                                                },
-                                                "videosPerMonth": {
-                                                  "type": "integer"
-                                                }
-                                              }
-                                            },
-                                            "perPlatform": {
-                                              "type": "object",
-                                              "additionalProperties": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "payoutType": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                      "excluded",
-                                                      "view_bonus",
-                                                      "cpm",
-                                                      "flat_fee"
-                                                    ]
-                                                  },
-                                                  "excluded": {
-                                                    "type": "boolean"
-                                                  },
-                                                  "flatFeeCents": {
-                                                    "type": "integer"
-                                                  },
-                                                  "tiers": {
-                                                    "type": "array",
-                                                    "items": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "viewsThreshold": {
-                                                          "type": "integer"
-                                                        },
-                                                        "bonusCents": {
-                                                          "type": "integer"
-                                                        }
-                                                      }
-                                                    }
-                                                  },
-                                                  "cpmCents": {
-                                                    "type": "integer"
-                                                  },
-                                                  "minViews": {
-                                                    "type": "integer"
-                                                  },
-                                                  "maxViews": {
-                                                    "type": "integer"
-                                                  },
-                                                  "flatFee": {
-                                                    "type": "object"
-                                                  },
-                                                  "amountCents": {
-                                                    "type": "integer"
-                                                  },
-                                                  "monthlyInput": {
-                                                    "type": "object"
-                                                  },
-                                                  "baseRateDisabled": {
-                                                    "type": "boolean"
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
+                                      "$ref": "#/components/schemas/CanvasContentRule"
                                     }
                                   },
                                   "fallbackPay": {
                                     "nullable": true,
                                     "description": "The pay config used when content matches no rule. This can be null for a non-default payscale group with no fallback configured; null means the creator has no fallback pay yet.",
-                                    "type": "object",
-                                    "properties": {
-                                      "payoutType": {
-                                        "type": "string",
-                                        "enum": [
-                                          "view_bonus",
-                                          "cpm",
-                                          "flat_fee"
-                                        ]
-                                      },
-                                      "platformPayoutMode": {
-                                        "type": "string",
-                                        "enum": [
-                                          "per_post",
-                                          "highest_platform"
-                                        ]
-                                      },
-                                      "viewTrackingDays": {
-                                        "type": "integer"
-                                      },
-                                      "trialCutoff": {
-                                        "type": "object",
-                                        "properties": {
-                                          "views": {
-                                            "type": "integer"
-                                          },
-                                          "posts": {
-                                            "type": "integer"
-                                          },
-                                          "days": {
-                                            "type": "integer"
-                                          },
-                                          "enabled": {
-                                            "type": "boolean"
-                                          }
-                                        }
-                                      },
-                                      "perCreatorCap": {
-                                        "type": "object",
-                                        "properties": {
-                                          "enabled": {
-                                            "type": "boolean"
-                                          },
-                                          "capCents": {
-                                            "type": "integer"
-                                          },
-                                          "periodDays": {
-                                            "type": "integer"
-                                          }
-                                        }
-                                      },
-                                      "inactivityCutoff": {
-                                        "type": "object",
-                                        "properties": {
-                                          "enabled": {
-                                            "type": "boolean"
-                                          },
-                                          "days": {
-                                            "type": "integer"
-                                          }
-                                        }
-                                      },
-                                      "baseRateDisabled": {
-                                        "type": "boolean"
-                                      },
-                                      "tiers": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "viewsThreshold": {
-                                              "type": "integer"
-                                            },
-                                            "bonusCents": {
-                                              "type": "integer"
-                                            }
-                                          }
-                                        }
-                                      },
-                                      "cpmCents": {
-                                        "type": "integer"
-                                      },
-                                      "minViews": {
-                                        "type": "integer"
-                                      },
-                                      "maxViews": {
-                                        "type": "integer"
-                                      },
-                                      "flatFeeCents": {
-                                        "type": "integer"
-                                      },
-                                      "amountCents": {
-                                        "type": "integer"
-                                      },
-                                      "flatFee": {
-                                        "type": "object",
-                                        "properties": {
-                                          "enabled": {
-                                            "type": "boolean"
-                                          },
-                                          "flatFeeCents": {
-                                            "type": "integer"
-                                          },
-                                          "minViews": {
-                                            "type": "integer"
-                                          }
-                                        }
-                                      },
-                                      "monthlyInput": {
-                                        "type": "object",
-                                        "properties": {
-                                          "budgetCents": {
-                                            "type": "integer"
-                                          },
-                                          "postsPerMonth": {
-                                            "type": "integer"
-                                          },
-                                          "videosPerMonth": {
-                                            "type": "integer"
-                                          }
-                                        }
-                                      },
-                                      "perPlatform": {
-                                        "type": "object",
-                                        "additionalProperties": {
-                                          "type": "object",
-                                          "properties": {
-                                            "payoutType": {
-                                              "type": "string",
-                                              "enum": [
-                                                "excluded",
-                                                "view_bonus",
-                                                "cpm",
-                                                "flat_fee"
-                                              ]
-                                            },
-                                            "excluded": {
-                                              "type": "boolean"
-                                            },
-                                            "flatFeeCents": {
-                                              "type": "integer"
-                                            },
-                                            "tiers": {
-                                              "type": "array",
-                                              "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "viewsThreshold": {
-                                                    "type": "integer"
-                                                  },
-                                                  "bonusCents": {
-                                                    "type": "integer"
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            "cpmCents": {
-                                              "type": "integer"
-                                            },
-                                            "minViews": {
-                                              "type": "integer"
-                                            },
-                                            "maxViews": {
-                                              "type": "integer"
-                                            },
-                                            "flatFee": {
-                                              "type": "object"
-                                            },
-                                            "amountCents": {
-                                              "type": "integer"
-                                            },
-                                            "monthlyInput": {
-                                              "type": "object"
-                                            },
-                                            "baseRateDisabled": {
-                                              "type": "boolean"
-                                            }
-                                          }
-                                        }
+                                    "allOf": [
+                                      {
+                                        "$ref": "#/components/schemas/CanvasPay"
                                       }
-                                    }
+                                    ]
                                   },
                                   "maxVideosPerWeek": {
                                     "type": "integer",
@@ -6928,6 +6947,24 @@
                                     "name": "Grace Hopper"
                                   }
                                 },
+                                "trial": {
+                                  "nullable": true,
+                                  "description": "The creator's trial on this program. `null` when the creator has no trial record, such as a contract or a creator who started without the trial.",
+                                  "allOf": [
+                                    {
+                                      "$ref": "#/components/schemas/CreatorTrial"
+                                    }
+                                  ]
+                                },
+                                "trialSkipReason": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "enum": [
+                                    "top_creator",
+                                    null
+                                  ],
+                                  "description": "`top_creator` when the creator started without the program's trial because they are a top creator. Else `null`."
+                                },
                                 "contractStatus": {
                                   "type": "string",
                                   "enum": [
@@ -9178,6 +9215,300 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/programs/{id}/pay-structures": {
+      "get": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "List program pay structures",
+        "description": "List every payscale on a Canvas program, with the ids that the two pay-structure changes accept, and the program's trial rule.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the program"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pay structures returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string"
+                    },
+                    "trial": {
+                      "nullable": true,
+                      "description": "The trial a creator who starts on the trial payscale runs now. `null` when no payscale is the trial, or when the brand ends the trial by hand.",
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/TrialRule"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "skipTopCreators": {
+                              "type": "boolean",
+                              "description": "Top creators start on the Default payscale and skip the trial."
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "isTrial": {
+                            "type": "boolean"
+                          },
+                          "fallbackPay": {
+                            "nullable": true,
+                            "description": "The payscale's own pay. The Default's own pay is the program pay, or `null` when the program removed it.",
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/CanvasPay"
+                              }
+                            ]
+                          },
+                          "contentRules": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/CanvasContentRule"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The program is not a Canvas program, or the request is invalid"
+          },
+          "404": {
+            "description": "No program, creator, or post was found"
+          }
+        }
+      }
+    },
+    "/programs/{id}/creators/{creatorId}/pay-structure": {
+      "put": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "Change a creator pay structure",
+        "description": "Move a creator onto another payscale on a Canvas program, as the dashboard pay picker does. Only videos the creator submits after the move use the new payscale, unless `applyToPastVideos` is true. Any move off the trial payscale ends the trial; `graduate` also records that the creator passed it. A creator who signed the program contract is asked to sign the new pay terms again.\n\n`applyToPastVideos` re-prices every unpaid video the creator submitted on the program, in a background run that cannot be cancelled. The run can add money to the creator's wallet, and that money is not taken back.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the program"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Creator id from `GET /creators`"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "payscaleId"
+                ],
+                "properties": {
+                  "payscaleId": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "A payscale id from `GET /programs/{id}/pay-structures`, or `null` for Default. Not the trial payscale."
+                  },
+                  "move": {
+                    "type": "string",
+                    "enum": [
+                      "assign",
+                      "graduate"
+                    ],
+                    "default": "assign",
+                    "description": "`graduate` takes a creator off the trial payscale and records that they passed it."
+                  },
+                  "applyToPastVideos": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Also re-price the creator's submitted, unpaid videos. Cannot be combined with `graduate`."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The creator was moved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "payscaleId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "resetRunId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The background re-price run, when `applyToPastVideos` is true."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The program is not a Canvas program, or the request is invalid"
+          },
+          "403": {
+            "description": "This key cannot change the program"
+          },
+          "404": {
+            "description": "No program, creator, or post was found"
+          },
+          "409": {
+            "description": "The change cannot be made now"
+          }
+        }
+      }
+    },
+    "/posts/{id}/pay-structure": {
+      "put": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Change a post pay structure",
+        "description": "Pay one Canvas post's video under any pay structure on its program, as the dashboard media pay picker does. It acts on the whole video, with its cross-posts. Before the video's pay locks, the change only records the pick. After the lock, it re-prices the video at once and pays its held money at the new price; money paid is not taken back.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Post id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "payStructureId"
+                ],
+                "properties": {
+                  "payStructureId": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "A content rule id, or a payscale id for that payscale's own pay, from `GET /programs/{id}/pay-structures`. `null` is automatic matching, refused after the pay locks."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The pay structure was changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "programId": {
+                      "type": "string"
+                    },
+                    "payStructure": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "status": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The program is not a Canvas program, or the request is invalid"
+          },
+          "403": {
+            "description": "This key cannot change the program"
+          },
+          "404": {
+            "description": "No program, creator, or post was found"
+          },
+          "409": {
+            "description": "The change cannot be made now"
           }
         }
       }
