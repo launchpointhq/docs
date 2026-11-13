@@ -6444,7 +6444,7 @@
             }
           },
           "400": {
-            "description": "programId is missing or invalid, or fromDate is after toDate"
+            "description": "programId is missing or is not a UUID, page or limit is sent, or fromDate is after toDate. The message states what to change."
           },
           "401": {
             "description": "API key is invalid or missing"
