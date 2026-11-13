@@ -3966,7 +3966,7 @@
           "Posts"
         ],
         "summary": "Exclude a post from earnings",
-        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nWith `?dryRun=true`, the request runs the same checks and changes nothing. It answers `200` with `{ id, excluded: false, dryRun: true, canExclude, blockedBy, crossPostIds, pendingCentsToRemove }`. A refusal is `canExclude: false` with its code in `blockedBy`.\n\nIf your workspace has a contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
+        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nWith `?dryRun=true`, the request runs the same checks and changes nothing. It answers `200` with `{ id, excluded: false, dryRun: true, canExclude, blockedBy, crossPostIds, pendingCentsToRemove }`. A refusal is `canExclude: false` with its code in `blockedBy`.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4103,7 +4103,7 @@
             "description": "Invalid post id or message, both `message` and `reason` sent, or the post is not in a canvas program"
           },
           "403": {
-            "description": "The program is read-only for this API key"
+            "description": "The program is read-only for this API key. Also returned when: a workspace that has a contract with Launchpoint cannot read creator pay"
           },
           "404": {
             "description": "Post not found or already excluded"

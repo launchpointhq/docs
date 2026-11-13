@@ -121,7 +121,7 @@ Creator email addresses are never present in API responses.
 
 If your workspace has a contract with Launchpoint, you pay the contract price for delivery, not creator pay. The API then does not return what creators earn:
 
-- These endpoints return `403`: `GET /payouts`, `GET /payouts/stats`, `GET /payouts/pending`, `GET /pay-structures`, `GET /programs/{id}/pay-structures`, `GET /posts/{id}/payments`, and the two pay-structure updates.
+- These endpoints return `403`: `GET /payouts`, `GET /payouts/stats`, `GET /payouts/pending`, `GET /pay-structures`, `GET /programs/{id}/pay-structures`, `GET /posts/{id}/payments`, `POST /posts/{id}/exclude`, and the two pay-structure updates.
 - Other endpoints keep their fields and return `null` for creator pay, such as `earnings`, `cpm`, `paid`, and `payment` on posts and analytics.
 - `GET /payouts/spend` returns your spend, with `creatorEarnings` set to `null`.
 
