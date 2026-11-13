@@ -6301,7 +6301,7 @@
           "Payouts"
         ],
         "summary": "Report the spend of one program",
-        "description": "What one program cost you through Launchpoint. `programId` is required, so the amounts of an organic program and an Ads program are never added together. Call this endpoint once for each program; `GET /programs` lists the ids.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee. For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits.\n\n`paid`, `paidOffPlatform`, `awaiting`, and `tracking` are creator earnings on the program. They are not additions to `spend`; do not add them to it. Every amount is returned in dollars and in cents.\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days. Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- The creator earnings fields select posts by their publish day.\n\nA contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
+        "description": "What one program cost you through Launchpoint. `programId` is required, so the amounts of an organic program and an Ads program are never added together. Call this endpoint once for each program; `GET /programs` lists the ids.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee. For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. It already contains the creator share that `GET /programs/{programId}/ads` reports, so do not add that share again. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits. Use `spend` or `spendCents`, not both: each amount is returned in dollars and in cents.\n\n**Creator earnings.** `creatorEarnings` holds what the program's creators earned: `paid`, `paidOffPlatform`, `awaiting`, and `tracking`. If you pay a platform fee on creator pay, this money is the cost inside `deliverySpend`. Never add it to `spend`, and do not add your own direct creator payments either: `paidOffPlatform` is already inside. `creatorEarnings` is `null` if you have a contract with Launchpoint, because you pay the contract price, not creator pay.\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days (`timeZone`). Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- `undatedSpend` is delivery that has no day. It is in no date range. It is part of `deliverySpend` and `spend` only when you set no dates.\n- `creatorEarnings` selects posts by their publish day.\n\n**Before you compute a cost per customer.** Spend is counted on the day the views occurred, and a purchase can follow days later. Use a range that ended at least as long ago as your usual time from view to purchase. A contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6380,6 +6380,13 @@
                           "type": "string",
                           "nullable": true
                         },
+                        "timeZone": {
+                          "type": "string",
+                          "description": "Time zone of the date range and of each day",
+                          "enum": [
+                            "America/New_York"
+                          ]
+                        },
                         "spend": {
                           "type": "number",
                           "description": "deliverySpend + adRoyaltySpend, in dollars"
@@ -6404,37 +6411,52 @@
                           "type": "integer",
                           "description": "Royalty fee of the ads that run the program's media, in cents"
                         },
-                        "paid": {
+                        "undatedSpend": {
                           "type": "number",
-                          "description": "Money sent to creators through Launchpoint, in dollars"
+                          "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set, in dollars"
                         },
-                        "paidCents": {
+                        "undatedSpendCents": {
                           "type": "integer",
-                          "description": "Money sent to creators through Launchpoint, in cents"
+                          "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set, in cents"
                         },
-                        "paidOffPlatform": {
-                          "type": "number",
-                          "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
-                        },
-                        "paidOffPlatformCents": {
-                          "type": "integer",
-                          "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
-                        },
-                        "awaiting": {
-                          "type": "number",
-                          "description": "Money held for creators that is past its pay date, in dollars"
-                        },
-                        "awaitingCents": {
-                          "type": "integer",
-                          "description": "Money held for creators that is past its pay date, in cents"
-                        },
-                        "tracking": {
-                          "type": "number",
-                          "description": "Money held for creators that is still inside its view-tracking window, in dollars"
-                        },
-                        "trackingCents": {
-                          "type": "integer",
-                          "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                        "creatorEarnings": {
+                          "type": "object",
+                          "nullable": true,
+                          "description": "What the program's creators earned. Not an addition to spend. Null for a customer with a Launchpoint contract.",
+                          "properties": {
+                            "paid": {
+                              "type": "number",
+                              "description": "Money sent to creators through Launchpoint, in dollars"
+                            },
+                            "paidCents": {
+                              "type": "integer",
+                              "description": "Money sent to creators through Launchpoint, in cents"
+                            },
+                            "paidOffPlatform": {
+                              "type": "number",
+                              "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
+                            },
+                            "paidOffPlatformCents": {
+                              "type": "integer",
+                              "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
+                            },
+                            "awaiting": {
+                              "type": "number",
+                              "description": "Money held for creators that is past its pay date, in dollars"
+                            },
+                            "awaitingCents": {
+                              "type": "integer",
+                              "description": "Money held for creators that is past its pay date, in cents"
+                            },
+                            "tracking": {
+                              "type": "number",
+                              "description": "Money held for creators that is still inside its view-tracking window, in dollars"
+                            },
+                            "trackingCents": {
+                              "type": "integer",
+                              "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                            }
+                          }
                         }
                       }
                     }
