@@ -6300,41 +6300,21 @@
         "tags": [
           "Payouts"
         ],
-        "summary": "Report creator spend per program",
-        "description": "Creator money for each visible program, using the same definition as the campaign pages in the dashboard.\n\n`spend` is money sent to creators through Launchpoint (`paid`), money the brand paid creators directly (`paidOffPlatform`), and money still held for creators (`awaiting` is past its pay date, `tracking` is still inside its view window). Every field is returned in dollars and in cents.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet. For an agency, a linked brand's wallet can fund the same creators, so summing the wallet ledger by program understates what creators earned. Use this endpoint for per-program spend reports.\n\n`fromDate` and `toDate` pick posts by their publish day, the same rule as the dashboard date picker, not the day money moved. Rows are sorted by spend, and `summary` sums every program in the report, not only the current page.\n",
+        "summary": "Report the spend of one program",
+        "description": "What one program cost you through Launchpoint. `programId` is required, so the amounts of an organic program and an Ads program are never added together. Call this endpoint once for each program; `GET /programs` lists the ids.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee. For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits.\n\n`paid`, `paidOffPlatform`, `awaiting`, and `tracking` are creator earnings on the program. They are not additions to `spend`; do not add them to it. Every amount is returned in dollars and in cents.\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days. Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- The creator earnings fields select posts by their publish day.\n\nA contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
           },
           {
             "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1
-            },
-            "description": "Pagination page number"
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 25
-            },
-            "description": "Programs to return per page"
-          },
-          {
-            "in": "query",
             "name": "programId",
+            "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
             },
-            "description": "Narrow the report to one program"
+            "description": "The program to report"
           },
           {
             "in": "query",
@@ -6343,7 +6323,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Count posts published on or after this day (YYYY-MM-DD)"
+            "description": "Count delivery on or after this New York day (YYYY-MM-DD)"
           },
           {
             "in": "query",
@@ -6352,7 +6332,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Count posts published on or before this day (YYYY-MM-DD)"
+            "description": "Count delivery on or before this New York day (YYYY-MM-DD)"
           }
         ],
         "responses": {
@@ -6364,101 +6344,27 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "programId": {
-                            "type": "string"
-                          },
-                          "programName": {
-                            "type": "string"
-                          },
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "draft",
-                              "active",
-                              "paused",
-                              "completed",
-                              "archived"
-                            ]
-                          },
-                          "currency": {
-                            "type": "string",
-                            "enum": [
-                              "usd"
-                            ]
-                          },
-                          "spend": {
-                            "type": "number",
-                            "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
-                          },
-                          "spendCents": {
-                            "type": "integer",
-                            "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
-                          },
-                          "paid": {
-                            "type": "number",
-                            "description": "Money sent to creators through Launchpoint, in dollars"
-                          },
-                          "paidCents": {
-                            "type": "integer",
-                            "description": "Money sent to creators through Launchpoint, in cents"
-                          },
-                          "paidOffPlatform": {
-                            "type": "number",
-                            "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
-                          },
-                          "paidOffPlatformCents": {
-                            "type": "integer",
-                            "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
-                          },
-                          "awaiting": {
-                            "type": "number",
-                            "description": "Money held for creators that is past its pay date, in dollars"
-                          },
-                          "awaitingCents": {
-                            "type": "integer",
-                            "description": "Money held for creators that is past its pay date, in cents"
-                          },
-                          "tracking": {
-                            "type": "number",
-                            "description": "Money held for creators that is still inside its view-tracking window, in dollars"
-                          },
-                          "trackingCents": {
-                            "type": "integer",
-                            "description": "Money held for creators that is still inside its view-tracking window, in cents"
-                          }
-                        }
-                      }
-                    },
-                    "page": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "totalPages": {
-                      "type": "integer"
-                    },
-                    "fromDate": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "toDate": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "summary": {
                       "type": "object",
                       "properties": {
-                        "programCount": {
-                          "type": "integer",
-                          "description": "Programs in the whole report, not only this page"
+                        "programId": {
+                          "type": "string"
+                        },
+                        "programName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "active",
+                            "paused",
+                            "completed",
+                            "archived"
+                          ]
+                        },
+                        "kind": {
+                          "type": "string",
+                          "description": "Program kind, such as `ugc` or `ads`"
                         },
                         "currency": {
                           "type": "string",
@@ -6466,13 +6372,37 @@
                             "usd"
                           ]
                         },
+                        "fromDate": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "toDate": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "spend": {
                           "type": "number",
-                          "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
+                          "description": "deliverySpend + adRoyaltySpend, in dollars"
                         },
                         "spendCents": {
                           "type": "integer",
-                          "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
+                          "description": "deliverySpend + adRoyaltySpend, in cents"
+                        },
+                        "deliverySpend": {
+                          "type": "number",
+                          "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee, in dollars"
+                        },
+                        "deliverySpendCents": {
+                          "type": "integer",
+                          "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee, in cents"
+                        },
+                        "adRoyaltySpend": {
+                          "type": "number",
+                          "description": "Royalty fee of the ads that run the program's media, in dollars"
+                        },
+                        "adRoyaltySpendCents": {
+                          "type": "integer",
+                          "description": "Royalty fee of the ads that run the program's media, in cents"
                         },
                         "paid": {
                           "type": "number",
@@ -6514,10 +6444,13 @@
             }
           },
           "400": {
-            "description": "Invalid filters, such as fromDate after toDate"
+            "description": "programId is missing or invalid, or fromDate is after toDate"
           },
           "401": {
             "description": "API key is invalid or missing"
+          },
+          "404": {
+            "description": "Program not found, or not visible to this API key"
           },
           "429": {
             "description": "Request rate limit exceeded"
