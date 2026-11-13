@@ -3,7 +3,7 @@
   "info": {
     "title": "Launchpoint Public API",
     "version": "1.0.0",
-    "description": "**Private preview.** The Launchpoint Public API is in private preview and available only to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Use an API key in the `x-api-key` header to authenticate.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview, access is limited to trusted partners.\n- Create and manage API keys in Dashboard \u2192 Settings \u2192 Developer.\n\n## Creator privacy\n- Responses never include creator email addresses. Creator phone numbers are null when no number is stored or the workspace does not have access to creator contact details.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
+    "description": "**Private preview.** The Launchpoint Public API is in private preview and available only to trusted partners we work with directly. Access is not self-serve. Email hi@launchpointhq.com to ask about access.\n\nREST API for Launchpoint brands and agencies. Use an API key in the `x-api-key` header to authenticate.\n\n## Requirements\n- Public API access must be enabled for the company. During private preview, access is limited to trusted partners.\n- Create and manage API keys in Dashboard → Settings → Developer.\n\n## Creator privacy\n- Responses never include creator email addresses. Creator phone numbers are null when no number is stored or the workspace does not have access to creator contact details.\n\n## Rate limits\n- Default: **100 requests per minute** per API key.\n- Approved partner accounts: **400 requests per minute**.\n- Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. Requests over the limit return `429`.\n\n## Errors\n- Errors use `{ \"error\": \"<message>\" }` with the matching HTTP status. Some endpoints also include a `code`.\n\n## Timestamps\n- Timestamps are Unix timestamps in milliseconds unless a field says otherwise.\n\n## Pagination\n- Most list endpoints accept `page` and `limit` and return `{ data, page, total }`. Some also return `totalPages`.\n- `scope=company` is the default. A parent agency key can pass `scope=agency` on supported routes to include its own data and linked brands."
   },
   "servers": [
     {
@@ -63,7 +63,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API key created in Dashboard \u2192 Settings \u2192 Developer"
+        "description": "API key created in Dashboard → Settings → Developer"
       }
     },
     "parameters": {
@@ -1327,7 +1327,7 @@
         ],
         "operationId": "listCreatorDeals",
         "summary": "List creator deals",
-        "description": "List public creator opportunities across Launchpoint for a jobs board or creator app. This catalog is platform-wide, not limited to the API key company. It includes only public, active campaigns that accept submissions and have not been deleted. Private, unlisted, paused, closed, and deleted deals are excluded.\n\nUse each item\u2019s `url` for the details action. It opens a public landing page before signup, with app, iPhone download, and web links. After installation or signup, a new creator must return to that page and open the deal again; automatic return through app installation is not supported.\n\nThis is not a personalized eligibility or pay feed. Launchpoint checks eligibility and shows current terms when the creator applies. The feed does not return creator identities, private budgets, or sourcing rewards.\n\nThe only query parameters are `page` and `limit`. Unsupported parameters, including `scope` and creator filters, return `400`. Results are ordered by stable deal ID. Fetch successive pages through `totalPages` to read the full catalog. Paging reads live state, so changes during a crawl can move rows between pages. Deduplicate by `id` and replace your cached catalog after each complete refresh.",
+        "description": "List public creator opportunities across Launchpoint for a jobs board or creator app. This catalog is platform-wide, not limited to the API key company. It includes only public, active campaigns that accept submissions and have not been deleted. Private, unlisted, paused, closed, and deleted deals are excluded.\n\nUse each item’s `url` for the details action. It opens a public landing page before signup, with app, iPhone download, and web links. After installation or signup, a new creator must return to that page and open the deal again; automatic return through app installation is not supported.\n\nThis is not a personalized eligibility or pay feed. Launchpoint checks eligibility and shows current terms when the creator applies. The feed does not return creator identities, private budgets, or sourcing rewards.\n\nThe only query parameters are `page` and `limit`. Unsupported parameters, including `scope` and creator filters, return `400`. Results are ordered by stable deal ID. Fetch successive pages through `totalPages` to read the full catalog. Paging reads live state, so changes during a crawl can move rows between pages. Deduplicate by `id` and replace your cached catalog after each complete refresh.",
         "parameters": [
           {
             "in": "query",
@@ -3698,7 +3698,7 @@
           "Posts"
         ],
         "summary": "View post analysis",
-        "description": "Get the media analysis for one post: the storyboard scenes the analyzer wrote plus retention data.\n\n`analysisStatus` is the state of the post's latest non-fingerprint analysis: `none` when the post has never been analyzed, `pending`, `failed`, or `complete`. `storyboard` is `null` until a complete analysis with scenes exists.\n\n`retention.organic` follows the post insights contract: `status` and `reason` are paired \u2014 `available` with `reason: null` means an Instagram snapshot exists; `no_data` with `never_fetched` means none was stored; `no_data` with `unsupported_platform` means the post is not Instagram.\n\n`retention.paid` sums the post's video paid metrics across all of its boosts: `impressions`, three-second views, and watch-through quartile counters (`videoP25Views` \u2026 `videoP100Views`), plus `hookRatePct` (three-second views \u00f7 impressions) and `completionRatePct` (completes \u00f7 impressions), both as percentages from 0 to 100. Paid metrics are video-level, so every crossposted sibling post of one video reports the same paid block. `no_data` with reason `no_paid_metrics` means the video has no reported paid metrics.\n",
+        "description": "Get the media analysis for one post: the storyboard scenes the analyzer wrote plus retention data.\n\n`analysisStatus` is the state of the post's latest non-fingerprint analysis: `none` when the post has never been analyzed, `pending`, `failed`, or `complete`. `storyboard` is `null` until a complete analysis with scenes exists.\n\n`retention.organic` follows the post insights contract: `status` and `reason` are paired — `available` with `reason: null` means an Instagram snapshot exists; `no_data` with `never_fetched` means none was stored; `no_data` with `unsupported_platform` means the post is not Instagram.\n\n`retention.paid` sums the post's video paid metrics across all of its boosts: `impressions`, three-second views, and watch-through quartile counters (`videoP25Views` … `videoP100Views`), plus `hookRatePct` (three-second views ÷ impressions) and `completionRatePct` (completes ÷ impressions), both as percentages from 0 to 100. Paid metrics are video-level, so every crossposted sibling post of one video reports the same paid block. `no_data` with reason `no_paid_metrics` means the video has no reported paid metrics.\n",
         "parameters": [
           {
             "in": "path",
@@ -3801,7 +3801,7 @@
                                 "hookRatePct": {
                                   "type": "number",
                                   "nullable": true,
-                                  "description": "Share still watching at 3s, percentage from 0 to 100 (1 \u2212 reels skip rate)"
+                                  "description": "Share still watching at 3s, percentage from 0 to 100 (1 − reels skip rate)"
                                 },
                                 "skipRatePct": {
                                   "type": "number",
@@ -3881,12 +3881,12 @@
                                 "hookRatePct": {
                                   "type": "number",
                                   "nullable": true,
-                                  "description": "Three-second views \u00f7 impressions, percentage from 0 to 100"
+                                  "description": "Three-second views ÷ impressions, percentage from 0 to 100"
                                 },
                                 "completionRatePct": {
                                   "type": "number",
                                   "nullable": true,
-                                  "description": "Completes \u00f7 impressions, percentage from 0 to 100"
+                                  "description": "Completes ÷ impressions, percentage from 0 to 100"
                                 }
                               }
                             }
@@ -6238,7 +6238,7 @@
           "Payouts"
         ],
         "summary": "View payout wallet statistics",
-        "description": "Read-only summary of your company's payout wallet balances and lifetime activity.\n\nThese are the same metrics shown on the payouts dashboard:\n- **Available balance** \u2014 funds ready to pay creators\n- **Pending balance** \u2014 incoming top-ups still processing\n- **Total owed** \u2014 calculated amount owed across active contracts\n- **Lifetime deposits** \u2014 total confirmed wallet top-ups\n- **Lifetime paid out** \u2014 total confirmed payouts to creators\n\nAll amounts are in USD dollars.\n",
+        "description": "Read-only summary of your company's payout wallet balances and lifetime activity.\n\nThese are the same metrics shown on the payouts dashboard:\n- **Available balance** — funds ready to pay creators\n- **Pending balance** — incoming top-ups still processing\n- **Total owed** — calculated amount owed across active contracts\n- **Lifetime deposits** — total confirmed wallet top-ups\n- **Lifetime paid out** — total confirmed payouts to creators\n\nAll amounts are in USD dollars.\n",
         "responses": {
           "200": {
             "description": "Payout statistics returned successfully",
@@ -8996,7 +8996,7 @@
           "Media review"
         ],
         "summary": "Reject media",
-        "description": "Reject one media item in your review queue. The creator gets a notification, sees your message, and can send a new revision.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.",
+        "description": "Reject one media item in your review queue with a custom `message`, preset `reasons`, or both. The creator gets a notification, sees the combined text, and can send a new revision.\n\nThe trimmed custom message comes first. Each distinct reason adds its prompt in input order, separated by blank lines. The combined text must be 1 to 1000 characters and is returned as `rejectionComments`. Reason codes are not stored separately. Message-only requests keep their existing behavior.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nAn agency key can reject media on a program it reviews, including media it has passed to the brand (`awaiting_brand`). A read-only program returns `403`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9018,15 +9018,41 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "message"
+                "anyOf": [
+                  {
+                    "required": [
+                      "message"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "reasons"
+                    ]
+                  }
                 ],
                 "properties": {
                   "message": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 1000,
-                    "description": "Shown to the creator. Say what to fix."
+                    "description": "Optional when reasons are supplied. Trimmed and shown to the creator before the preset prompts. A supplied message must not be blank. The combined text, including separators and prompts, must not exceed 1000 characters."
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "delivery_or_message",
+                        "video_quality",
+                        "too_similar_to_past_work",
+                        "does_not_follow_brief",
+                        "audio_quality",
+                        "brand_or_compliance_issue"
+                      ]
+                    },
+                    "description": "Optional when message is supplied. Preset feedback shared with the portal and v1 dashboard. Repeated codes add their prompt only once.\n\n- `delivery_or_message`: The delivery was hard to follow, or the main message didn’t come through.\n- `video_quality`: The lighting, framing, camera or background needs work.\n- `too_similar_to_past_work`: This looks too much like your earlier submissions, so try a new concept or format.\n- `does_not_follow_brief`: The video is missing key points, the call to action or required elements from the brief.\n- `audio_quality`: The sound is muffled, has background noise or is too quiet.\n- `brand_or_compliance_issue`: There are other brands’ logos in frame, claims we can’t make or something off-brand."
                   },
                   "revisionId": {
                     "type": "string",
@@ -9034,6 +9060,13 @@
                     "description": "Optional. The `revisionId` you reviewed. The decision fails with `409` and `code: media_newer_revision` when the creator has sent a newer revision."
                   }
                 }
+              },
+              "example": {
+                "reasons": [
+                  "video_quality",
+                  "audio_quality"
+                ],
+                "message": "Please reshoot the opening."
               }
             }
           }
@@ -9058,10 +9091,10 @@
             }
           },
           "400": {
-            "description": "Invalid media id, message, or revision id"
+            "description": "Invalid media id, reason code, message, or revision id; no feedback supplied; or combined feedback exceeds 1000 characters"
           },
           "403": {
-            "description": "The program is read-only for this API key, or `code: agency_key_not_supported`"
+            "description": "The program is read-only for this API key"
           },
           "404": {
             "description": "Media not found"

@@ -164,12 +164,44 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 | `approve_onboarding_proof` | Marks the requirement met, or the account warmed up |
 | `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
 | `approve_media` | Approves media for posting. Brand keys only |
-| `reject_media` | Rejects media with a message; the creator can send a new revision. Brand keys only |
+| `reject_media` | Rejects media with preset reasons, a custom message, or both; the creator gets a notification and can send a new revision |
 | `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told. Run `preview_post_exclusion` first to see what would change |
 
 A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
 
 Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reject_media`. The decision then fails with `media_newer_revision` if the creator sent a newer revision after you looked.
+
+For `reject_media`, send `message`, `reasons`, or both. `reasons` is a nonempty
+array of up to six codes. Each code adds the same feedback as its button in
+the portal and v1 dashboard:
+
+| Code | Feedback shown to the creator |
+| --- | --- |
+| `delivery_or_message` | The delivery was hard to follow, or the main message didn’t come through. |
+| `video_quality` | The lighting, framing, camera or background needs work. |
+| `too_similar_to_past_work` | This looks too much like your earlier submissions, so try a new concept or format. |
+| `does_not_follow_brief` | The video is missing key points, the call to action or required elements from the brief. |
+| `audio_quality` | The sound is muffled, has background noise or is too quiet. |
+| `brand_or_compliance_issue` | There are other brands’ logos in frame, claims we can’t make or something off-brand. |
+
+The trimmed custom message comes first, followed by each distinct reason's
+prompt in input order, separated by blank lines. The combined text must be
+1 to 1000 characters. A supplied message must not be blank. Repeated reason
+codes add their prompt only once. Existing message-only requests still work.
+The saved text is returned as `rejectionComments`; reason codes are not saved
+separately. An agency key can reject media on a program it reviews, including
+media it has passed to the brand. This is a real write that notifies the creator.
+
+For example, after you have reviewed the video:
+
+```json
+{
+  "media_id": "33333333-3333-4333-8333-333333333333",
+  "revision_id": "44444444-4444-4444-8444-444444444444",
+  "reasons": ["video_quality", "audio_quality"],
+  "message": "Please reshoot the opening."
+}
+```
 
 `payment.state` is `paid` (the money reached the creator's Launchpoint balance, not withdrawn), `pending`, `excluded`, `credit_missing` (brand money was spent but the creator credit is missing; contact Launchpoint), `clawed_back`, `paid_off_platform`, or `unknown`. Amounts are whole cents.
 
