@@ -6300,8 +6300,8 @@
         "tags": [
           "Payouts"
         ],
-        "summary": "Report creator spend per program",
-        "description": "Creator money for each visible program, using the same definition as the campaign pages in the dashboard.\n\n`spend` is money sent to creators through Launchpoint (`paid`), money the brand paid creators directly (`paidOffPlatform`), and money still held for creators (`awaiting` is past its pay date, `tracking` is still inside its view window). Every field is returned in dollars and in cents.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet. For an agency, a linked brand's wallet can fund the same creators, so summing the wallet ledger by program understates what creators earned. Use this endpoint for per-program spend reports.\n\n`fromDate` and `toDate` pick posts by their publish day, the same rule as the dashboard date picker, not the day money moved. Rows are sorted by spend, and `summary` sums every program in the report, not only the current page.\n",
+        "summary": "Report spend per program",
+        "description": "What each visible program cost you through Launchpoint: one row for each program, sorted by spend. Pass `programId` to report one program.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee (your take rate). For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. It already contains the creator share that `GET /programs/{programId}/ads` reports, so do not add that share again. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits. Use `spend` or `spendCents`, not both: each amount is returned in dollars and in cents.\n\n**Do not add an Ads program to an organic program.** Each row has `kind`. Organic delivery and Ads sourcing are different purchases. `summary` covers every program in the report, not only the current page. Its spend amounts are `null` when the report has an Ads program and a program of another kind; sum the rows of one kind instead.\n\n**Creator pay.** `paid`, `paidOffPlatform`, `awaiting`, and `tracking` are what the program's creators earned. If you pay a platform fee on creator pay, this money is the cost inside `deliverySpend`. Never add it to `spend`, and do not add your own direct creator payments either: `paidOffPlatform` is already inside. These fields are `null` if you have a CPM, fixed-fee, or itemized contract with Launchpoint, because you pay the contract price, not creator pay.\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days (`timeZone`). Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- `undatedSpend` is delivery that has no day. It is in no date range. It is part of `deliverySpend` and `spend` only when you set no dates.\n- The creator pay fields select posts by their publish day.\n\n**Changed.** Before this version, a date range selected posts by their publish day and counted all their spend. It now counts the delivery of the days in the range.\n\n**Before you compute a cost per customer.** Spend is counted on the day the views occurred, and a purchase can follow days later. Use a range that ended at least as long ago as your usual time from view to purchase. A contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6343,7 +6343,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Count posts published on or after this day (YYYY-MM-DD)"
+            "description": "Count delivery on or after this New York day (YYYY-MM-DD)"
           },
           {
             "in": "query",
@@ -6352,7 +6352,7 @@
               "type": "string",
               "format": "date"
             },
-            "description": "Count posts published on or before this day (YYYY-MM-DD)"
+            "description": "Count delivery on or before this New York day (YYYY-MM-DD)"
           }
         ],
         "responses": {
@@ -6384,6 +6384,10 @@
                               "archived"
                             ]
                           },
+                          "kind": {
+                            "type": "string",
+                            "description": "Program kind, such as `ugc` or `ads`"
+                          },
                           "currency": {
                             "type": "string",
                             "enum": [
@@ -6392,43 +6396,75 @@
                           },
                           "spend": {
                             "type": "number",
-                            "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
+                            "description": "deliverySpend + adRoyaltySpend, in dollars"
                           },
                           "spendCents": {
                             "type": "integer",
-                            "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
+                            "description": "deliverySpend + adRoyaltySpend, in cents"
+                          },
+                          "deliverySpend": {
+                            "type": "number",
+                            "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee, in dollars"
+                          },
+                          "deliverySpendCents": {
+                            "type": "integer",
+                            "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee, in cents"
+                          },
+                          "adRoyaltySpend": {
+                            "type": "number",
+                            "description": "Royalty fee of the ads that run the program's media, in dollars"
+                          },
+                          "adRoyaltySpendCents": {
+                            "type": "integer",
+                            "description": "Royalty fee of the ads that run the program's media, in cents"
+                          },
+                          "undatedSpend": {
+                            "type": "number",
+                            "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set, in dollars"
+                          },
+                          "undatedSpendCents": {
+                            "type": "integer",
+                            "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set, in cents"
                           },
                           "paid": {
                             "type": "number",
-                            "description": "Money sent to creators through Launchpoint, in dollars"
+                            "description": "Money sent to creators through Launchpoint; null for a contract customer, in dollars",
+                            "nullable": true
                           },
                           "paidCents": {
                             "type": "integer",
-                            "description": "Money sent to creators through Launchpoint, in cents"
+                            "description": "Money sent to creators through Launchpoint; null for a contract customer, in cents",
+                            "nullable": true
                           },
                           "paidOffPlatform": {
                             "type": "number",
-                            "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
+                            "description": "Money the brand paid creators directly, outside Launchpoint; null for a contract customer, in dollars",
+                            "nullable": true
                           },
                           "paidOffPlatformCents": {
                             "type": "integer",
-                            "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
+                            "description": "Money the brand paid creators directly, outside Launchpoint; null for a contract customer, in cents",
+                            "nullable": true
                           },
                           "awaiting": {
                             "type": "number",
-                            "description": "Money held for creators that is past its pay date, in dollars"
+                            "description": "Money held for creators that is past its pay date; null for a contract customer, in dollars",
+                            "nullable": true
                           },
                           "awaitingCents": {
                             "type": "integer",
-                            "description": "Money held for creators that is past its pay date, in cents"
+                            "description": "Money held for creators that is past its pay date; null for a contract customer, in cents",
+                            "nullable": true
                           },
                           "tracking": {
                             "type": "number",
-                            "description": "Money held for creators that is still inside its view-tracking window, in dollars"
+                            "description": "Money held for creators that is still inside its view-tracking window; null for a contract customer, in dollars",
+                            "nullable": true
                           },
                           "trackingCents": {
                             "type": "integer",
-                            "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                            "description": "Money held for creators that is still inside its view-tracking window; null for a contract customer, in cents",
+                            "nullable": true
                           }
                         }
                       }
@@ -6453,6 +6489,13 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "timeZone": {
+                      "type": "string",
+                      "description": "Time zone of the date range and of each day",
+                      "enum": [
+                        "America/New_York"
+                      ]
+                    },
                     "summary": {
                       "type": "object",
                       "properties": {
@@ -6468,43 +6511,83 @@
                         },
                         "spend": {
                           "type": "number",
-                          "description": "paid + paidOffPlatform + awaiting + tracking, in dollars"
+                          "description": "deliverySpend + adRoyaltySpend; null when the report has an Ads program and a program of another kind, in dollars",
+                          "nullable": true
                         },
                         "spendCents": {
                           "type": "integer",
-                          "description": "paid + paidOffPlatform + awaiting + tracking, in cents"
+                          "description": "deliverySpend + adRoyaltySpend; null when the report has an Ads program and a program of another kind, in cents",
+                          "nullable": true
+                        },
+                        "deliverySpend": {
+                          "type": "number",
+                          "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee; null when the report has an Ads program and a program of another kind, in dollars",
+                          "nullable": true
+                        },
+                        "deliverySpendCents": {
+                          "type": "integer",
+                          "description": "Price of the program's delivery: views at the contract CPM, or creator cost plus the platform fee; null when the report has an Ads program and a program of another kind, in cents",
+                          "nullable": true
+                        },
+                        "adRoyaltySpend": {
+                          "type": "number",
+                          "description": "Royalty fee of the ads that run the program's media; null when the report has an Ads program and a program of another kind, in dollars",
+                          "nullable": true
+                        },
+                        "adRoyaltySpendCents": {
+                          "type": "integer",
+                          "description": "Royalty fee of the ads that run the program's media; null when the report has an Ads program and a program of another kind, in cents",
+                          "nullable": true
+                        },
+                        "undatedSpend": {
+                          "type": "number",
+                          "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set; null when the report has an Ads program and a program of another kind, in dollars",
+                          "nullable": true
+                        },
+                        "undatedSpendCents": {
+                          "type": "integer",
+                          "description": "Delivery that has no day; part of deliverySpend and spend only when no dates are set; null when the report has an Ads program and a program of another kind, in cents",
+                          "nullable": true
                         },
                         "paid": {
                           "type": "number",
-                          "description": "Money sent to creators through Launchpoint, in dollars"
+                          "description": "Money sent to creators through Launchpoint; null for a contract customer, in dollars",
+                          "nullable": true
                         },
                         "paidCents": {
                           "type": "integer",
-                          "description": "Money sent to creators through Launchpoint, in cents"
+                          "description": "Money sent to creators through Launchpoint; null for a contract customer, in cents",
+                          "nullable": true
                         },
                         "paidOffPlatform": {
                           "type": "number",
-                          "description": "Money the brand paid creators directly, outside Launchpoint, in dollars"
+                          "description": "Money the brand paid creators directly, outside Launchpoint; null for a contract customer, in dollars",
+                          "nullable": true
                         },
                         "paidOffPlatformCents": {
                           "type": "integer",
-                          "description": "Money the brand paid creators directly, outside Launchpoint, in cents"
+                          "description": "Money the brand paid creators directly, outside Launchpoint; null for a contract customer, in cents",
+                          "nullable": true
                         },
                         "awaiting": {
                           "type": "number",
-                          "description": "Money held for creators that is past its pay date, in dollars"
+                          "description": "Money held for creators that is past its pay date; null for a contract customer, in dollars",
+                          "nullable": true
                         },
                         "awaitingCents": {
                           "type": "integer",
-                          "description": "Money held for creators that is past its pay date, in cents"
+                          "description": "Money held for creators that is past its pay date; null for a contract customer, in cents",
+                          "nullable": true
                         },
                         "tracking": {
                           "type": "number",
-                          "description": "Money held for creators that is still inside its view-tracking window, in dollars"
+                          "description": "Money held for creators that is still inside its view-tracking window; null for a contract customer, in dollars",
+                          "nullable": true
                         },
                         "trackingCents": {
                           "type": "integer",
-                          "description": "Money held for creators that is still inside its view-tracking window, in cents"
+                          "description": "Money held for creators that is still inside its view-tracking window; null for a contract customer, in cents",
+                          "nullable": true
                         }
                       }
                     }
