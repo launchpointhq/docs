@@ -119,13 +119,13 @@ Creator email addresses are never present in API responses.
 
 ## Creator pay and Launchpoint contracts
 
-If your workspace has a contract with Launchpoint, you pay the contract price for delivery, not creator pay. The API then does not return what creators earn:
+If your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, you pay the contract price for delivery, not creator pay. The API then does not return what creators earn:
 
 - These endpoints return `403`: `GET /payouts`, `GET /payouts/stats`, `GET /payouts/pending`, `GET /pay-structures`, `GET /programs/{id}/pay-structures`, `GET /posts/{id}/payments`, `POST /posts/{id}/exclude`, and the two pay-structure updates.
 - Other endpoints keep their fields and return `null` for creator pay, such as `earnings`, `cpm`, `paid`, and `payment` on posts and analytics.
-- `GET /payouts/spend` returns your spend, with `creatorEarnings` set to `null`.
+- `GET /payouts/spend` returns your spend, with `paid`, `paidOffPlatform`, `awaiting`, and `tracking` set to `null`.
 
-A workspace that pays a platform fee on creator pay gets every field. The MCP tools follow the same rule.
+A workspace that pays a platform fee on creator pay gets every field, with or without a take-rate contract. The MCP tools follow the same rule.
 
 ## Stay within the rate limit
 
