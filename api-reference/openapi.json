@@ -2017,7 +2017,7 @@
             "description": "Unauthorized - API key is invalid"
           },
           "403": {
-            "description": "The requested scope is not allowed"
+            "description": "The requested scope is not allowed. Also returned when: a workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           },
           "429": {
             "description": "Request rate limit exceeded"
@@ -2679,7 +2679,7 @@
           "Posts"
         ],
         "summary": "Browse posts",
-        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2895,7 +2895,7 @@
           "Posts"
         ],
         "summary": "View post details",
-        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified or submitted code in plain text, and `adCodeStatus` is its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. The fields use the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified or submitted code in plain text, and `adCodeStatus` is its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. The fields use the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "in": "path",
@@ -3220,6 +3220,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "A workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           },
           "404": {
             "description": "Post not found, or not visible to this API key"
@@ -3963,7 +3966,7 @@
           "Posts"
         ],
         "summary": "Exclude a post from earnings",
-        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nWith `?dryRun=true`, the request runs the same checks and changes nothing. It answers `200` with `{ id, excluded: false, dryRun: true, canExclude, blockedBy, crossPostIds, pendingCentsToRemove }`. A refusal is `canExclude: false` with its code in `blockedBy`.",
+        "description": "Exclude a post in a canvas program from creator earnings. This is permanent. The exclusion covers the post's whole video, including its cross-posts on other platforms (same `crossPostGroupId`). The video stops counting in pay and analytics, its pending pay is removed, and it is not tracked again. Afterwards the posts are no longer returned by `/posts`.\n\nWith a `message`, the creator is told that the video will not be paid, and why. Without one, the creator is not told.\n\nThe request is refused with `409` and a `code` when real pay already reached the creator or a paid ad uses the video. `paid: false` in `/posts` does not guarantee that the exclusion is allowed.\n\nWith `?dryRun=true`, the request runs the same checks and changes nothing. It answers `200` with `{ id, excluded: false, dryRun: true, canExclude, blockedBy, crossPostIds, pendingCentsToRemove }`. A refusal is `canExclude: false` with its code in `blockedBy`.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4100,7 +4103,7 @@
             "description": "Invalid post id or message, both `message` and `reason` sent, or the post is not in a canvas program"
           },
           "403": {
-            "description": "The program is read-only for this API key"
+            "description": "The program is read-only for this API key. Also returned when: a workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           },
           "404": {
             "description": "Post not found or already excluded"
@@ -4117,7 +4120,7 @@
           "Posts"
         ],
         "summary": "List excluded posts",
-        "description": "List posts removed from earnings on visible programs, newest removal first. The record stays after the post is deleted. Filter by program, creator, and the New York day of the removal.",
+        "description": "List posts removed from earnings on visible programs, newest removal first. The record stays after the post is deleted. Filter by program, creator, and the New York day of the removal.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4222,7 +4225,7 @@
           "Posts"
         ],
         "summary": "Look up posts by id",
-        "description": "Get one answer for each of up to 1,000 post ids, in request order. Duplicate ids are answered once.\n\n- A post in a visible program has the `GET /posts` item shape, `payment`, and `exclusion: null`.\n- A post that was removed from a visible program has a short shape with `payment.state: \"excluded\"` and its `exclusion` record, even after the post was deleted.\n- Any other id returns `{ \"id\", \"payment\": { \"state\": \"unknown\" } }`. Unknown means the post is not visible to this API key or does not exist; the two cases are not told apart.\n\nOne request uses one rate-limit slot.",
+        "description": "Get one answer for each of up to 1,000 post ids, in request order. Duplicate ids are answered once.\n\n- A post in a visible program has the `GET /posts` item shape, `payment`, and `exclusion: null`.\n- A post that was removed from a visible program has a short shape with `payment.state: \"excluded\"` and its `exclusion` record, even after the post was deleted.\n- Any other id returns `{ \"id\", \"payment\": { \"state\": \"unknown\" } }`. Unknown means the post is not visible to this API key or does not exist; the two cases are not told apart.\n\nOne request uses one rate-limit slot.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4340,7 +4343,7 @@
           "Posts"
         ],
         "summary": "Download posts as CSV",
-        "description": "Create and download a CSV file containing posts.\n\nThe response streams all post data, including metrics, as CSV.\n",
+        "description": "Create and download a CSV file containing posts.\n\nThe response streams all post data, including metrics, as CSV.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "requestBody": {
           "required": false,
           "content": {
@@ -4433,7 +4436,7 @@
           "Analytics"
         ],
         "summary": "View key KPIs",
-        "description": "Get key performance indicators grouped by status.\n\nThe response includes:\n- Programs (by status: active, draft, paused, etc.)\n- Contracts (by status: active, pending, completed, etc.)\n- Posts (total, views, engagement, paid/unpaid)\n- Creators (total, with active contracts)\n\nAgency accounts can pass `scope=agency` to calculate KPIs across the\nparent agency and every subaccount.\n",
+        "description": "Get key performance indicators grouped by status.\n\nThe response includes:\n- Programs (by status: active, draft, paused, etc.)\n- Contracts (by status: active, pending, completed, etc.)\n- Posts (total, views, engagement, paid/unpaid)\n- Creators (total, with active contracts)\n\nAgency accounts can pass `scope=agency` to calculate KPIs across the\nparent agency and every subaccount.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4653,7 +4656,7 @@
           "Analytics"
         ],
         "summary": "Browse tracked videos and analytics",
-        "description": "Get tracked videos/posts with analytics and filters.\n\nEach video includes engagement metrics, sorting, and detailed statistics.\n\nAgency accounts can pass `scope=agency` to combine tracked videos from the\nparent agency and every subaccount.\n\nUse `attribution=gained` to get what each post gained in the dates. Posts with no activity are left out, so a day's rows sum to the day's total on `GET /analytics/overview`. `minViews` and `paid` use lifetime totals and return `400` with `attribution=gained`.",
+        "description": "Get tracked videos/posts with analytics and filters.\n\nEach video includes engagement metrics, sorting, and detailed statistics.\n\nAgency accounts can pass `scope=agency` to combine tracked videos from the\nparent agency and every subaccount.\n\nUse `attribution=gained` to get what each post gained in the dates. Posts with no activity are left out, so a day's rows sum to the day's total on `GET /analytics/overview`. `minViews` and `paid` use lifetime totals and return `400` with `attribution=gained`.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4946,6 +4949,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "The `paid` filter is set and the workspace has a CPM, fixed-fee, or itemized contract with Launchpoint"
           }
         }
       }
@@ -4956,7 +4962,7 @@
           "Analytics"
         ],
         "summary": "Browse tracked accounts",
-        "description": "Get tracked social media accounts with aggregated analytics.\n\nPosts are grouped by social handle and platform, with metrics for each account.\n\nAgency accounts can pass `scope=agency` to combine accounts from the\nparent agency and every subaccount.\n",
+        "description": "Get tracked social media accounts with aggregated analytics.\n\nPosts are grouped by social handle and platform, with metrics for each account.\n\nAgency accounts can pass `scope=agency` to combine accounts from the\nparent agency and every subaccount.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -5186,7 +5192,7 @@
           "Analytics"
         ],
         "summary": "View analytics overview",
-        "description": "Get analytics with filtering support.\n\nLike the /overall page in the web app, this endpoint returns:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` follows the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nstay as upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to calculate the overview across\nthe parent agency and every subaccount.\n\nUse `attribution=gained` to get the numbers on the dashboard Performance chart. A day is a New York calendar day. The current day is partial, and a late first read of a post changes an earlier day. Metrics history uses UTC days, so its `viewsDelta` sum can differ.",
+        "description": "Get analytics with filtering support.\n\nLike the /overall page in the web app, this endpoint returns:\n- Summary metrics\n- Top performing posts\n- Top performing creators\n- Platform breakdown\n\nWhen `fromDate` and/or `toDate` are provided, `summary` follows the same\nactivity attribution model as the dashboard Performance Overview chart:\n- daily deltas from post `daily` stats\n- first-stat totals attributed back to the upload date\n- posts without daily stats attributed to their upload date\n\n`snapshotSummary`, `topPosts`, `topCreators`, and `platformBreakdown`\nstay as upload-date snapshot views, matching the `/overall` page tables.\n\nAgency accounts can pass `scope=agency` to calculate the overview across\nthe parent agency and every subaccount.\n\nUse `attribution=gained` to get the numbers on the dashboard Performance chart. A day is a New York calendar day. The current day is partial, and a late first read of a post changes an earlier day. Metrics history uses UTC days, so its `viewsDelta` sum can differ.\n\nIf your workspace has a CPM, fixed-fee, or itemized contract with Launchpoint, the creator pay fields in this response are `null`. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6228,6 +6234,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "A workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           }
         }
       }
@@ -6281,6 +6290,9 @@
           "401": {
             "description": "API key is invalid or missing"
           },
+          "403": {
+            "description": "A workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
+          },
           "429": {
             "description": "Request rate limit exceeded"
           },
@@ -6301,7 +6313,7 @@
           "Payouts"
         ],
         "summary": "Report spend per program",
-        "description": "What each visible program cost you through Launchpoint: one row for each program, sorted by spend. Pass `programId` to report one program.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee (your take rate). For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. It already contains the creator share that `GET /programs/{programId}/ads` reports, so do not add that share again. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits. Use `spend` or `spendCents`, not both: each amount is returned in dollars and in cents.\n\n**Do not add an Ads program to an organic program.** Each row has `kind`. Organic delivery and Ads sourcing are different purchases. `summary` covers every program in the report, not only the current page. Its spend amounts are `null` when the report has an Ads program and a program of another kind; sum the rows of one kind instead.\n\n**Creator pay.** `paid`, `paidOffPlatform`, `awaiting`, and `tracking` are what the program's creators earned. If you pay a platform fee on creator pay, this money is the cost inside `deliverySpend`. Never add it to `spend`, and do not add your own direct creator payments either: `paidOffPlatform` is already inside. These fields are `null` if you have a CPM, fixed-fee, or itemized contract with Launchpoint, because you pay the contract price, not creator pay.\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days (`timeZone`). Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- `undatedSpend` is delivery that has no day. It is in no date range. It is part of `deliverySpend` and `spend` only when you set no dates.\n- The creator pay fields select posts by their publish day.\n\n**Changed.** Before this version, a date range selected posts by their publish day and counted all their spend. It now counts the delivery of the days in the range.\n\n**Before you compute a cost per customer.** Spend is counted on the day the views occurred, and a purchase can follow days later. Use a range that ended at least as long ago as your usual time from view to purchase. A contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
+        "description": "What each visible program cost you through Launchpoint: one row for each program, sorted by spend. Pass `programId` to report one program.\n\n`spend` is `deliverySpend` plus `adRoyaltySpend`:\n\n- `deliverySpend` is the price of the program's delivery. Under a signed CPM contract it is the delivered views at the contract CPM. Without a CPM contract it is creator cost plus your platform fee (your take rate). For an Ads program it is the cost of sourcing creators plus that fee.\n- `adRoyaltySpend` is the royalty fee of the ads that run the program's media. It already contains the creator share that `GET /programs/{programId}/ads` reports, so do not add that share again. Money you pay the ad platform is not included.\n\nViews past a contract's commitment keep the price of the last contract; the commitment does not cap `spend`. This is the cost of delivery, not a record of cash payments or wallet debits. Use `spend` or `spendCents`, not both: each amount is returned in dollars and in cents.\n\n**Do not add an Ads program to an organic program.** Each row has `kind`. Organic delivery and Ads sourcing are different purchases. `summary` covers every program in the report, not only the current page. Its spend amounts are `null` when the report has an Ads program and a program of another kind; sum the rows of one kind instead.\n\n**Creator pay.** `paid`, `paidOffPlatform`, `awaiting`, and `tracking` are what the program's creators earned. If you pay a platform fee on creator pay, this money is the cost inside `deliverySpend`. Never add it to `spend`, and do not add your own direct creator payments either: `paidOffPlatform` is already inside. These fields are `null` if you have a CPM, fixed-fee, or itemized contract with Launchpoint, because you pay the contract price, not creator pay. See [Creator pay and Launchpoint contracts](/index#creator-pay-and-launchpoint-contracts).\n\n**Date ranges.** `fromDate` and `toDate` include both days and are New York days (`timeZone`). Without them the report covers all time.\n\n- `deliverySpend` covers the views that occurred on those days. Under a CPM contract each view is charged on the day it occurred, at the rate of the contract that took it, so ranges that touch add up to the all-time amount. Without a contract, the program's charge is spread over its view days in proportion to views.\n- `adRoyaltySpend` covers the ad delivery of those days.\n- For an Ads program, sourcing cost uses the publish day of the post it pays for.\n- `undatedSpend` is delivery that has no day. It is in no date range. It is part of `deliverySpend` and `spend` only when you set no dates.\n- The creator pay fields select posts by their publish day.\n\n**Changed.** Before this version, a date range selected posts by their publish day and counted all their spend. It now counts the delivery of the days in the range.\n\n**Before you compute a cost per customer.** Spend is counted on the day the views occurred, and a purchase can follow days later. Use a range that ended at least as long ago as your usual time from view to purchase. A contract with a CPM range can change the amount of past days while that contract is still in progress, because its rate follows creator cost. Amounts can also change as views and earnings update.\n\nThis is different from `GET /payouts`, which lists money that left your own wallet.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -6848,6 +6860,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "A workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           }
         }
       }
@@ -9428,6 +9443,9 @@
           "400": {
             "description": "The program is not a Canvas program, or the request is invalid"
           },
+          "403": {
+            "description": "A workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
+          },
           "404": {
             "description": "No program, creator, or post was found"
           }
@@ -9530,7 +9548,7 @@
             "description": "The program is not a Canvas program, or the request is invalid"
           },
           "403": {
-            "description": "This key cannot change the program"
+            "description": "This key cannot change the program. Also returned when: a workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           },
           "404": {
             "description": "No program, creator, or post was found"
@@ -9618,7 +9636,7 @@
             "description": "The program is not a Canvas program, or the request is invalid"
           },
           "403": {
-            "description": "This key cannot change the program"
+            "description": "This key cannot change the program. Also returned when: a workspace that has a CPM, fixed-fee, or itemized contract with Launchpoint cannot read creator pay"
           },
           "404": {
             "description": "No program, creator, or post was found"
