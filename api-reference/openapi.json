@@ -9541,6 +9541,272 @@
         }
       }
     },
+    "/programs/{id}/creators/{creatorId}/remove": {
+      "get": {
+        "tags": [
+          "Creators"
+        ],
+        "summary": "Preview a creator removal",
+        "description": "Read who a removal would remove and which payment choice it can take, as the dashboard's Remove dialog shows. Changes nothing.\n\nCall it before every removal and show the result to the person who approves it. The removal takes `creatorName` and `programName` exactly as returned. When `sameNameCreators` is not empty, another approved creator on the program has the same name: show their handles too, and send the removal a `creatorHandle` that only this creator has.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The program id"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The creator `id` from `GET /creators`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What the removal would do",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "programName": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "creatorName": {
+                      "type": "string"
+                    },
+                    "handles": {
+                      "type": "array",
+                      "description": "The creator's accounts on the program",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "platform": {
+                            "type": "string",
+                            "example": "tiktok"
+                          },
+                          "handle": {
+                            "type": "string",
+                            "example": "avastone"
+                          }
+                        }
+                      }
+                    },
+                    "sameNameCreators": {
+                      "type": "array",
+                      "description": "Up to 5 other approved creators on the program with the same name. Names are the same when they match without spaces and letter case.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "creatorId": {
+                            "type": "string"
+                          },
+                          "handles": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "platform": {
+                                  "type": "string",
+                                  "example": "tiktok"
+                                },
+                                "handle": {
+                                  "type": "string",
+                                  "example": "avastone"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "canRemovePayments": {
+                      "type": "boolean",
+                      "description": "`true`: `paymentAction` can be `keep` or `remove`. `false`: only `keep` is allowed."
+                    },
+                    "paymentsKeptReason": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Why only `keep` is allowed, as the dashboard shows it. `null` when `remove` is allowed."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - API key is invalid"
+          },
+          "403": {
+            "description": "The program is read-only for this API key"
+          },
+          "404": {
+            "description": "The program is not visible to this key, or the creator is not an approved creator in it. A creator already removed returns 404"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Creators"
+        ],
+        "summary": "Remove a creator from a program",
+        "description": "Remove an approved creator from a program, as the dashboard's Remove does. The creator's place on the program ends. Their videos and posts stay, and money already paid is never taken back.\n\nThe creator id is opaque, so the request must also repeat the names from `GET` on this path. A request whose names do not match its ids removes nobody. When another approved creator on the program has the same name, the request must also name a handle that only this creator has on the program, on any platform.\n\nThe removal is recorded with your API key as the actor and your `reason`. The creator does not see the reason. Use the application routes for a creator who is not approved yet.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The program id"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The creator `id` from `GET /creators`"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason",
+                  "paymentAction",
+                  "creatorName",
+                  "programName"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Why the creator is removed. Stored on the removal's record; the creator does not see it.",
+                    "example": "No posts in 30 days"
+                  },
+                  "paymentAction": {
+                    "type": "string",
+                    "enum": [
+                      "keep",
+                      "remove"
+                    ],
+                    "description": "No default. `keep`: the creator is still paid for work already done. `remove`: the creator's unpaid earnings on the program are cancelled. `remove` is allowed only when the preview returns `canRemovePayments: true`."
+                  },
+                  "creatorName": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "description": "`creatorName` from the preview. Letter case and spaces are ignored.",
+                    "example": "Ava Stone"
+                  },
+                  "programName": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "description": "`programName` from the preview. Letter case and spaces are ignored.",
+                    "example": "Fall Launch"
+                  },
+                  "creatorHandle": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "description": "Required only when the preview returns `sameNameCreators`: one of this creator's `handles` that no creator in `sameNameCreators` has. A leading `@` and letter case are ignored.",
+                    "example": "@avastone"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The creator was removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "programName": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "creatorName": {
+                      "type": "string"
+                    },
+                    "removed": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "paymentAction": {
+                      "type": "string",
+                      "enum": [
+                        "keep",
+                        "remove"
+                      ]
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "A product order whose cancellation needs a check"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body is invalid"
+          },
+          "401": {
+            "description": "Unauthorized - API key is invalid"
+          },
+          "403": {
+            "description": "The program is read-only for this API key"
+          },
+          "404": {
+            "description": "The program is not visible to this key, or the creator is not an approved creator in it. A creator already removed returns 404"
+          },
+          "409": {
+            "description": "Nobody was removed. The body has `error` and `code`: `removal_names_do_not_match` (`creatorName` or `programName` is not the name of its id; the message gives the names of the ids), `removal_name_ambiguous` (another approved creator has the name, and `creatorHandle` is missing or not a handle that only this creator has), or `pending_payouts_must_be_kept` (`remove` is not allowed; use `keep`)."
+          }
+        }
+      }
+    },
     "/posts/{id}/pay-structure": {
       "put": {
         "tags": [
