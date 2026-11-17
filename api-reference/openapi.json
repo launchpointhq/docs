@@ -9796,7 +9796,7 @@
           "Programs"
         ],
         "summary": "Update a creator step",
-        "description": "Change a creator's step, pay, or coach on a Canvas program, as the dashboard does. Call `POST .../step/preview` with the same intent first, then send its `version` and the keys to skip. Every other proposed change is written. Discord and the creator's notice follow in a background run.\n\nA move to the trial step starts a new trial. Send `trialEndsAt` to set the day it ends; the trial then ends on that date, not on the program's day or video limit.",
+        "description": "Change a creator's step, pay, or coach on a Canvas program, as the dashboard does. Call `POST .../step/preview` with the same intent first, then send its `version` and the keys to skip. Every other proposed change is written. Discord and the creator's notice follow in a background run.\n\nA move to the trial step starts a new trial. Send `trialEndsAt` to set the day it ends; the trial then ends on that date, not on the program's day or video limit.\n\nTo change the end of a trial that is already running, send the intent `{ \"kind\": \"trial_end\", \"endsAt\": \"…\" }`. A past moment is refused with `invalid_trial_end`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9832,7 +9832,7 @@
                 "properties": {
                   "intent": {
                     "type": "object",
-                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach.",
+                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach. A trial end moves the end of the creator's running trial: the trial then ends at that moment, not on the program's limit, and a trial that ended or kept the creator after a miss runs again until then. The creator is not told.",
                     "oneOf": [
                       {
                         "type": "object",
@@ -9890,6 +9890,26 @@
                             "type": "string",
                             "nullable": true,
                             "description": "A coach's creator id from `GET /creators`, or `null` for no coach."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "endsAt"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "trial_end"
+                            ]
+                          },
+                          "endsAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "The new end of the creator's running trial: ISO-8601 with `Z` or a UTC offset, in the future, at most 366 days ahead. Do not send `trialEndsAt` with it."
                           }
                         }
                       }
@@ -9969,7 +9989,7 @@
             }
           },
           "400": {
-            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial, or that skips `trial`), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
+            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial or that skips `trial`, or a `trial_end` intent for a creator with no running trial), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
           },
           "403": {
             "description": "This key cannot change the program"
@@ -10025,7 +10045,7 @@
                 "properties": {
                   "intent": {
                     "type": "object",
-                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach.",
+                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach. A trial end moves the end of the creator's running trial: the trial then ends at that moment, not on the program's limit, and a trial that ended or kept the creator after a miss runs again until then. The creator is not told.",
                     "oneOf": [
                       {
                         "type": "object",
@@ -10083,6 +10103,26 @@
                             "type": "string",
                             "nullable": true,
                             "description": "A coach's creator id from `GET /creators`, or `null` for no coach."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "endsAt"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "trial_end"
+                            ]
+                          },
+                          "endsAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "The new end of the creator's running trial: ISO-8601 with `Z` or a UTC offset, in the future, at most 366 days ahead. Do not send `trialEndsAt` with it."
                           }
                         }
                       }
@@ -10176,7 +10216,7 @@
             }
           },
           "400": {
-            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial, or that skips `trial`), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
+            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial or that skips `trial`, or a `trial_end` intent for a creator with no running trial), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
           },
           "403": {
             "description": "This key cannot change the program"
