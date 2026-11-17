@@ -147,6 +147,8 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | `get_payout_stats` | Available money, money owed, deposits, and money paid out |
 | `get_program_spend` | What each program cost you: delivery spend and ad royalty fees, one row for each program. Dates select the days the delivery occurred |
 | `list_pay_structures` | Creator pay terms, CPM or CPC limits, and Canvas payscales |
+| `get_creator_step` | One creator's step on a Canvas program: step, pay, coach, trial (with `endsAt`), and the program's steps, plus the `version` an update sends back |
+| `preview_creator_step_update` | Every change a step, pay, or coach pick would make, with the same checks as the update. `startsTrial` says whether the update can take `trial_ends_at`. Changes nothing |
 | `list_contracts` | Visible creator contracts |
 | `list_creator_conversations` | Creator conversations for one visible program |
 | `list_conversation_messages` | A newest-first page of messages without changing read receipts |
@@ -165,6 +167,7 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 | `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
 | `approve_media` | Approves media for posting. Brand keys only |
 | `reject_media` | Rejects media with preset reasons, a custom message, or both; the creator gets a notification and can send a new revision |
+| `update_creator_step` | Moves a creator to a step, or changes their pay or coach, as the dashboard does. A move to the trial step starts a new trial; `trial_ends_at` sets the day it ends |
 | `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told. Run `preview_post_exclusion` first to see what would change |
 
 A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
@@ -225,6 +228,18 @@ not the username, which can change. Discord entries are omitted for unlinked
 creators and while creator access is locked. A linked account does not prove
 membership in a program's Discord server. The `search` filter does not search
 Discord usernames or IDs.
+
+To set when a trial ends, run `preview_creator_step_update` with a step intent for the trial step and `trial_ends_at`, then `update_creator_step` with the same input and the preview's `version`. `trial_ends_at` is an ISO-8601 moment with `Z` or a UTC offset, at most 366 days ahead. The trial then ends at that moment, not on the program's day or video limit. A change that starts no trial returns `400 trial_end_not_applicable`; a moment that is not in the future, or is too far ahead, returns `400 invalid_trial_end`.
+
+```json
+{
+  "program_id": "11111111-1111-4111-8111-111111111111",
+  "creator_id": "crt_…",
+  "intent": { "kind": "step", "step_id": "22222222-2222-4222-8222-222222222222" },
+  "trial_ends_at": "2026-12-05T23:59:59-05:00",
+  "version": 4
+}
+```
 
 `send_creator_message` needs a program id, the opaque creator id returned by `list_creators`, and a message. Pass a stable `client_message_id` UUID when retrying so the creator never receives the same message twice.
 

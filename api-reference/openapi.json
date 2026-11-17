@@ -9628,6 +9628,564 @@
           }
         }
       }
+    },
+    "/programs/{id}/creators/{creatorId}/step": {
+      "get": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "Get a creator step",
+        "description": "One creator's step on a Canvas program: the step, its pay, coach, and trial, and the program's steps in order. Send `version` back with an update.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the program"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Creator id from `GET /creators`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The creator's step",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Send it to `POST .../step`."
+                    },
+                    "step": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "discordStep": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "description": "The step whose Discord roles and space the creator has. It differs from `step` only when a person kept the creator's Discord."
+                    },
+                    "payscaleId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "`null` is Default."
+                    },
+                    "payLabel": {
+                      "type": "string"
+                    },
+                    "coach": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "trial": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "waiting",
+                            "running",
+                            "qualified",
+                            "checking",
+                            "kept",
+                            "promoted",
+                            "removed",
+                            "cancelled"
+                          ]
+                        },
+                        "startedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true,
+                          "description": "ISO-8601."
+                        },
+                        "endsAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true,
+                          "description": "When the trial ends, ISO-8601. Set at once when a move gave `trialEndsAt`."
+                        }
+                      }
+                    },
+                    "steps": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "payscaleId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "startsTrial": {
+                            "type": "boolean"
+                          },
+                          "passStepId": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The program is not a Canvas program"
+          },
+          "404": {
+            "description": "No program or approved creator was found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "Update a creator step",
+        "description": "Change a creator's step, pay, or coach on a Canvas program, as the dashboard does. Call `POST .../step/preview` with the same intent first, then send its `version` and the keys to skip. Every other proposed change is written. Discord and the creator's notice follow in a background run.\n\nA move to the trial step starts a new trial. Send `trialEndsAt` to set the day it ends; the trial then ends on that date, not on the program's day or video limit.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the program"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Creator id from `GET /creators`"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "intent"
+                ],
+                "properties": {
+                  "intent": {
+                    "type": "object",
+                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach.",
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "stepId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "step"
+                            ]
+                          },
+                          "stepId": {
+                            "type": "string",
+                            "description": "A step id from `GET .../step`."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "payscaleId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "pay"
+                            ]
+                          },
+                          "payscaleId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "A payscale id from `GET /programs/{id}/pay-structures`, or `null` for Default."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "coachId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "coach"
+                            ]
+                          },
+                          "coachId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "A coach's creator id from `GET /creators`, or `null` for no coach."
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "skip": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "step",
+                        "pay",
+                        "trial",
+                        "discord",
+                        "coach",
+                        "contract",
+                        "notice"
+                      ]
+                    },
+                    "default": [],
+                    "description": "Proposed changes to leave as they are. The change your intent names cannot be skipped. A trial change cannot be skipped while its pay change is kept."
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "The `version` from the preview. The update fails with `409` when the creator changed since."
+                  },
+                  "applyToPastVideos": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Also re-price every unpaid video the creator submitted on the program, in a background run that cannot be cancelled. The run can add money to the creator's wallet, and that money is not taken back."
+                  },
+                  "trialEndsAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the change starts a trial: the moment the trial ends. ISO-8601 with `Z` or a UTC offset, for example `2026-12-05T23:59:59-05:00`. It must be in the future and at most 366 days ahead. The trial then ends at this moment, not on the program's day or video limit. Leave it out to keep the program's limit."
+                  }
+                }
+              },
+              "example": {
+                "intent": {
+                  "kind": "step",
+                  "stepId": "22222222-2222-4222-8222-222222222222"
+                },
+                "version": 4,
+                "trialEndsAt": "2026-12-05T23:59:59-05:00"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The update was applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "updateId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "`null` when nothing changed."
+                    },
+                    "resetRunId": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The background re-price run, when `applyToPastVideos` is true."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial, or that skips `trial`), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
+          },
+          "403": {
+            "description": "This key cannot change the program"
+          },
+          "404": {
+            "description": "No program, step, or approved creator was found"
+          },
+          "409": {
+            "description": "The creator changed after the `version` you sent"
+          }
+        }
+      }
+    },
+    "/programs/{id}/creators/{creatorId}/step/preview": {
+      "post": {
+        "tags": [
+          "Programs"
+        ],
+        "summary": "Preview a creator step update",
+        "description": "Every change that follows from one intent, with the same checks and refusals as the update. Changes nothing.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the program"
+          },
+          {
+            "in": "path",
+            "name": "creatorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Creator id from `GET /creators`"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "intent"
+                ],
+                "properties": {
+                  "intent": {
+                    "type": "object",
+                    "description": "What you pick. A step moves the creator there with its pay, Discord, trial, and round-robin coach. A payscale changes the pay, and moves the creator to the one step with that pay when exactly one step has it. A coach changes only the coach.",
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "stepId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "step"
+                            ]
+                          },
+                          "stepId": {
+                            "type": "string",
+                            "description": "A step id from `GET .../step`."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "payscaleId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "pay"
+                            ]
+                          },
+                          "payscaleId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "A payscale id from `GET /programs/{id}/pay-structures`, or `null` for Default."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "coachId"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "coach"
+                            ]
+                          },
+                          "coachId": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "A coach's creator id from `GET /creators`, or `null` for no coach."
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "applyToPastVideos": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Also count the creator's submitted, unpaid videos that a re-price at the new pay would change."
+                  },
+                  "trialEndsAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the change starts a trial: the moment the trial ends. ISO-8601 with `Z` or a UTC offset, for example `2026-12-05T23:59:59-05:00`. It must be in the future and at most 366 days ahead. The trial then ends at this moment, not on the program's day or video limit. Leave it out to keep the program's limit."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The proposed changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "programId": {
+                      "type": "string"
+                    },
+                    "creatorId": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Send it with the update."
+                    },
+                    "changes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "enum": [
+                              "step",
+                              "pay",
+                              "trial",
+                              "discord",
+                              "coach",
+                              "contract",
+                              "notice"
+                            ]
+                          },
+                          "before": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "after": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "required": {
+                            "type": "boolean",
+                            "description": "The intent's own change. It cannot be skipped."
+                          }
+                        }
+                      }
+                    },
+                    "startsTrial": {
+                      "type": "boolean",
+                      "description": "The change starts a trial, so the update can take `trialEndsAt`."
+                    },
+                    "pastVideos": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "With `applyToPastVideos`: the submitted videos a re-price would change.",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "willChange": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is invalid, or a refusal: a payscale or coach not on the program, a skip of the intent's own change, `trial_end_not_applicable` (`trialEndsAt` on a change that starts no trial, or that skips `trial`), or `invalid_trial_end` (`trialEndsAt` not in the future, or more than 366 days ahead). The body has `error` and, for the trial end refusals, `code`."
+          },
+          "403": {
+            "description": "This key cannot change the program"
+          },
+          "404": {
+            "description": "No program, step, or approved creator was found"
+          }
+        }
+      }
     }
   }
 }
