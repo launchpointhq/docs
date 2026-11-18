@@ -97,7 +97,7 @@
           "type": "boolean",
           "default": false
         },
-        "description": "Set to `true` to return `trackingCode` on each media item. The read creates the code for approved media that has none. Without it, `trackingCode` is absent and the read changes nothing."
+        "description": "Set to `true` to return `trackingCode` and `fileName` on each media item. The read creates the code for approved media that has none. Without it, both fields are absent and the read changes nothing."
       }
     },
     "schemas": {
@@ -707,7 +707,12 @@
           "trackingCode": {
             "type": "string",
             "nullable": true,
-            "description": "The media's Launchpoint tracking code. Present only when the request sets `includeTrackingCode=true`. Name the file `launchpoint-{handle}-{trackingCode}.mp4` before you upload it to an ad platform, so the ad's spend is matched to this media. This is the same code as in the dashboard download's file name. The first such read creates it for approved media that has none, and later reads return the same code. Null under the same rule as `mediaUrl`, while self-launched ads are not turned on for your workspace, and for media that is not approved."
+            "description": "The media's Launchpoint tracking code. Present only when the request sets `includeTrackingCode=true`. It is matched to the ad's spend through the name in `fileName`. This is the same code as in the dashboard download's file name. The first such read creates it for approved media that has none, and later reads return the same code. Null under the same rule as `mediaUrl`, while self-launched ads are not turned on for your workspace, and for media that is not approved."
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true,
+            "description": "The whole file name to give the downloaded video, for example `launchpoint-janedoe-z9kzipt3.mp4`: `launchpoint-{handle}-{trackingCode}.mp4`, or `launchpoint-{trackingCode}.mp4` when the creator has no handle or creator details are locked for your workspace. It is the same name as the dashboard download's. Use it before you upload the file to an ad platform; without `.mp4` it also works as the ad name. Present only when the request sets `includeTrackingCode=true`. Null when `trackingCode` is null."
           },
           "status": {
             "type": "string",
