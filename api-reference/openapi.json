@@ -89,6 +89,15 @@
           "type": "string"
         },
         "description": "Limit results to creators who have a linked social account with exactly this handle, in any letter case. A leading `@` is ignored. A handle that no visible creator linked returns an empty result. Use it when you know the handle but not the `creatorId`."
+      },
+      "IncludeTrackingCodeParam": {
+        "in": "query",
+        "name": "includeTrackingCode",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        },
+        "description": "Set to `true` to return `trackingCode` on each media item. The read creates the code for approved media that has none. Without it, `trackingCode` is absent and the read changes nothing."
       }
     },
     "schemas": {
@@ -636,7 +645,6 @@
           "creatorId",
           "revisionId",
           "media",
-          "trackingCode",
           "status",
           "rejectionComments",
           "submittedAt",
@@ -699,7 +707,7 @@
           "trackingCode": {
             "type": "string",
             "nullable": true,
-            "description": "The media's Launchpoint tracking code. Name the file `launchpoint-{handle}-{trackingCode}.mp4` before you upload it to an ad platform, so the ad's spend is matched to this media. This is the same code as in the dashboard download's file name. A read creates it for approved media that has none, and later reads return the same code. Null under the same rule as `mediaUrl`, while self-launched ads are not turned on for your workspace, and for media that is not approved."
+            "description": "The media's Launchpoint tracking code. Present only when the request sets `includeTrackingCode=true`. Name the file `launchpoint-{handle}-{trackingCode}.mp4` before you upload it to an ad platform, so the ad's spend is matched to this media. This is the same code as in the dashboard download's file name. The first such read creates it for approved media that has none, and later reads return the same code. Null under the same rule as `mediaUrl`, while self-launched ads are not turned on for your workspace, and for media that is not approved."
           },
           "status": {
             "type": "string",
@@ -8888,6 +8896,9 @@
             "$ref": "#/components/parameters/CreatorHandleParam"
           },
           {
+            "$ref": "#/components/parameters/IncludeTrackingCodeParam"
+          },
+          {
             "in": "query",
             "name": "page",
             "schema": {
@@ -8970,6 +8981,9 @@
               "format": "uuid"
             },
             "description": "ID of the media"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeTrackingCodeParam"
           }
         ],
         "responses": {
