@@ -636,6 +636,7 @@
           "creatorId",
           "revisionId",
           "media",
+          "trackingCode",
           "status",
           "rejectionComments",
           "submittedAt",
@@ -694,6 +695,11 @@
                 "description": "Links to the images of a carousel. Empty for a video, and empty under the same rule as `mediaUrl`."
               }
             }
+          },
+          "trackingCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "The media's Launchpoint tracking code. Name the file `launchpoint-{handle}-{trackingCode}.mp4` before you upload it to an ad platform, so the ad's spend is matched to this media. This is the same code as in the dashboard download's file name. A read creates it for approved media that has none, and later reads return the same code. Null under the same rule as `mediaUrl`, while self-launched ads are not turned on for your workspace, and for media that is not approved."
           },
           "status": {
             "type": "string",
