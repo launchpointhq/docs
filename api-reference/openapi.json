@@ -712,7 +712,7 @@
           "fileName": {
             "type": "string",
             "nullable": true,
-            "description": "The whole file name to give the downloaded video, for example `launchpoint-janedoe-z9kzipt3.mp4`: `launchpoint-{handle}-{trackingCode}.mp4`, or `launchpoint-{trackingCode}.mp4` when the creator has no handle. It is the same name as the dashboard download's. Use it before you upload the file to an ad platform; without `.mp4` it also works as the ad name. Present only when the request sets `includeTrackingCode=true`. Null when `trackingCode` is null."
+            "description": "The whole file name to give the downloaded video, for example `launchpoint-janedoe-z9kzipt3.mp4`: `launchpoint-{handle}-{trackingCode}.mp4`, or `launchpoint-{trackingCode}.mp4` when the creator has no handle or creator details are locked for your workspace. It is the same name as the dashboard download's. Use it before you upload the file to an ad platform; without `.mp4` it also works as the ad name. Present only when the request sets `includeTrackingCode=true`. Null when `trackingCode` is null."
           },
           "status": {
             "type": "string",
