@@ -2698,7 +2698,7 @@
           "Posts"
         ],
         "summary": "Browse posts",
-        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform; to ask the creator for one, use `POST /posts/{id}/ad-code-request`. Posts without a code remain in the response, under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2914,7 +2914,7 @@
           "Posts"
         ],
         "summary": "View post details",
-        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified or submitted code in plain text, and `adCodeStatus` is its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform. The fields use the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCode` is the saved, verified or submitted code in plain text, and `adCodeStatus` is its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. This read does not request a new code from the creator or platform; to ask the creator for one, use `POST /posts/{id}/ad-code-request`. The fields use the same campaign visibility rules as the post.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
         "parameters": [
           {
             "in": "path",
@@ -4126,6 +4126,91 @@
           },
           "409": {
             "description": "Refused to protect money already paid. `code` is one of `already_paid`, `payout_processing`, `paid_off_platform`, `has_paid_ads`, `has_platform_fee`, `manual_payout_in_progress`, `removal_in_progress`."
+          }
+        }
+      }
+    },
+    "/posts/{id}/ad-code-request": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Request a post's ad code",
+        "description": "Ask the creator for one post's ad code (a TikTok Spark code or a Meta partnership code), as the portal's **Request code** does. The request is saved and the creator is told in the app. The creator can submit the code or decline. Nothing is sent to TikTok or Meta.\n\nThe request is made only when the post owes no code: `adCodeState` is `not_requested` (never asked) or `declined` (the creator said no). In every other state the call changes nothing, so repeating it is safe. A post whose campaign already requires codes, or that already has a code, is left as it is.\n\nThe answer gives the post's `adCodeState` after the call and `requestOpened`, which is `true` only when this call opened the request. Read the code later from `adCode` on `/posts/{id}`.\n\n`adCodeState` values: `ready` (code checked against your ad account), `not_verified` (code collected without a check), `waiting` (owed by the creator), `rejected`, `expired`, `brand_setup_required` (connect your ad account first), `not_requested`, `declined`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ScopeParam"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the post"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The post's code state after the call",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "adCodeState",
+                    "requestOpened"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "adCodeState": {
+                      "type": "string",
+                      "enum": [
+                        "ready",
+                        "not_verified",
+                        "waiting",
+                        "rejected",
+                        "expired",
+                        "brand_setup_required",
+                        "not_requested",
+                        "declined"
+                      ],
+                      "description": "Where the post's code stands after the call"
+                    },
+                    "requestOpened": {
+                      "type": "boolean",
+                      "description": "True when this call opened the request. The creator is told then. False when the post already had a code, an open request, or a code its campaign requires"
+                    }
+                  }
+                },
+                "example": {
+                  "id": "bde652e1-6784-45ac-9245-a636bc444c23",
+                  "adCodeState": "waiting",
+                  "requestOpened": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid post id"
+          },
+          "401": {
+            "description": "Missing or invalid API key"
+          },
+          "403": {
+            "description": "The program is read-only for this API key"
+          },
+          "404": {
+            "description": "Post not found"
+          },
+          "409": {
+            "description": "The post is not live on the creator's account, so it has no ad code to request"
           }
         }
       }
