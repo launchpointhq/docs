@@ -166,7 +166,7 @@ Each write is a real action. Repeating a proof decision returns it unchanged. Me
 | `send_onboarding_feedback` | Sends a creator onboarding feedback in the app, by push, and in Discord. Returns `409 proofs_waiting` while a proof waits |
 | `approve_onboarding_proof` | Marks the requirement met, or the account warmed up |
 | `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
-| `approve_media` | Approves media for posting, including media waiting on revisions unless a newer submitted video blocks it. Brand keys only |
+| `approve_media` | Takes the brand or reviewing agency's approval, including on media waiting on revisions unless a newer submitted video blocks it |
 | `reject_media` | Requests changes with preset reasons, a custom message, or both; optional `final: true` closes media waiting on revisions as a final rejection |
 | `update_creator_step` | Moves a creator to a step, or changes their pay or coach, as the dashboard does. A move to the trial step starts a new trial; `trial_ends_at` sets the day it ends |
 | `remove_creator` | Removes an approved creator from a program, as the dashboard's Remove does. Needs a reason, a payment choice, and the names from `preview_creator_removal`. Money already paid is never taken back |
@@ -198,6 +198,10 @@ the original video's latest rejection. The message names the newer video ID.
 Newer pending and approved videos block approval. Empty reserved slots,
 creator-quit videos, and currently final-rejected videos do not. Review the newer
 video instead; final rejection of the original remains available.
+
+A brand key takes the brand's approval. An agency key on a program its agency
+reviews takes the agency's approval. Media then waits for the brand
+(`awaiting_brand`), unless brand review is off, when it is approved.
 
 For `reject_media`, send `message`, `reasons`, or both. `reasons` is a nonempty
 array of up to six codes. Each code adds the same feedback as its button in
