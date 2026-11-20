@@ -158,7 +158,7 @@ Every `*By` field (`reviewedBy`, `decidedBy`, `confirmedBy`, `excludedBy`) is an
 
 ### Write
 
-Each write is a real action. Repeating a decision that a proof or media item already has is safe and returns it as it stands.
+Each write is a real action. Repeating a proof decision returns it unchanged. Media rejection has two stages: requesting changes, then final rejection. A repeat rejection while waiting on revisions finalizes the rejection; it is not a no-op.
 
 | Tool | What it does |
 | --- | --- |
@@ -166,8 +166,8 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 | `send_onboarding_feedback` | Sends a creator onboarding feedback in the app, by push, and in Discord. Returns `409 proofs_waiting` while a proof waits |
 | `approve_onboarding_proof` | Marks the requirement met, or the account warmed up |
 | `reject_onboarding_proof` | Rejects a proof with a message; the creator can send a new one |
-| `approve_media` | Approves media for posting. Brand keys only |
-| `reject_media` | Rejects media with preset reasons, a custom message, or both; the creator gets a notification and can send a new revision |
+| `approve_media` | Approves media for posting, including media waiting on revisions. Brand keys only |
+| `reject_media` | Requests changes with preset reasons, a custom message, or both; rejecting media already waiting on revisions closes it as a final rejection |
 | `update_creator_step` | Moves a creator to a step, or changes their pay or coach, as the dashboard does. A move to the trial step starts a new trial; `trial_ends_at` sets the day it ends |
 | `remove_creator` | Removes an approved creator from a program, as the dashboard's Remove does. Needs a reason, a payment choice, and the names from `preview_creator_removal`. Money already paid is never taken back |
 | `submit_feedback` | Sends the Launchpoint team a problem with the API and the fix you propose. At most 5 per API key each hour |
@@ -176,6 +176,19 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
 
 Pass `revision_id` from `list_media` or `get_media` to `approve_media` and `reject_media`. The decision then fails with `media_newer_revision` if the creator sent a newer revision after you looked.
+
+<Info>
+  **Rollout:** reviewing media waiting on revisions goes live after backend [PR #15012](https://github.com/launchpointhq/launchpoint-backend/pull/15012) deploys. No tool inputs, response fields, schemas, or status enum values change.
+</Info>
+
+For media waiting on revisions (a non-final change request), `reject_media`
+closes the change request as a final rejection and returns the updated media
+record. `approve_media` approves the current revision, clears the change request,
+and returns the updated record. If the media is already final-rejected,
+`reject_media` is idempotent and returns it unchanged; `approve_media` returns
+`409 media_already_reviewed`. Repeating approval of already approved media also
+returns it unchanged. The public status remains `rejected` for both change
+requests and final rejections.
 
 For `reject_media`, send `message`, `reasons`, or both. `reasons` is a nonempty
 array of up to six codes. Each code adds the same feedback as its button in

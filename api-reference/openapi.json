@@ -9025,7 +9025,7 @@
           "Media review"
         ],
         "summary": "Approve media",
-        "description": "Approve one media item in your review queue. This is the brand's decision, the same as Approve in the dashboard: the creator is told and can post.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.",
+        "description": "Approve one media item in your review queue. This is the brand's decision, the same as Approve in the dashboard: the creator is told and can post.\n\nMedia waiting on revisions (a non-final change request) can also be approved. Approval applies to the current revision, clears its change request, and returns the updated media record. Approving already final-rejected media returns `409` with `code: media_already_reviewed`. Repeating approval of already approved media returns it unchanged. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.\n\nRollout: review of media waiting on revisions goes live after backend PR [#15012](https://github.com/launchpointhq/launchpoint-backend/pull/15012) deploys. No schema, field, or status enum changes are required.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9104,7 +9104,7 @@
           "Media review"
         ],
         "summary": "Reject media",
-        "description": "Reject one media item in your review queue with a custom `message`, preset `reasons`, or both. The creator gets a notification, sees the combined text, and can send a new revision.\n\nThe trimmed custom message comes first. Each distinct reason adds its prompt in input order, separated by blank lines. The combined text must be 1 to 1000 characters and is returned as `rejectionComments`. Reason codes are not stored separately. Message-only requests keep their existing behavior.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nAn agency key can reject media on a program it reviews, including media it has passed to the brand (`awaiting_brand`). A read-only program returns `403`.",
+        "description": "Reject one media item in your review queue with a custom `message`, preset `reasons`, or both. An initial rejection requests changes: the creator gets a notification, sees the combined text, and can send a new revision.\n\nThe trimmed custom message comes first. Each distinct reason adds its prompt in input order, separated by blank lines. The combined text must be 1 to 1000 characters and is returned as `rejectionComments`. Reason codes are not stored separately. Message-only requests keep their existing behavior.\n\nRejecting media waiting on revisions (a non-final change request) closes it as a final rejection and returns the updated media record. A repeated rejection in this state is a final decision, not a no-op. Once the media is final-rejected, another rejection is idempotent and returns it unchanged. Rejecting approved media returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nAn agency key can reject media on a program it reviews, including media it has passed to the brand (`awaiting_brand`). A read-only program returns `403`.\n\nRollout: finalizing media waiting on revisions goes live after backend PR [#15012](https://github.com/launchpointhq/launchpoint-backend/pull/15012) deploys. No schema or field changes are required. The public status remains `rejected` for both change requests and final rejections.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9181,7 +9181,7 @@
         },
         "responses": {
           "200": {
-            "description": "Media rejected and creator notified",
+            "description": "Updated media after requesting changes or final rejection; unchanged if already final-rejected",
             "content": {
               "application/json": {
                 "schema": {
