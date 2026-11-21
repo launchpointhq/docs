@@ -9110,7 +9110,7 @@
           "Media review"
         ],
         "summary": "Approve media",
-        "description": "Approve one media item in your review queue. This is the brand's decision, the same as Approve in the dashboard: the creator is told and can post.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nOnly a brand API key can decide. An agency API key gets `403` with `code: agency_key_not_supported`.",
+        "description": "Approve one media item in your review queue, as Approve in the dashboard.\n\nMedia waiting on revisions (a non-final change request) can also be approved. Approval applies to the current revision, clears its change request, and returns the updated media record. Approval returns `409` with `code: newer_video` if the same creator has newer submitted media on the same program and task, created after the original video's latest rejection. The message names the newer video ID. Newer pending and approved videos block approval; empty reserved slots, creator-quit videos, and currently final-rejected videos do not.\n\nApproving already final-rejected media returns `409` with `code: media_already_reviewed`. Repeating approval of already approved media returns it unchanged. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nA brand key takes the brand's approval. An agency key on a program its agency reviews takes the agency's approval: media then waits for the brand (`awaiting_brand`), unless brand review is off, when it is approved. A read-only program returns `403`.\n\nRollout: these review rules go live after backend PR [#15012](https://github.com/launchpointhq/launchpoint-backend/pull/15012) deploys. Response fields and status enum values do not change.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9189,7 +9189,7 @@
           "Media review"
         ],
         "summary": "Reject media",
-        "description": "Reject one media item in your review queue with a custom `message`, preset `reasons`, or both. The creator gets a notification, sees the combined text, and can send a new revision.\n\nThe trimmed custom message comes first. Each distinct reason adds its prompt in input order, separated by blank lines. The combined text must be 1 to 1000 characters and is returned as `rejectionComments`. Reason codes are not stored separately. Message-only requests keep their existing behavior.\n\nRepeating the decision the media already has returns the media as it stands, so retries are safe. The opposite decision returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nAn agency key can reject media on a program it reviews, including media it has passed to the brand (`awaiting_brand`). A read-only program returns `403`.",
+        "description": "Reject one media item in your review queue with a custom `message`, preset `reasons`, or both. An initial rejection requests changes: the creator gets a notification, sees the combined text, and can send a new revision. Pending-review media still receives a change request even with `final: true`.\n\nThe trimmed custom message comes first. Each distinct reason adds its prompt in input order, separated by blank lines. The combined text must be 1 to 1000 characters and is returned as `rejectionComments`. Reason codes are not stored separately. Message-only requests keep their existing behavior.\n\nFor media waiting on revisions (a non-final change request), omitting `final` or setting it to false is a no-op and returns `200` with the unchanged record. Setting `final: true` closes it as a final rejection and returns the updated media record. Once the media is final-rejected, another rejection is idempotent and returns `200` unchanged, including with `final: true`. Repeating it is safe. Rejecting approved media returns `409` with `code: media_already_reviewed`. Media outside your review queue returns `409` with `code: media_not_reviewable`.\n\nAn agency key can reject media on a program it reviews, including media it has passed to the brand (`awaiting_brand`). A read-only program returns `403`.\n\nRollout: these review rules and the optional boolean `final` input go live after backend PR [#15012](https://github.com/launchpointhq/launchpoint-backend/pull/15012) deploys. Response fields and status enum values do not change. The public status remains `rejected` for both change requests and final rejections.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -9230,6 +9230,10 @@
                     "maxLength": 1000,
                     "description": "Optional when reasons are supplied. Trimmed and shown to the creator before the preset prompts. A supplied message must not be blank. The combined text, including separators and prompts, must not exceed 1000 characters."
                   },
+                  "final": {
+                    "type": "boolean",
+                    "description": "Optional. Set true to finalize media waiting on revisions. Omit or set false to leave that change request unchanged. Pending-review media still receives a change request. Already-final media stays unchanged."
+                  },
                   "reasons": {
                     "type": "array",
                     "minItems": 1,
@@ -9266,7 +9270,7 @@
         },
         "responses": {
           "200": {
-            "description": "Media rejected and creator notified",
+            "description": "Updated media after requesting changes or explicit final rejection; unchanged for waiting-on-revisions media without final: true, or if already final-rejected",
             "content": {
               "application/json": {
                 "schema": {
