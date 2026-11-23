@@ -17,10 +17,10 @@ Use this hosted Streamable HTTP endpoint:
 https://dashboard.launchpointhq.com/api/v1/mcp
 ```
 
-It uses the same API keys, workspace access, creator privacy rules, review rules, money guards, and rate limit as the REST API. Each tool does what its REST route does. MCP cannot create invite links, change creator collections, or link Discord channels.
+It uses the same API keys, workspace access, creator privacy rules, review rules, money guards, and rate limit as the REST API. Each tool does what its REST route does. MCP cannot change creator collections or link Discord channels.
 
 <Warning>
-  An MCP key can message creators, approve or reject their onboarding proofs and media, and exclude posts from earnings for programs your workspace can manage. Treat it like a person on your team with those permissions. Review the creator, the decision, and any message text before asking an assistant to act.
+  An MCP key can create invite links, message creators, approve or reject their onboarding proofs and media, and exclude posts from earnings for programs your workspace can manage. Treat it like a person on your team with those permissions. Review the creator, the decision, and any message text before asking an assistant to act.
 </Warning>
 
 ## Create an MCP key
@@ -133,10 +133,10 @@ Tool inputs use snake_case names for the REST parameters, such as `program_id` f
 | `get_analytics_overview` | Totals, platform breakdowns, top posts, and top creators. `attribution: gained` returns the dashboard Performance chart's views gained without top posts, and `group_by: day` adds daily totals |
 | `list_analytics_videos` | One row per post with metrics. `attribution: gained` returns what each post gained in the dates |
 | `get_comment_dm_analytics` | Comment-to-DM funnel (opt-ins, first DMs sent, link clicks, unique clickers, link clicks per country) by program, creator account, post, or day |
-| `list_creators` | Visible creators with each program's join date (`joinedAt`) and coach (`coach`), social profiles, linked Discord user IDs and usernames, enhancement opt-ins, and niches |
+| `list_creators` | Visible creators with each program's join date (`joinedAt`), coach (`coach`), and invite reference (`externalRef`), social profiles, linked Discord user IDs and usernames, enhancement opt-ins, and niches |
 | `get_creator_audience` | The audience of each account a creator uses on your programs |
 | `list_creator_feed` | A creator's public posts, newest first: stored feed reads plus campaign posts, with counts, the platform's paid-partnership label, and the campaign program |
-| `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status |
+| `list_applications` | Creator applications to Canvas programs, with pending, approved, or rejected status and the invite reference (`externalRef`) |
 | `list_onboarding_creators` | A program's Onboarding queue, as the dashboard shows it |
 | `get_creator_onboarding` | Everything one creator still needs before posting, with the ids of waiting proofs and how each met requirement was met (`decision`) |
 | `list_onboarding_proofs` | Onboarding proofs on a program; pending review by default, with `reviewedBy` on decided proofs |
@@ -162,6 +162,7 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 
 | Tool | What it does |
 | --- | --- |
+| `create_program_invite` | Creates a shareable invite link for a program. Needs `expires_in_days` (1 to 90) and `max_uses`. Optional `external_ref` tags the link with your own reference for the creator who joins with it. Creators who join with the link skip the approval queue. Each call creates another link |
 | `send_creator_message` | Sends and stores a workspace message, then notifies the creator |
 | `send_onboarding_feedback` | Sends a creator onboarding feedback in the app, by push, and in Discord. Returns `409 proofs_waiting` while a proof waits |
 | `approve_onboarding_proof` | Marks the requirement met, or the account warmed up |
@@ -232,6 +233,10 @@ not the username, which can change. Discord entries are omitted for unlinked
 creators and while creator access is locked. A linked account does not prove
 membership in a program's Discord server. The `search` filter does not search
 Discord usernames or IDs.
+
+To match each creator to a user in your own system, pass `external_ref` to `create_program_invite`, such as your user id. It is trimmed text of 1 to 255 characters; an empty, longer, or non-text value returns `400`. The answer includes `externalRef`. `list_creators` returns it as `campaigns[].externalRef` for the program the creator joined with the link, and `list_applications` as `externalRef`. Only the workspace that created the link reads its ref; every other API key gets `null`. A creator who joined some other way also has `null`.
+
+Use `max_uses: 1` to make one link per person, so a forwarded link cannot attach a second creator to the same ref. A creator who already joined keeps the ref of the link that brought them in; opening a later link does not change it. Deleting the link in the dashboard removes its ref from the creators who joined through it.
 
 To set when a trial ends, run `preview_creator_step_update` with a step intent for the trial step and `trial_ends_at`, then `update_creator_step` with the same input and the preview's `version`. `trial_ends_at` is an ISO-8601 moment with `Z` or a UTC offset, at most 366 days ahead. The trial then ends at that moment, not on the program's day or video limit. A change that starts no trial returns `400 trial_end_not_applicable`; a moment that is not in the future, or is too far ahead, returns `400 invalid_trial_end`.
 
