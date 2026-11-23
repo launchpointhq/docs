@@ -5961,7 +5961,7 @@
           "Programs"
         ],
         "summary": "Create a program invite link",
-        "description": "Create a shareable invite link for a program.\n\nCreators can join the program directly through this link.\n",
+        "description": "Create a shareable invite link for a program.\n\nCreators can join the program directly through this link.\n\nPass `externalRef` to tag the link with your own reference for the creator who joins with it, such as your user id. `GET /creators` then returns it as `campaigns[].externalRef`, and `GET /applications` as `externalRef`. Only the workspace that created the invite link reads its ref, in either `scope`. Every other API key gets `null`. A creator who joined some other way has `null`.\n\nUse `maxUses: 1` to make one link per person, so a forwarded link cannot attach a second creator to the same ref. A creator who already joined keeps the ref of the link that brought them in; opening a later link does not change it. Deleting the link in the dashboard removes its ref from the creators who joined through it.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -5994,6 +5994,13 @@
                     "description": "Maximum link uses (null for unlimited)",
                     "example": 50,
                     "nullable": true
+                  },
+                  "externalRef": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Your own reference for the creator who joins with this link, such as your user id. Trimmed; 1 to 255 characters after trimming. Empty, longer than 255 characters, or not a string returns `400`.",
+                    "example": "user_8f3a2c"
                   }
                 }
               }
@@ -6028,6 +6035,11 @@
                       "type": "integer",
                       "nullable": true
                     },
+                    "externalRef": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The stored, trimmed `externalRef`. `null` when none was sent."
+                    },
                     "programId": {
                       "type": "string"
                     },
@@ -6040,7 +6052,14 @@
             }
           },
           "400": {
-            "description": "Request is invalid"
+            "description": "Request is invalid, such as an `externalRef` that is empty, longer than 255 characters, or not a string",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Invalid request"
+                }
+              }
+            }
           },
           "404": {
             "description": "No program was found"
@@ -6962,7 +6981,7 @@
           "Creators"
         ],
         "summary": "Browse creators",
-        "description": "Get creators associated with your company, along with a contract status map for each campaign.\nUse this to see which creators are active across your campaigns. Each creator has a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nThe `campaigns` array lists every program a creator is or was contracted under,\nalong with its contract status. A creator's top-level `status` is `\"active\"` when they\nhave at least one active contract; otherwise, it is `\"inactive\"`.\n\nEach campaign lists `enhancementOptIns`: the creator's accounts opted into that\nprogram's enhancements, trial reels (`trialReels`) or comment-to-DM (`commentDm`).\nA brand turns an enhancement on for a program; the creator then opts in per account.\nAn account opted into both has two entries. An opt-out removes the entry.\n\nGhost-handle contracts are excluded.\n",
+        "description": "Get creators associated with your company, along with a contract status map for each campaign.\nUse this to see which creators are active across your campaigns. Each creator has a\n`phone` number, which is `null` when no number is on file or while your creator access is locked.\nCreator email addresses are never returned.\n\nThe `campaigns` array lists every program a creator is or was contracted under,\nalong with its contract status. A creator's top-level `status` is `\"active\"` when they\nhave at least one active contract; otherwise, it is `\"inactive\"`.\n\nEach campaign lists `enhancementOptIns`: the creator's accounts opted into that\nprogram's enhancements, trial reels (`trialReels`) or comment-to-DM (`commentDm`).\nA brand turns an enhancement on for a program; the creator then opts in per account.\nAn account opted into both has two entries. An opt-out removes the entry.\n\nEach campaign lists `externalRef`: the `externalRef` of the invite link the creator\njoined that program through. Only the workspace that created the invite link reads its ref, in either `scope`. Every other API key gets `null`.\nIt is `null` when the creator joined some other way.\n\nGhost-handle contracts are excluded.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -7114,6 +7133,12 @@
                                   "type": "integer",
                                   "nullable": true,
                                   "description": "When the creator joined this program: their first approval on it, the date the dashboard shows as \"Joined\". Unix milliseconds, an absolute UTC instant, so compare it directly with a post's `uploadedAt`. `null` when the creator has no approval record."
+                                },
+                                "externalRef": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "The `externalRef` of the invite link the creator joined this program through. Only the workspace that created the invite link reads its ref, in either `scope`. Every other API key gets `null`. `null` when the creator joined some other way, or when the link was deleted.",
+                                  "example": "user_8f3a2c"
                                 },
                                 "coach": {
                                   "type": "object",
@@ -7668,7 +7693,7 @@
           "Applications"
         ],
         "summary": "Browse creator applications",
-        "description": "Get creator applications to your Canvas programs, with each application's approval status.\n\nAn application is a creator's current enrollment in a Canvas program together with the campaign-level approval decision. `status` is `pending` while the application waits for review, `approved` once the creator is accepted, and `rejected` when the creator is turned down. A creator who joined before approvals existed is returned as `approved` with `decidedAt: null`.\n\nPending applications default to `pool=recommended`. Workspaces with permission can explicitly request `pool=all` to include both Recommended and additional eligible applicants, not just the additional group. Quality, safety and campaign eligibility checks still apply to pending applicants. Approved and rejected applications are unaffected by the pool, but any `pool=all` request still requires permission. An unavailable All applicants pool returns `403`; it does not silently fall back to Recommended.\n\nThe pool does not widen workspace or program access. Existing scope, search, status and pagination parameters still apply, and totals reflect the selected pool and filters. Brief-based programs approve creators per brief and are not listed here.\n",
+        "description": "Get creator applications to your Canvas programs, with each application's approval status.\n\nAn application is a creator's current enrollment in a Canvas program together with the campaign-level approval decision. `status` is `pending` while the application waits for review, `approved` once the creator is accepted, and `rejected` when the creator is turned down. A creator who joined before approvals existed is returned as `approved` with `decidedAt: null`.\n\nPending applications default to `pool=recommended`. Workspaces with permission can explicitly request `pool=all` to include both Recommended and additional eligible applicants, not just the additional group. Quality, safety and campaign eligibility checks still apply to pending applicants. Approved and rejected applications are unaffected by the pool, but any `pool=all` request still requires permission. An unavailable All applicants pool returns `403`; it does not silently fall back to Recommended.\n\nThe pool does not widen workspace or program access. Existing scope, search, status and pagination parameters still apply, and totals reflect the selected pool and filters. Brief-based programs approve creators per brief and are not listed here.\n\n`externalRef` is the `externalRef` of the invite link the creator joined the program through. Only the workspace that created the invite link reads its ref, in either `scope`. Every other API key gets `null`. It is `null` when the creator joined some other way.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -7793,6 +7818,12 @@
                           "creatorId": {
                             "type": "string",
                             "description": "Opaque creator id, the same value `/creators` returns"
+                          },
+                          "externalRef": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The `externalRef` of the invite link the creator joined this program through. Only the workspace that created the invite link reads its ref, in either `scope`. Every other API key gets `null`. `null` when the creator joined some other way, or when the link was deleted.",
+                            "example": "user_8f3a2c"
                           },
                           "creatorName": {
                             "type": "string"
