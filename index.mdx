@@ -105,6 +105,8 @@ Increment `page` through `totalPages` to fetch every matching post. The maximum 
 
 Posts also include `confirmation`: when the video was confirmed, its views then, and `confirmedBy`, or `null` when it was not confirmed. To list removed posts, use `GET /posts/excluded`.
 
+`POST /api/v1/posts/{id}/ad-code-request` is deprecated. Connect an ad account in [Portal → Integrations → Ad accounts](https://home.launchpointhq.com/integrations#ad-accounts), then use `POST /api/v1/ads` when available. Until then, use Run Ad in the Portal. Successful responses include `deprecationNote`; the REST response also carries the `Deprecation` and `Link` headers.
+
 ## Use company or agency scope
 
 Any route that supports `scope` defaults to `scope=company`, which returns data belonging to the API key's company only.

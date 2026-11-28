@@ -2698,7 +2698,7 @@
           "Posts"
         ],
         "summary": "Browse posts",
-        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCodeStatus`: `verified` for a checked code, `submitted` for an unchecked code, or `null` if neither is stored and unexpired. The code itself is not returned. To ask the creator for a code, use `POST /posts/{id}/ad-code-request`. Posts without a code remain in the response under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
+        "description": "Get social media posts with detailed filters.\n\nFilter posts by program, platform, creator, date range, and more. Each row includes direct links, thumbnails, stable creator IDs, cross-post group IDs, current metrics, metric availability, and the current UTC day's view change.\n\nEach post includes `adCodeStatus`: `verified` for a checked code, `submitted` for an unchecked code, or `null` if neither is stored and unexpired. The code itself is not returned. To run the post, connect an ad account in Portal → Integrations → Ad accounts, then use `POST /api/v1/ads` when available. Until then, use Run Ad in the Portal. Posts without a code remain in the response under the same campaign visibility rules.\n\nPlatform copies of one source video remain separate rows because their links and metrics differ. Copies share `crossPostGroupId` so callers can group or de-duplicate them.\n\nAgency accounts can pass `scope=agency` to return posts from the parent agency and every subaccount in one request.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -2908,7 +2908,7 @@
           "Posts"
         ],
         "summary": "View post details",
-        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCodeStatus` is `verified` for a checked code, `submitted` for an unchecked code, or `null` if neither is stored and unexpired. The code itself is not returned. To ask the creator for a code, use `POST /posts/{id}/ad-code-request`.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
+        "description": "Get full details for one post/video.\n\nThe response includes metrics, engagement data, payment status, and related contract/program information.\n\n`adCodeStatus` is `verified` for a checked code, `submitted` for an unchecked code, or `null` if neither is stored and unexpired. The code itself is not returned. To run the post, connect an ad account in Portal → Integrations → Ad accounts, then use `POST /api/v1/ads` when available. Until then, use Run Ad in the Portal.\n\n`description` is the post's caption. For an Instagram post on an account connected to Launchpoint, each metrics read replaces it with the current caption, so an edit by the creator appears after the next read. `descriptionFetchedAt` is the time of the read that returned it.\n\n`account` is the social account that published the post.",
         "parameters": [
           {
             "in": "path",
@@ -4124,7 +4124,8 @@
           "Posts"
         ],
         "summary": "Request a post's ad code",
-        "description": "Ask the creator for one post's ad code (a TikTok Spark code or a Meta partnership code), as the portal's **Request code** does. The request is saved and the creator is told in the app. The creator can submit the code or decline. Nothing is sent to TikTok or Meta.\n\nThe request is made only when the post owes no code: `adCodeState` is `not_requested` (never asked) or `declined` (the creator said no). In every other state the call changes nothing, so repeating it is safe. A post whose campaign already requires codes, or that already has a code, is left as it is.\n\nThe answer gives the post's `adCodeState` after the call and `requestOpened`, which is `true` only when this call opened the request. Opening a request requires a connected Meta or TikTok ad account for the post's platform. Check `adCodeStatus` on `/posts/{id}`; it does not return the code itself.\n\n`adCodeState` values: `ready` (code checked against your ad account), `not_verified` (code collected without a check), `waiting` (owed by the creator), `rejected`, `expired`, `brand_setup_required` (connect your ad account first), `not_requested`, `declined`.",
+        "deprecated": true,
+        "description": "**Deprecated.** Connect an ad account in [Portal → Integrations → Ad accounts](https://home.launchpointhq.com/integrations#ad-accounts), then use `POST /api/v1/ads` when available. Until then, use Run Ad in the Portal.\n\nAsk the creator for one post's ad code (a TikTok Spark code or a Meta partnership code), as the portal's **Request code** does. The request is saved and the creator is told in the app. The creator can submit the code or decline. Nothing is sent to TikTok or Meta.\n\nThe request is made only when the post owes no code: `adCodeState` is `not_requested` (never asked) or `declined` (the creator said no). In every other state the call changes nothing, so repeating it is safe. A post whose campaign already requires codes, or that already has a code, is left as it is.\n\nThe answer gives the post's `adCodeState` after the call and `requestOpened`, which is `true` only when this call opened the request. Opening a request requires a connected Meta or TikTok ad account for the post's platform. Check `adCodeStatus` on `/posts/{id}`; it does not return the code itself.\n\n`adCodeState` values: `ready` (code checked against your ad account), `not_verified` (code collected without a check), `waiting` (owed by the creator), `rejected`, `expired`, `brand_setup_required` (connect your ad account first), `not_requested`, `declined`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ScopeParam"
@@ -4143,6 +4144,16 @@
         "responses": {
           "200": {
             "description": "The post's code state after the call",
+            "headers": {
+              "Deprecation": {
+                "description": "This operation is deprecated",
+                "schema": { "type": "string", "enum": ["true"] }
+              },
+              "Link": {
+                "description": "Link to the replacement endpoint and, when configured, the Portal's ad accounts page",
+                "schema": { "type": "string" }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -4150,7 +4161,8 @@
                   "required": [
                     "id",
                     "adCodeState",
-                    "requestOpened"
+                    "requestOpened",
+                    "deprecationNote"
                   ],
                   "properties": {
                     "id": {
@@ -4174,13 +4186,18 @@
                     "requestOpened": {
                       "type": "boolean",
                       "description": "True when this call opened the request. The creator is told then. False when the post already had a code, an open request, or a code its campaign requires"
+                    },
+                    "deprecationNote": {
+                      "type": "string",
+                      "description": "How to connect an ad account and run the post without requesting a code separately"
                     }
                   }
                 },
                 "example": {
                   "id": "bde652e1-6784-45ac-9245-a636bc444c23",
                   "adCodeState": "waiting",
-                  "requestOpened": true
+                  "requestOpened": true,
+                  "deprecationNote": "Ad-code requests are deprecated. Connect an ad account in Portal → Integrations → Ad accounts, then use POST /api/v1/ads when available. Until then, use Run Ad in the Portal."
                 }
               }
             }
