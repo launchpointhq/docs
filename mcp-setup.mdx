@@ -173,7 +173,7 @@ Each write is a real action. Repeating a decision that a proof or media item alr
 | `remove_creator` | Removes an approved creator from a program, as the dashboard's Remove does. Needs a reason, a payment choice, and the names from `preview_creator_removal`. Money already paid is never taken back |
 | `submit_feedback` | Sends the Launchpoint team a problem with the API and the fix you propose. At most 5 per API key each hour |
 | `exclude_post` | Excludes a Canvas post, and every post with the same `crossPostGroupId`, from earnings. Without `message` the creator is not told. Run `preview_post_exclusion` first to see what would change |
-| `request_post_ad_code` | Asks the creator for a post's ad code (TikTok Spark code or Meta partnership code), as the portal's Request code does. Asks only when the post owes no code (`not_requested` or `declined`); otherwise changes nothing. Returns `adCodeState` and `requestOpened`. Read the code later with `get_post` (`adCode`) |
+| `request_post_ad_code` | Asks the creator for a post's ad code (TikTok Spark code or Meta partnership code), as the portal's Request code does. Asks only when the post owes no code (`not_requested` or `declined`); otherwise changes nothing. Returns `adCodeState` and `requestOpened`. Opening a request requires a connected ad account for the post's platform. Check `adCodeStatus` with `get_post`; it does not return the code itself. |
 
 A refused write returns the REST status and `code`, for example `409 proof_already_reviewed`, `409 media_newer_revision`, or `409 already_paid` and `409 has_paid_ads` from `exclude_post`. `exclude_post` never takes money back.
 
