@@ -4146,8 +4146,12 @@
             "description": "The post's code state after the call",
             "headers": {
               "Deprecation": {
-                "description": "This operation is deprecated",
-                "schema": { "type": "string", "enum": ["true"] }
+                "description": "RFC 9745 deprecation date (2026-11-28 UTC), serialized as @ followed by Unix seconds",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^@-?[0-9]+$"
+                },
+                "example": "@1795824000"
               },
               "Link": {
                 "description": "Link to the replacement endpoint and, when configured, the Portal's ad accounts page",
