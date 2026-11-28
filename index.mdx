@@ -85,15 +85,15 @@ curl --get "https://dashboard.launchpointhq.com/api/v1/posts" \
   --data-urlencode "limit=500"
 ```
 
-Each post includes `adCode`, the saved, verified or submitted code in plain text, and `adCodeStatus`, its stored status (`verified` or `submitted`). `submitted` means the campaign collects codes without checking them. Both fields are `null` when no verified or submitted, unexpired code is stored. A code without an expiry remains available. Fetching posts does not request a new code from the creator or platform, and posts without a code remain in the response.
+Each post includes `adCodeStatus`: `verified` for a checked code, `submitted` for an unchecked code, or `null` if neither is stored and unexpired. A code without an expiry does not expire. These reads do not request a code and never return the code itself. Use Run Ad in Launchpoint to use a saved code.
 
 An abbreviated response:
 
 ```json
 {
   "data": [
-    { "id": "post-with-code", "adCode": "example-ad-code", "adCodeStatus": "verified" },
-    { "id": "post-without-code", "adCode": null, "adCodeStatus": null }
+    { "id": "post-with-code", "adCodeStatus": "verified" },
+    { "id": "post-without-code", "adCodeStatus": null }
   ],
   "page": 1,
   "total": 2,
@@ -101,9 +101,11 @@ An abbreviated response:
 }
 ```
 
-Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCode` and `data.adCodeStatus` with the same behavior. These fields follow the post's existing campaign visibility and API-key access rules.
+Increment `page` through `totalPages` to fetch every matching post. The maximum page size is 500. `GET /posts/{id}` also includes `data.adCodeStatus` with the same behavior. These fields follow the post's existing campaign visibility and API-key access rules.
 
 Posts also include `confirmation`: when the video was confirmed, its views then, and `confirmedBy`, or `null` when it was not confirmed. To list removed posts, use `GET /posts/excluded`.
+
+`POST /api/v1/posts/{id}/ad-code-request` is deprecated. Connect an ad account in [Portal → Integrations → Ad accounts](https://home.launchpointhq.com/integrations#ad-accounts), then use `POST /api/v1/ads` when available. Until then, use Run Ad in the Portal. Successful responses include `deprecationNote`; the REST response also carries the `Deprecation` and `Link` headers.
 
 ## Use company or agency scope
 
